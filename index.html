@@ -1,0 +1,3197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BEYBLADE X 對戰系統</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#050505;
+  --panel:#0f0f0f;
+  --panel-2:#161616;
+  --border:#2a2a2a;
+  --text:#f2f2f2;
+  --muted:#828282;
+  --cyan:#39ff14;
+  --cyan-soft:#8fe083; /* softer readable green for body text — pure --cyan is too harsh at bold/large sizes */
+  --teal:#7cff3f;
+  --orange:#f5ff00;
+  --violet:#ff1f4d;
+  --gold:#f5ff00;
+  --blue:#00c3ff;
+  --silver:#c9d0dc;
+  --bronze:#d38a52;
+  --amber:#ffa726;
+  /* Finish-type colors: chosen to stay distinguishable under common forms of
+     color-blindness (deuteranopia/protanopia/tritanopia), each also paired
+     with its own icon glyph so nothing relies on color alone. */
+  --fin-spin:#22c55e;    /* green  */
+  --fin-over:#ffb020;    /* amber  */
+  --fin-burst:#c77dff;   /* purple */
+  --fin-xtreme:#ff5c5c;  /* red    */
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(57,255,20,.07), transparent 60%),
+    radial-gradient(1000px 500px at -10% 110%, rgba(255,31,77,.06), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;
+  min-height:100vh;
+}
+
+button, input, select{ font-family:inherit; }
+button{ cursor:pointer; }
+::-webkit-scrollbar{ height:6px; width:6px; }
+::-webkit-scrollbar-thumb{ background:var(--border); border-radius:6px; }
+
+.container{ max-width:1160px; margin:auto; padding:0 20px 60px; }
+
+/* ===== Header ===== */
+.header{
+  background:linear-gradient(160deg,#141a24 0%,#0d1119 100%);
+  border-bottom:1px solid var(--border);
+  padding:26px 20px;
+  position:relative;
+  overflow:hidden;
+}
+.header::after{
+  content:"";
+  position:absolute; right:-60px; top:-60px;
+  width:220px; height:220px; border-radius:50%;
+  border:2px dashed rgba(57,255,20,.18);
+}
+.header::before{
+  content:"";
+  position:absolute; right:0px; top:10px;
+  width:150px; height:150px; border-radius:50%;
+  border:2px solid rgba(255,31,77,.15);
+}
+.header-inner{ max-width:1160px; margin:auto; position:relative; z-index:1; }
+.logo{
+  font-family:'Rajdhani',sans-serif;
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:2px;
+  line-height:1;
+  font-style:italic;
+  transform:skewX(-4deg);
+  display:inline-flex;
+  align-items:baseline;
+  gap:9px;
+}
+.logo-main{
+  background:linear-gradient(90deg,#fff, var(--cyan) 75%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  position:relative;
+}
+.logo-main::after{
+  content:""; position:absolute; left:1px; right:6%; bottom:-5px; height:3px;
+  background:linear-gradient(90deg, var(--cyan), var(--violet));
+  border-radius:2px;
+}
+.logo span{ color:var(--orange); -webkit-text-fill-color:var(--orange); }
+.logo-sub{
+  font-style:normal; font-weight:700; font-size:13px; letter-spacing:3px;
+  color:var(--muted); -webkit-text-fill-color:var(--muted); align-self:center;
+}
+.subtitle{ color:var(--muted); margin-top:10px; font-size:13px; letter-spacing:.5px; }
+.tname{ margin-top:14px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:27px; letter-spacing:.4px; color:var(--silver); }
+
+/* ===== Tabs ===== */
+.tabs{
+  display:flex; gap:8px; margin:20px 0; overflow-x:auto; padding-bottom:2px;
+}
+.tab{
+  background:var(--panel);
+  color:var(--muted);
+  border:1px solid var(--border);
+  padding:10px 18px;
+  border-radius:10px;
+  white-space:nowrap;
+  font-weight:600;
+  font-size:14px;
+  transition:.15s;
+}
+.tab.active{ background:var(--text); color:#0a0d13; border-color:var(--text); }
+
+/* ===== Cards ===== */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:18px;
+}
+.card-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:21px;
+  font-weight:800;
+  margin-bottom:14px;
+  letter-spacing:.3px;
+}
+.card-sub{ color:var(--muted); font-size:13px; margin-top:-8px; margin-bottom:16px; }
+
+/* ===== Setup ===== */
+.field-label{ font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; letter-spacing:.4px; }
+.text-input, select.text-input{
+  width:100%;
+  background:#0d1119;
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:12px 14px;
+  border-radius:10px;
+  font-size:14px;
+}
+.text-input:focus, select.text-input:focus{ outline:2px solid var(--cyan); outline-offset:1px; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+.player-input{ display:flex; gap:10px; margin-bottom:10px; align-items:center; }
+.player-number{
+  width:34px; height:34px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--panel-2); color:var(--muted); font-family:'Space Mono',monospace; font-size:12px;
+  flex-shrink:0;
+}
+.icon-btn{
+  width:38px; height:38px; flex-shrink:0;
+  border-radius:8px; border:1px solid var(--border); background:var(--panel-2); color:var(--muted);
+  font-size:18px; line-height:1;
+}
+.icon-btn:hover{ color:var(--orange); border-color:var(--orange); }
+
+.btn{
+  border:0; border-radius:10px; padding:12px 18px; font-weight:700; font-size:14px;
+}
+.btn-primary{ background:linear-gradient(90deg,var(--cyan),var(--teal)); color:#040a02; }
+.btn-dark{ background:var(--panel-2); color:var(--text); border:1px solid var(--border); }
+.btn-danger{ background:rgba(142,37,37,.25); color:#ff8f8f; border:1px solid rgba(142,37,37,.6); }
+.btn-success{ background:linear-gradient(90deg,#247b45,#2fa860); color:#eafff2; }
+.btn-warning{ background:rgba(245,255,0,.12); color:var(--gold); border:1px solid rgba(245,255,0,.45); }
+.btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn:disabled{ opacity:.35; cursor:not-allowed; }
+.btn-block{ width:100%; }
+.btn-sm{ padding:8px 12px; font-size:12px; border-radius:8px; flex-shrink:0; }
+.roster-row{ display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+.roster-row.withdrawn .roster-name-input{ opacity:.5; text-decoration:line-through; }
+.roster-name-input{ flex:1; }
+.flex{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.space-between{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.text-muted{ color:var(--muted); font-size:13px; }
+
+/* ===== Stats ===== */
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.stat{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; }
+.stat-label{ color:var(--muted); font-size:12px; letter-spacing:.3px; }
+.stat-value{ font-family:'Space Mono',monospace; font-size:26px; font-weight:700; margin-top:6px; }
+
+/* ===== Podium ===== */
+.podium{
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:end;
+  margin-bottom:18px;
+}
+.podium-item{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px;
+  padding:20px 12px 16px; text-align:center; position:relative; overflow:hidden;
+}
+.podium-item::before{
+  content:""; position:absolute; inset:0; opacity:.14; pointer-events:none;
+}
+.podium-1{ order:2; border-color:rgba(245,255,0,.5); padding-top:28px; }
+.podium-1::before{ background:radial-gradient(circle at 50% 0%, var(--gold), transparent 70%); }
+.podium-2{ order:1; border-color:rgba(201,208,220,.4); }
+.podium-2::before{ background:radial-gradient(circle at 50% 0%, var(--silver), transparent 70%); }
+.podium-3{ order:3; border-color:rgba(211,138,82,.4); }
+.podium-3::before{ background:radial-gradient(circle at 50% 0%, var(--bronze), transparent 70%); }
+.podium-medal{ font-size:34px; position:relative; z-index:1; }
+.podium-1 .podium-medal{ font-size:42px; }
+.podium-title{
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:1px;
+  color:var(--muted); margin-top:2px; position:relative; z-index:1;
+}
+.podium-name{
+  font-family:'Rajdhani',sans-serif; font-weight:900; font-size:19px;
+  margin-top:6px; position:relative; z-index:1; overflow-wrap:break-word;
+}
+.podium-2 .podium-title, .podium-2 .podium-name{ color:var(--silver); }
+.podium-2 .podium-name{ text-shadow:0 0 10px rgba(201,208,220,.35); }
+.podium-3 .podium-title, .podium-3 .podium-name{ color:var(--bronze); }
+.podium-3 .podium-name{ text-shadow:0 0 10px rgba(211,138,82,.4); }
+.podium-1 .podium-title, .podium-1 .podium-name{ color:var(--gold); }
+.podium-1 .podium-name{ text-shadow:0 0 14px rgba(245,255,0,.5); }
+.podium-record{ font-family:'Space Mono',monospace; font-size:12px; color:var(--muted); margin-top:4px; position:relative; z-index:1; }
+
+/* ===== Standings table ===== */
+.table-wrapper{ overflow-x:auto; }
+table{ width:100%; border-collapse:collapse; min-width:680px; }
+th{ color:var(--muted); font-size:11px; letter-spacing:.5px; text-align:center; padding:10px 8px; border-bottom:1px solid var(--border); text-transform:uppercase; }
+td{ padding:13px 8px; text-align:center; border-bottom:1px solid #1c212c; font-family:'Space Mono',monospace; font-size:13px; }
+td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-size:14px; }
+.rank-cell{ font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16px; }
+.rank-1{ color:var(--gold); }
+.rank-2{ color:var(--silver); }
+.rank-3{ color:var(--bronze); }
+.points-cell{ font-size:17px; font-weight:700; color:var(--cyan); }
+.empty-row td{ font-family:'Inter',sans-serif; color:var(--muted); padding:30px; }
+
+/* ===== Round tabs ===== */
+.round-tabs{ display:flex; gap:8px; overflow-x:auto; margin-bottom:18px; }
+.round-btn{ min-width:76px; background:var(--panel-2); color:var(--muted); border:1px solid var(--border); padding:9px; border-radius:9px; font-weight:600; font-size:13px; }
+.round-btn.active{ background:var(--text); color:#0a0d13; }
+
+.round-heading{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:1.5px;
+  color:#0a0d13; background:var(--muted); margin:26px 0 12px; padding:5px 14px 6px;
+  border-radius:20px; text-transform:uppercase;
+}
+.round-heading:first-child{ margin-top:0; }
+
+/* ===== Match cards ===== */
+.match-list{ display:grid; gap:12px; }
+.match{
+  background:var(--panel-2); border:1px solid var(--border); border-left:3px solid var(--border);
+  border-radius:14px; padding:16px;
+  transition:border-color .2s ease, transform .15s ease, box-shadow .2s ease;
+}
+.match:hover{ border-color:#3a3a3a; transform:translateY(-1px); box-shadow:0 6px 18px -8px rgba(0,0,0,.5); }
+.match.completed{ border-color:rgba(57,255,20,.4); border-left-color:var(--cyan); }
+.match-header{ display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; margin-bottom:12px; font-family:'Space Mono',monospace; }
+.status-pill{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.status-pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.status-pill.pending{ background:rgba(125,134,152,.15); color:var(--muted); }
+.status-pill.done{ background:rgba(57,255,20,.15); color:var(--cyan-soft); }
+.match-result{ margin-top:2px; text-align:center; color:var(--cyan-soft); font-weight:700; font-size:19px; font-family:'Rajdhani',sans-serif; letter-spacing:.3px; }
+.match-log{ margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.log-chip{ font-size:15px; font-weight:700; padding:5px 12px; border-radius:20px; font-family:'Space Mono',monospace; }
+.match-actions{ margin-top:14px; display:flex; justify-content:center; gap:8px; }
+.match-actions .btn{ flex:1; max-width:220px; }
+
+/* ===== Referee ===== */
+.ref-picker{ margin-bottom:18px; }
+.referee-panels{ display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; align-items:start; }
+.referee-panel{ margin:0; }
+.ref-panel-head{ display:flex; gap:10px; align-items:center; margin-bottom:16px; }
+.icon-btn.focus-btn.active{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.12); }
+.referee-focus-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  background:rgba(57,255,20,.08); border:1px solid rgba(57,255,20,.35); color:var(--text);
+  padding:10px 14px; border-radius:12px; font-size:13px; margin-bottom:14px;
+}
+.referee-focus-banner b{ color:var(--cyan); }
+.ref-panel-label{ flex:1; font-weight:700; }
+.referee-empty{ text-align:center; padding:60px 20px; color:var(--muted); }
+.referee-empty .big{ font-family:'Rajdhani',sans-serif; font-size:26px; color:var(--text); margin-bottom:8px; font-weight:800; }
+
+.referee-title{ color:var(--muted); margin-bottom:18px; font-size:13px; font-family:'Space Mono',monospace; text-align:center; }
+
+.ref-flash{ text-align:center; height:0; overflow:visible; position:relative; margin-bottom:6px; }
+.ref-flash-badge{
+  display:inline-block; position:relative; top:-6px;
+  padding:9px 20px; border-radius:30px;
+  font-family:'Rajdhani',sans-serif; font-weight:900; font-size:19px; letter-spacing:.4px;
+  animation: flashPop 1.1s ease forwards; pointer-events:none;
+}
+@keyframes flashPop{
+  0%{ opacity:0; transform:translateY(10px) scale(.85); }
+  18%{ opacity:1; transform:translateY(-6px) scale(1.1); }
+  32%{ transform:translateY(-8px) scale(1); }
+  72%{ opacity:1; transform:translateY(-8px) scale(1); }
+  100%{ opacity:0; transform:translateY(-22px) scale(.95); }
+}
+
+.ring-row{ display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:end; margin-bottom:22px; }
+.ring-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+.ring-name{ font-family:'Rajdhani',sans-serif; font-weight:800; font-size:18px; text-align:center; }
+.vs-mark{ font-family:'Rajdhani',sans-serif; font-size:16px; color:var(--muted); font-weight:800; }
+
+/* ===== Battery point indicator ===== */
+.battery-outer{ position:relative; width:76px; }
+.battery-cap{
+  width:30px; height:9px; margin:0 auto;
+  background:#3a3a3a; border:2px solid #4a4a4a; border-bottom:0;
+  border-radius:4px 4px 0 0;
+}
+.battery-body{
+  width:76px; height:132px;
+  border:3px solid #4a4a4a; border-radius:12px;
+  background:#0a0a0a;
+  padding:7px 7px;
+  display:flex; flex-direction:column-reverse; gap:6px;
+  transition:border-color .3s, box-shadow .3s;
+  position:relative;
+}
+.battery-body.battery-seven{ height:190px; gap:4px; padding:7px 6px; }
+.battery-cell{
+  flex:1; border-radius:5px;
+  background:#151515;
+  box-shadow:inset 0 0 0 1px #222;
+  transition:background .3s ease, box-shadow .3s ease;
+  min-height:0;
+}
+.battery-cell.lit{
+  background:linear-gradient(180deg, var(--cell-color,#39ff14), var(--cell-color-dark,#1f9e0a));
+  box-shadow:0 0 10px 1px var(--cell-color,#39ff14), inset 0 0 6px rgba(255,255,255,.4);
+}
+.battery-body.battery-full{
+  border-color:var(--cyan);
+  animation: batteryPulseGlow 1.3s ease-in-out infinite;
+}
+@keyframes batteryPulseGlow{
+  0%,100%{ box-shadow:0 0 10px 2px rgba(57,255,20,.5), 0 0 22px 6px rgba(57,255,20,.25); }
+  50%{ box-shadow:0 0 18px 5px rgba(57,255,20,.8), 0 0 38px 14px rgba(57,255,20,.45); }}
+.battery-value{ font-family:'Space Mono',monospace; font-size:20px; font-weight:700; text-align:center; }
+.battery-value .of{ font-size:11px; color:var(--muted); }
+
+.battery-burst{ position:absolute; inset:0; overflow:visible; pointer-events:none; z-index:2; }
+.spark{
+  position:absolute; top:50%; left:50%; width:7px; height:7px; border-radius:50%;
+  background:radial-gradient(circle, #fff, var(--spark-color,#ffea00));
+  opacity:0;
+  animation: sparkFly .9s ease-out forwards;
+  animation-delay:var(--delay,0s);
+  transform:translate(-50%,-50%);
+}
+@keyframes sparkFly{
+  0%{ opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) translateY(0) scale(1); }
+  100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) translateY(-64px) scale(.2); }
+}
+
+/* electric current-overflow streaks */
+.bolt{
+  position:absolute; top:50%; left:50%; width:3px; height:50px;
+  background:linear-gradient(180deg, #fff, var(--bolt-color,#39ff14) 55%, transparent);
+  opacity:0; transform-origin:top center; border-radius:2px;
+  filter:drop-shadow(0 0 6px var(--bolt-color,#39ff14));
+  animation: boltFly .7s ease-out forwards;
+  animation-delay:var(--delay,0s);
+}
+@keyframes boltFly{
+  0%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(.2); }
+  20%{ opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(1); }
+  100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(1.5) translateY(-26px); }
+}
+
+.battery-body.battery-overcharge{
+  animation: batteryPulseGlow .4s ease-in-out infinite;
+}
+.battery-outer.shake-2x{
+  animation: overchargeShake .55s cubic-bezier(.36,.07,.19,.97) 2;
+}
+@keyframes overchargeShake{
+  0%,100%{ transform:translate(0,0) rotate(0deg); }
+  10%{ transform:translate(-4px,1px) rotate(-1deg); }
+  20%{ transform:translate(4px,-1px) rotate(1deg); }
+  30%{ transform:translate(-4px,2px) rotate(-1deg); }
+  40%{ transform:translate(4px,-2px) rotate(1deg); }
+  50%{ transform:translate(-3px,1px) rotate(-.5deg); }
+  60%{ transform:translate(3px,-1px) rotate(.5deg); }
+  70%{ transform:translate(-2px,1px); }
+  80%{ transform:translate(2px,-1px); }
+  90%{ transform:translate(-1px,0); }
+}
+
+/* Danger state: score exceeds 4 points (e.g. 5, 6 in longer matches) */
+.battery-body.battery-danger{
+  border-color:#ff2d2d;
+  animation: dangerFlash .45s steps(1,end) infinite;
+}
+.battery-outer.shake-inf{
+  animation: overchargeShake .55s cubic-bezier(.36,.07,.19,.97) infinite;
+}
+@keyframes dangerFlash{
+  0%,49%{ border-color:#ff2d2d; box-shadow:0 0 16px 4px rgba(255,45,45,.75), 0 0 32px 12px rgba(255,45,45,.4); }
+  50%,100%{ border-color:#39ff14; box-shadow:0 0 16px 4px rgba(57,255,20,.75), 0 0 32px 12px rgba(57,255,20,.4); }
+}
+.battery-burst.danger-burst .spark{ width:11px; height:11px; animation-name:sparkFlyBig; }
+@keyframes sparkFlyBig{
+  0%{ opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) translateY(0) scale(1); }
+  100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) translateY(-96px) scale(.3); }
+}
+.battery-burst.danger-burst .bolt{ width:4px; height:64px; animation-name:boltFlyBig; }
+@keyframes boltFlyBig{
+  0%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(.2); }
+  20%{ opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(1); }
+  100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(1.8) translateY(-38px); }
+}
+
+.finish-grid{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; position:relative; align-items:stretch; }
+.finish-grid::before{
+  content:"";
+  position:absolute; top:0; bottom:0; left:50%;
+  width:1px; background:var(--border);
+  transform:translateX(-50%);
+}
+.finish-col{
+  display:flex; flex-direction:column; gap:10px;
+  flex:1 1 0; min-width:0;
+  background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px;
+}
+.finish-col.side-a{ border-left:3px solid var(--cyan); }
+.finish-col.side-b{ border-right:3px solid var(--violet); }
+.finish-col-header{
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16px; text-align:center;
+  color:var(--text); padding-bottom:8px; margin-bottom:2px; border-bottom:1px solid var(--border);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.finish-btn{
+  border-radius:12px; padding:20px 16px; text-align:left; border:1px solid var(--border);
+  background:var(--panel-2); color:var(--text); font-weight:800;
+  display:flex; justify-content:space-between; align-items:center;
+  min-height:64px; transition:transform .1s ease, filter .1s ease, box-shadow .15s ease, border-color .15s ease;
+  min-width:0; overflow:hidden;
+}
+.finish-btn:active{
+  transform:scale(.94);
+  filter:brightness(1.5) saturate(1.3);
+  box-shadow:0 0 20px 3px rgba(255,255,255,.3);
+  border-color:var(--text);
+}
+.finish-btn.just-scored{
+  animation: scoredPulse .5s ease;
+}
+@keyframes scoredPulse{
+  0%{ transform:scale(1.06); filter:brightness(1.7); box-shadow:0 0 26px 6px rgba(255,255,255,.4); }
+  100%{ transform:scale(1); filter:brightness(1); box-shadow:none; }
+}
+.finish-label{ font-family:'Rajdhani',sans-serif; font-size:23px; font-weight:900; letter-spacing:.4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.finish-btn.spin .finish-label{ color:var(--fin-spin); }
+.finish-btn.over .finish-label{ color:var(--fin-over); }
+.finish-btn.burst .finish-label{ color:var(--fin-burst); }
+.finish-btn.xtreme .finish-label{
+  background:linear-gradient(90deg,#ff2d55,#ffd60a,#39ff14,#00c3ff,#b18cff,#ff2d55);
+  background-size:250% auto;
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation: xtremeShimmer 3s linear infinite, xtremeGlow 1.6s ease-in-out infinite;
+}
+@keyframes xtremeShimmer{
+  0%{ background-position:0% center; }
+  100%{ background-position:250% center; }
+}
+@keyframes xtremeGlow{
+  0%,100%{ filter:drop-shadow(0 0 4px rgba(255,255,255,.55)) drop-shadow(0 0 10px rgba(255,45,85,.45)) drop-shadow(0 0 16px rgba(0,195,255,.35)); }
+  50%{ filter:drop-shadow(0 0 9px rgba(255,255,255,.95)) drop-shadow(0 0 20px rgba(255,214,10,.65)) drop-shadow(0 0 30px rgba(0,195,255,.6)); }
+}
+.finish-icon{ margin-right:6px; }
+.finish-pts{ font-family:'Space Mono',monospace; font-size:18px; font-weight:700; padding:4px 12px; border-radius:8px; color:#04141a; flex-shrink:0; margin-left:10px; }
+.finish-btn.spin .finish-pts{ background:var(--fin-spin); }
+.finish-btn.over .finish-pts{ background:var(--fin-over); color:#1a0f00; }
+.finish-btn.burst .finish-pts{ background:var(--fin-burst); color:#1a0025; }
+.finish-btn.xtreme .finish-pts{ background:var(--fin-xtreme); color:#1a0000; }
+.finish-btn:hover{ border-color:var(--text); }
+
+.quick-win-grid{ display:flex; align-items:stretch; gap:14px; }
+.quick-win-btn{
+  position:relative; flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  background:var(--panel); border:1.5px solid var(--border); border-radius:16px; padding:30px 14px;
+  min-height:130px; overflow:hidden;
+  transition:transform .1s ease, filter .1s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.quick-win-btn::before{
+  content:""; position:absolute; inset:0; opacity:.16; pointer-events:none; transition:opacity .15s ease;
+}
+.quick-win-btn.side-blue{ border-color:rgba(0,195,255,.45); box-shadow:inset 0 0 0 1px rgba(0,195,255,.08); }
+.quick-win-btn.side-blue::before{ background:radial-gradient(circle at 50% 0%, var(--blue), transparent 72%); }
+.quick-win-btn.side-blue .quick-win-label{ color:var(--blue); }
+.quick-win-btn.side-blue:hover{ border-color:rgba(0,195,255,.8); }
+.quick-win-btn.side-blue:active{
+  border-color:var(--blue);
+  box-shadow:0 0 26px 6px rgba(0,195,255,.4), inset 0 0 0 1px rgba(0,195,255,.3);
+}
+.quick-win-btn.side-blue:active::before{ opacity:.3; }
+
+.quick-win-btn.side-red{ border-color:rgba(255,69,69,.45); box-shadow:inset 0 0 0 1px rgba(255,69,69,.08); }
+.quick-win-btn.side-red::before{ background:radial-gradient(circle at 50% 0%, #ff4545, transparent 72%); }
+.quick-win-btn.side-red .quick-win-label{ color:#ff4545; }
+.quick-win-btn.side-red:hover{ border-color:rgba(255,69,69,.8); }
+.quick-win-btn.side-red:active{
+  border-color:#ff4545;
+  box-shadow:0 0 26px 6px rgba(255,69,69,.4), inset 0 0 0 1px rgba(255,69,69,.3);
+}
+.quick-win-btn.side-red:active::before{ opacity:.3; }
+
+.quick-win-btn:active{ transform:scale(.96); }
+.quick-win-name{
+  position:relative; z-index:1;
+  font-family:'Rajdhani',sans-serif; font-weight:900; font-size:22px; color:var(--text);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+}
+.quick-win-label{
+  position:relative; z-index:1;
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:2px;
+  text-transform:uppercase;
+}
+.quick-vs-mark{
+  font-family:'Rajdhani',sans-serif; font-size:14px; color:var(--muted); font-weight:900; letter-spacing:1px;
+  align-self:center; flex-shrink:0;
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--panel-2); border:1px solid var(--border);
+}
+
+.ref-footer{ margin-top:18px; display:flex; justify-content:center; gap:10px; }
+
+.winner-banner{
+  text-align:center; padding:34px 20px;
+  background:linear-gradient(160deg, rgba(245,200,0,.16), transparent);
+  border:1px solid rgba(245,200,0,.4); border-radius:14px;
+}
+.winner-banner .trophy{ font-size:38px; }
+.winner-banner .wname{ font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:900; margin:8px 0; }
+
+/* ===== Modal ===== */
+.modal{ position:fixed; inset:0; background:rgba(4,6,10,.8); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
+.modal.show{ display:flex; }
+.modal-box{ width:100%; max-width:420px; background:var(--panel); border-radius:16px; padding:24px; border:1px solid var(--border); }
+.modal-title{ font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:800; margin-bottom:16px; }
+.modal-buttons{ display:grid; gap:10px; margin-top:18px; }
+
+.hidden{ display:none !important; }
+
+.progress{ height:7px; background:var(--panel-2); border-radius:20px; overflow:hidden; margin-top:12px; }
+.progress-bar{ height:100%; background:linear-gradient(90deg,var(--cyan),var(--violet)); transition:width .3s; }
+
+.save-flag{ position:fixed; bottom:18px; right:18px; background:var(--panel); border:1px solid var(--border); color:var(--muted); padding:8px 14px; border-radius:20px; font-size:12px; opacity:0; transition:opacity .3s; pointer-events:none; }
+.save-flag.show{ opacity:1; }
+
+.action-toast{
+  position:fixed; top:18px; left:50%; z-index:300;
+  display:flex; align-items:center; gap:8px;
+  background:var(--panel); border:1px solid var(--cyan); color:var(--text);
+  padding:10px 20px; border-radius:24px; font-size:13px; font-weight:700;
+  box-shadow:0 8px 24px -6px rgba(0,0,0,.6), 0 0 16px -4px rgba(57,255,20,.4);
+  opacity:0; pointer-events:none;
+  transform:translate(-50%,-14px);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.action-toast.show{ opacity:1; transform:translate(-50%,0); }
+
+.cloud-status-wrap{ padding:8px 4px 14px; }
+.cloud-status{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted);
+}
+.cloud-status-hint{ font-size:12px; color:var(--muted); opacity:.7; text-align:right; }
+.cloud-status-actions{ margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.cloud-dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+.cloud-dot.on{ background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
+.cloud-dot.off{ background:#555; }
+.cloud-status-btn{
+  display:inline-flex; align-items:center; gap:7px;
+  background:none; border:1px solid var(--border); color:var(--text);
+  border-radius:10px; padding:9px 16px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+}
+.cloud-status-btn:hover{ color:var(--cyan); border-color:var(--cyan); }
+.cloud-tabs{ display:flex; gap:6px; margin-bottom:16px; background:var(--panel-2); border-radius:10px; padding:4px; }
+.cloud-tab{
+  flex:1; background:none; border:none; color:var(--muted); padding:8px; border-radius:7px;
+  font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
+}
+.cloud-tab.active{ background:var(--panel); color:var(--text); }
+.cloud-code-display{
+  font-family:'Space Mono',monospace; font-size:26px; font-weight:700; letter-spacing:6px;
+  text-align:center; background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
+  padding:12px; color:var(--cyan);
+}
+.cloud-code-row{ display:flex; gap:10px; }
+.cloud-code-item{ flex:1; min-width:0; }
+.cloud-code-tag{ font-size:11px; color:var(--muted); margin-bottom:5px; text-align:center; }
+.cloud-code-row .cloud-code-display{ font-size:20px; letter-spacing:4px; padding:10px 4px; }
+.cloud-share-btn{
+  width:100%; margin-top:7px; display:flex; align-items:center; justify-content:center; gap:6px;
+  background:var(--panel-2); border:1px solid var(--border); color:var(--muted);
+  border-radius:8px; padding:7px 6px; font-size:11.5px; font-weight:700; font-family:inherit; cursor:pointer;
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
+}
+.cloud-share-btn:hover{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.08); }
+.cloud-share-btn.copied{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.12); }
+
+/* Viewer (read-only) mode: hide anything that can write data */
+.viewer-mode .tab[data-tab="referee"],
+.viewer-mode .tab[data-tab="setup"],
+.viewer-mode .goto-referee-btn,
+.viewer-mode .undo-btn{ display:none !important; }
+
+@media (max-width:700px){
+  .container{ padding:0 12px 50px; }
+  .tname{ font-size:21px; }
+  .cloud-status-actions{ align-items:flex-start; }
+  .cloud-status-hint{ text-align:left; }
+  .stats{ grid-template-columns:repeat(2,1fr); }
+  .match-result{ font-size:16px; }
+  .ring-row{ grid-template-columns:1fr auto 1fr; gap:6px; }
+  .battery-outer{ width:56px; }
+  .battery-body{ width:56px; height:98px; }
+  .battery-body.battery-seven{ height:150px; }
+  .podium{ gap:8px; }
+  .podium-item{ padding:14px 6px 12px; }
+  .podium-1{ padding-top:20px; }
+  .podium-medal{ font-size:26px; }
+  .podium-1 .podium-medal{ font-size:32px; }
+  .podium-name{ font-size:15px; }
+  .battery-value{ font-size:16px; }
+  .finish-grid{ gap:8px; }
+  .finish-col{ padding:8px; gap:8px; }
+  .finish-col-header{ font-size:14px; padding-bottom:6px; }
+  .finish-btn{ padding:12px 8px; min-height:52px; }
+  .finish-label{ font-size:17px; }
+  .finish-pts{ font-size:14px; padding:3px 8px; margin-left:6px; }
+  .logo{ font-size:26px; }
+  .bracket-col{ width:150px !important; }
+}
+
+/* ===== Knockout Bracket Tree ===== */
+.bracket-scroll{ overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0; }
+.bracket{ display:flex; flex-direction:column; align-items:flex-start; gap:22px; }
+.bracket-inner{ display:flex; align-items:flex-start; position:relative; width:max-content; }
+.bracket-col{ display:flex; flex-direction:column; flex-shrink:0; }
+.bracket-round-label{
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:1.5px;
+  color:var(--muted); text-transform:uppercase; text-align:center; padding-bottom:12px; white-space:nowrap;
+}
+.bracket-champion-col .bracket-round-label{ color:var(--gold); }
+.bracket-round-body{ position:relative; }
+.bracket-conn-col{ display:flex; flex-direction:column; flex-shrink:0; }
+.bracket-conn{ position:relative; }
+.bconn-h{ position:absolute; height:2px; background:var(--border); }
+.bconn-v{ position:absolute; width:2px; background:var(--border); }
+
+.bracket-match{
+  position:absolute; left:2px; right:2px; height:74px;
+  background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
+  overflow:hidden; transition:border-color .2s;
+}
+.bracket-match.done{ border-color:rgba(57,255,20,.3); }
+.bracket-slot{
+  display:flex; align-items:center; gap:8px; height:37px; padding:0 10px;
+  font-size:13px; font-weight:600; border-bottom:1px solid var(--border); box-sizing:border-box;
+  transition:background .2s, border-color .2s;
+}
+.bracket-slot:last-child{ border-bottom:0; }
+.bracket-slot.bye{ color:var(--muted); font-style:italic; }
+.bracket-slot.winner{
+  padding-left:7px; border-left:3px solid var(--amber);
+  background:linear-gradient(90deg, rgba(255,167,38,.2), rgba(255,167,38,.03) 85%);
+}
+.bslot-pts{ font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); width:14px; text-align:center; flex-shrink:0; }
+.bracket-slot.winner .bslot-pts{ color:var(--amber); font-weight:800; }
+.bslot-name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bracket-slot.winner .bslot-name{ font-weight:800; color:var(--amber); text-shadow:0 0 10px rgba(255,167,38,.45); }
+.bracket-slot.loser .bslot-name{ color:var(--muted); font-weight:500; }
+.bracket-slot.loser .bslot-pts{ color:var(--muted); opacity:.65; }
+.bslot-check{
+  width:17px; height:17px; border-radius:5px; background:var(--amber); color:#1a0f00;
+  font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  box-shadow:0 0 8px rgba(255,167,38,.6);
+}
+
+.bracket-champion-box{
+  position:absolute; left:2px; right:2px; height:74px; display:flex; align-items:center; gap:8px;
+  justify-content:center; background:linear-gradient(135deg, rgba(245,255,0,.14), rgba(245,255,0,.02));
+  border:1px solid rgba(245,255,0,.5); border-radius:12px; box-sizing:border-box;
+  font-family:'Rajdhani',sans-serif; font-weight:900; font-size:16px; text-align:center; padding:0 10px;
+}
+.champ-trophy{ font-size:22px; flex-shrink:0; }
+.champ-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.champ-pending{ color:var(--muted); font-weight:600; font-size:13px; }
+.bracket-empty{ text-align:center; padding:50px 20px; color:var(--muted); }
+
+.bracket-bronze{ display:flex; flex-direction:column; padding-top:12px; border-top:1px dashed var(--border); width:max-content; }
+.bracket-bronze-body{ position:relative; height:74px; width:190px; }
+
+.bracket-match.is-live, .bracket-match.is-next{ overflow:visible; }
+.bracket-match.is-live{
+  border-color:rgba(255,69,69,.6);
+  animation: bmLivePulse 1.6s ease-in-out infinite;
+}
+.bracket-match.is-next{
+  border-color:rgba(255,196,0,.55);
+  box-shadow:0 0 0 1px rgba(255,196,0,.18), 0 0 12px rgba(255,196,0,.18);
+}
+@keyframes bmLivePulse{
+  0%,100%{ box-shadow:0 0 0 1px rgba(255,69,69,.28), 0 0 14px rgba(255,69,69,.22); }
+  50%{ box-shadow:0 0 0 1px rgba(255,69,69,.5), 0 0 22px rgba(255,69,69,.42); }
+}
+.bracket-status-badge{
+  position:absolute; top:-11px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:5px; z-index:2;
+  padding:3px 10px; border-radius:20px; white-space:nowrap;
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; letter-spacing:1.5px;
+  box-shadow:0 2px 6px rgba(0,0,0,.55);
+}
+.bracket-status-badge.live{ background:#2a0a0a; color:#ff6b6b; border:1px solid rgba(255,69,69,.75); }
+.bracket-status-badge.next{ background:#2a2205; color:#ffd23f; border:1px solid rgba(255,196,0,.75); }
+.bracket-status-dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.bracket-status-badge.live .bracket-status-dot{
+  background:#ff3b3b; box-shadow:0 0 6px #ff3b3b; animation: bmDotPulse 1.1s ease-in-out infinite;
+}
+.bracket-status-badge.next .bracket-status-dot{ background:#ffd23f; box-shadow:0 0 6px #ffd23f; }
+@keyframes bmDotPulse{
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:.35; transform:scale(.7); }
+}
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- =========================================================
+     ☁️ CLOUD SYNC (Firebase) — optional, for cross-device use
+     =========================================================
+     This app works fully offline (single browser) with no setup.
+     To let multiple referees on different phones/tablets sync the
+     same tournament in real time (recommended once you host this
+     on GitHub Pages), do this once:
+
+     1. Go to https://console.firebase.google.com → 建立新專案（免費）
+     2. 專案設定 → 一般 → 新增網頁應用程式 → 複製出現的 firebaseConfig
+     3. 左側選單「Firestore Database」→ 建立資料庫 → 用「測試模式」
+        (之後要正式使用建議加上安全規則，避免任何人都能改資料)
+     4. 把複製到的設定貼到下面 FIREBASE_CONFIG 取代預留值，存檔重新部署即可。
+======================================================== -->
+<script type="module">
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBjkKYryRVBZSkthVEflTkqwmDuFiR9JE0",
+    authDomain: "bxbs-c0759.firebaseapp.com",
+    projectId: "bxbs-c0759",
+    storageBucket: "bxbs-c0759.firebasestorage.app",
+    messagingSenderId: "388767962489",
+    appId: "1:388767962489:web:8518b01e446332f00a4ba8",
+    measurementId: "G-21R1CPPND2"
+  };
+
+  function isConfigured(){
+    return !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY");
+  }
+
+  window.cloudSync = { isConfigured, ready:false };
+
+  if(isConfigured()){
+    (async () => {
+      try{
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
+        const {
+          getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc,
+          onSnapshot, collection, writeBatch, serverTimestamp,
+          query, where, limit
+        } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js");
+
+        const app = initializeApp(FIREBASE_CONFIG);
+        const db = getFirestore(app);
+        let currentCode = null;
+        let unsubMeta = null;
+        let unsubMatches = null;
+
+        function stop(){
+          if(unsubMeta) unsubMeta();
+          if(unsubMatches) unsubMatches();
+          unsubMeta = null; unsubMatches = null; currentCode = null;
+        }
+
+        window.cloudSync = {
+          isConfigured,
+          ready: true,
+
+          // codeEntered may be either the referee (full-access) code, which
+          // is also the Firestore document id, or the read-only viewer code,
+          // which is stored as a field on that same document.
+          async resolveCode(codeEntered){
+            const directSnap = await getDoc(doc(db, 'events', codeEntered));
+            if(directSnap.exists()){
+              return { role:'referee', eventCode:codeEntered, data:directSnap.data() };
+            }
+            const q = query(collection(db, 'events'), where('viewerCode', '==', codeEntered), limit(1));
+            const qSnap = await getDocs(q);
+            if(!qSnap.empty){
+              const d = qSnap.docs[0];
+              return { role:'viewer', eventCode:d.id, data:d.data() };
+            }
+            return null;
+          },
+
+          async createEvent(refCode, viewerCode, metaData){
+            await setDoc(doc(db, 'events', refCode), { ...metaData, viewerCode, updatedAt: serverTimestamp() });
+          },
+
+          join(code, onMeta, onMatches){
+            stop();
+            currentCode = code;
+            unsubMeta = onSnapshot(doc(db, 'events', code), snap => {
+              if(snap.exists()) onMeta(snap.data());
+            });
+            unsubMatches = onSnapshot(collection(db, 'events', code, 'matches'), snap => {
+              const list = [];
+              snap.forEach(d => list.push(d.data()));
+              onMatches(list);
+            });
+          },
+
+          leave(){ stop(); },
+
+          async pushMeta(metaData){
+            if(!currentCode) return;
+            await setDoc(doc(db, 'events', currentCode), { ...metaData, updatedAt: serverTimestamp() }, { merge:true });
+          },
+
+          async pushMatches(matchArray){
+            if(!currentCode || matchArray.length === 0) return;
+            const batch = writeBatch(db);
+            matchArray.forEach(m => batch.set(doc(db, 'events', currentCode, 'matches', String(m.id)), m));
+            await batch.commit();
+          },
+
+          async clearMatches(){
+            if(!currentCode) return;
+            const snap = await getDocs(collection(db, 'events', currentCode, 'matches'));
+            const batch = writeBatch(db);
+            snap.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+          }
+        };
+        window.dispatchEvent(new Event('cloudsync-ready'));
+      }catch(err){
+        console.error('Firebase 初始化失敗，改用本機模式：', err);
+        window.cloudSync = { isConfigured:()=>false, ready:false };
+        window.dispatchEvent(new Event('cloudsync-ready'));
+      }
+    })();
+  } else {
+    window.dispatchEvent(new Event('cloudsync-ready'));
+  }
+</script>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo"><span class="logo-main">BEYBLADE <span>X</span></span><span class="logo-sub">對戰系統</span></div>
+    <div class="subtitle">輕鬆比賽　輕鬆玩</div>
+    <div class="tname" id="headerTName">尚未設定賽事</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="cloud-status-wrap">
+    <div class="cloud-status" id="cloudStatusBar">
+      <span class="cloud-dot" id="cloudDot"></span>
+      <span id="cloudStatusText">尚未連線</span>
+      <div class="cloud-status-actions">
+        <button class="cloud-status-btn" onclick="openCloudModal()">🔄 賽事同步設定</button>
+        <span class="cloud-status-hint">若要連網同步使用，請先到此設定。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="standings" onclick="switchTab('standings')">即時戰況</button>
+    <button class="tab" data-tab="matches" onclick="switchTab('matches')">對戰紀錄</button>
+    <button class="tab" data-tab="referee" onclick="switchTab('referee')">裁判台</button>
+    <button class="tab" data-tab="setup" onclick="switchTab('setup')">賽事設定</button>
+  </div>
+
+  <!-- STANDINGS -->
+  <section id="tab-standings">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">參賽人數</div><div class="stat-value" id="statPlayers">0</div></div>
+      <div class="stat"><div class="stat-label">總場次</div><div class="stat-value" id="statTotal">0</div></div>
+      <div class="stat"><div class="stat-label">已完成</div><div class="stat-value" id="statCompleted">0</div></div>
+      <div class="stat"><div class="stat-label">完成率</div><div class="stat-value" id="statProgress">0%</div></div>
+    </div>
+    <div class="progress"><div class="progress-bar" id="statProgressBar" style="width:0%"></div></div>
+
+    <div id="podiumContainer" class="hidden"></div>
+
+    <!-- Knockout bracket tree view -->
+    <div class="card hidden" id="bracketSection" style="margin-top:18px;">
+      <div class="space-between">
+        <div>
+          <div class="card-title">對戰樹狀圖</div>
+          <div class="card-sub" id="bracketRulesSummary">單淘汰賽</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-dark export-hide" onclick="exportAsImage('bracketSection','對戰樹狀圖')">📸 匯出成圖片</button>
+          <button class="btn btn-warning export-hide undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">🎰 隨機刷新賽程</button>
+        </div>
+      </div>
+
+      <div class="bracket-scroll">
+        <div class="bracket" id="bracketTree"></div>
+      </div>
+    </div>
+    <div class="card" id="standingsSection" style="margin-top:18px;">
+      <div class="space-between">
+        <div>
+          <div class="card-title">即時戰況</div>
+          <div class="card-sub" id="rulesSummary">先取得 4 分獲勝・排序依：勝場 → 得失分 → 總得分</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-dark export-hide" onclick="exportAsImage('standingsSection','即時戰況')">📸 匯出成圖片</button>
+          <button class="btn btn-warning export-hide undo-btn" onclick="undoLastMatch()">撤銷最近一場</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>名次</th><th>玩家</th><th>場</th><th>勝</th><th>負</th>
+              <th>得分</th><th>失分</th><th>得失</th><th>積分</th>
+            </tr>
+          </thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATCHES -->
+  <section id="tab-matches" class="hidden">
+    <div class="card">
+      <div class="card-title">對戰紀錄</div>
+      <div class="match-list" id="matchList"></div>
+    </div>
+  </section>
+
+  <!-- REFEREE -->
+  <section id="tab-referee" class="hidden">
+    <div class="space-between" style="margin-bottom:14px;">
+      <div>
+        <div class="card-title" style="margin:0;">裁判台</div>
+        <div class="card-sub">多桌並行時可各自新增裁判面板，分頭計分・資料會即時同步。</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addRefereePanel()">＋ 新增裁判</button>
+    </div>
+    <div id="refereeFocusBanner"></div>
+    <div id="refereePanels" class="referee-panels"></div>
+  </section>
+
+  <!-- SETUP -->
+  <section id="tab-setup" class="hidden">
+    <div class="card hidden" id="rosterSection" style="margin-bottom:18px;">
+      <div class="card-title">選手名單管理</div>
+      <div class="card-sub">比賽進行中可直接改名或標記棄權（自動判負・保留歷史戰績）</div>
+      <div id="rosterList" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">賽事設定</div>
+      <div class="field-label">比賽名稱</div>
+      <input id="tournamentName" class="text-input" placeholder="例：社區 BX 錦標賽" style="margin-bottom:18px;">
+
+      <div class="row2">
+        <div>
+          <div class="field-label">獲勝所需積分</div>
+          <select id="pointsToWin" class="text-input">
+            <option value="4">4 分（官方標準）</option>
+            <option value="7">7 分（加長賽）</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">賽制</div>
+          <select id="formatSelect" class="text-input" onchange="onFormatChange()">
+            <option value="knockout">單淘汰賽（輸了就出局）</option>
+            <option value="single">單循環（每人對戰一次）</option>
+            <option value="double">雙循環（每人對戰兩次）</option>
+          </select>
+          <div class="text-muted" id="formatNote" style="margin-top:6px;"></div>
+          <div id="quickModeSection" class="hidden" style="margin-top:12px;">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="quickModeCheckbox" style="width:18px; height:18px; accent-color:var(--cyan); flex-shrink:0; cursor:pointer;">
+              <span style="font-size:13px;">不計分快速模式（裁判只需選出勝者，不記錄比分）</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-label">參賽玩家（至少 2 位）</div>
+      <div id="playerInputs"></div>
+      <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-bottom:18px;" onclick="addPlayerRow()">＋ 新增玩家</button>
+
+      <div id="bulkAddSection" class="hidden" style="margin-bottom:20px;">
+        <div class="field-label">批量新增名單（單淘汰賽限定・一行一個名字）</div>
+        <textarea id="bulkNamesInput" class="text-input" rows="5" style="resize:vertical; font-family:'Space Mono',monospace;" placeholder="玩家A&#10;玩家B&#10;玩家C&#10;玩家D"></textarea>
+        <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-top:10px;" onclick="applyBulkNames()">套用名單</button>
+      </div>
+
+      <div class="flex">
+        <button class="btn btn-primary" onclick="startTournament()" id="startBtn">開始比賽</button>
+        <button class="btn btn-danger" onclick="resetTournament()">重置全部資料</button>
+      </div>
+      <div class="text-muted" id="setupNote" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+</div>
+
+<div class="save-flag" id="saveFlag">已儲存</div>
+<div class="action-toast" id="actionToast">✅ <span id="actionToastMsg"></span></div>
+
+<div class="modal" id="customModal">
+  <div class="modal-box">
+    <div class="modal-title" id="customModalTitle">確認</div>
+    <div class="text-muted" id="customModalMessage" style="margin-bottom:6px; font-size:14px; line-height:1.6;"></div>
+    <div class="modal-buttons" id="customModalButtons"></div>
+  </div>
+</div>
+
+<div class="modal" id="cloudModal">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-title">☁️ 雲端同步</div>
+
+    <div id="cloudNotConfigured" class="hidden">
+      <div class="text-muted" style="font-size:13px; line-height:1.75;">
+        這個部署還沒有連上雲端資料庫，資料目前只會保存在<b>這台裝置的瀏覽器</b>裡，換裝置或清除瀏覽器資料會遺失。
+        <br><br>
+        如果需要跨裝置即時同步（例如多位裁判在不同手機上分頭替不同桌次計分），請參考程式碼最上方
+        <code>FIREBASE_CONFIG</code> 的設定說明，接上你自己的 Firebase 專案（免費）即可。
+      </div>
+      <button class="btn btn-dark btn-block" style="margin-top:18px;" onclick="hideCloudModal()">先在本機使用</button>
+    </div>
+
+    <div id="cloudConfigured" class="hidden">
+      <div class="cloud-tabs">
+        <button class="cloud-tab active" id="cloudTabBtnCreate" onclick="switchCloudTab('create')">建立新賽事</button>
+        <button class="cloud-tab" id="cloudTabBtnJoin" onclick="switchCloudTab('join')">加入既有賽事</button>
+      </div>
+
+      <div id="cloudPaneCreate">
+        <div class="text-muted" style="font-size:12px; margin-bottom:12px;">
+          會產生兩組 3 碼代碼：一組給裁判用（完整功能），一組給選手／觀眾用（唯讀，只能看對戰紀錄與即時戰況）。
+        </div>
+        <div class="field-label">賽事名稱（選填）</div>
+        <input class="text-input" id="cloudNewName" placeholder="例如：2026 校內盃">
+        <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="handleCreateEvent()">建立並產生賽事代碼</button>
+
+        <div id="cloudCreatedResult" class="hidden" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+          <div class="field-label">✅ 賽事已建立，代碼如下</div>
+          <div class="cloud-code-row">
+            <div class="cloud-code-item">
+              <div class="cloud-code-tag">裁判用（完整功能）</div>
+              <div class="cloud-code-display" id="cloudResultRefCode">---</div>
+              <button class="cloud-share-btn" id="cloudResultRefShareBtn" onclick="copyShareLink(document.getElementById('cloudResultRefCode').innerText, this)">🔗 複製裁判連結</button>
+            </div>
+            <div class="cloud-code-item">
+              <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
+              <div class="cloud-code-display" id="cloudResultViewerCode">---</div>
+              <button class="cloud-share-btn" id="cloudResultViewerShareBtn" onclick="copyShareLink(document.getElementById('cloudResultViewerCode').innerText, this)">🔗 複製選手連結</button>
+            </div>
+          </div>
+          <div class="text-muted" style="font-size:12px; margin-top:10px; line-height:1.6;">
+            「裁判代碼」留給自己與其他裁判裝置使用；「選手代碼」可公開分享或貼出，讓參賽者用自己的手機查看賽況（無法計分、無法修改設定）。
+          </div>
+        </div>
+      </div>
+
+      <div id="cloudPaneJoin" class="hidden">
+        <div class="field-label">輸入賽事代碼</div>
+        <input class="text-input" id="cloudJoinCode" placeholder="例如：A7K" style="text-transform:uppercase; letter-spacing:5px; text-align:center; font-weight:800;" maxlength="3">
+        <div class="text-muted" style="font-size:12px; margin-top:6px;">裁判代碼或選手代碼皆可輸入，系統會自動判斷身分。</div>
+        <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="handleJoinEvent()">加入這場賽事</button>
+      </div>
+
+      <div id="cloudCurrent" class="hidden" style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border);">
+        <div class="field-label">目前連線狀態</div>
+        <div class="cloud-code-row" id="cloudCurrentCodes"></div>
+        <button class="btn btn-dark btn-block" style="margin-top:10px;" onclick="leaveCloudEvent()">離開此賽事／改建立新的</button>
+      </div>
+
+      <div id="cloudError" style="margin-top:12px; font-size:12px; color:#ff8f8f;"></div>
+    </div>
+
+    <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="hideCloudModal()">關閉</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONSTANTS
+========================================================= */
+const FINISH = {
+  SPIN:   { label:'轉停勝利', en:'SPIN FINISH',   points:1, color:'var(--fin-spin)',   icon:'●', cls:'spin'   },
+  OVER:   { label:'擊飛勝利', en:'OVER FINISH',   points:2, color:'var(--fin-over)',   icon:'▲', cls:'over'   },
+  BURST:  { label:'爆裂勝利', en:'BURST FINISH',  points:2, color:'var(--fin-burst)',  icon:'✦', cls:'burst'  },
+  XTREME: { label:'極限勝利', en:'X-TREME FINISH',points:3, color:'var(--fin-xtreme)', icon:'◆', cls:'xtreme' }
+};
+const STORAGE_KEY = 'beyblade-x-tournament-v1';
+
+/* =========================================================
+   STATE
+========================================================= */
+let state = {
+  tournament:{ name:'', pointsToWin:4, format:'knockout', quickMode:false, status:'registration' },
+  players:[],
+  matches:[],
+  currentRound:1
+};
+
+let saveTimer = null;
+let lastFlash = null; // transient, not persisted: { matchId, side, finish, ts }
+
+// Perf: when the referee panel is the active tab, scoring taps shouldn't force
+// a full rebuild of the standings/bracket/match-list DOM (they're hidden anyway,
+// and rebuilding them just to throw the result away caused visible jank). Instead
+// we mark them "dirty" and only actually re-render once the user switches to
+// that tab. See refreshAfterScoreChange() / switchTab().
+let standingsDirty = false;
+let matchesDirty = false;
+
+/* =========================================================
+   INIT
+========================================================= */
+document.addEventListener('DOMContentLoaded', async () => {
+  createPlayerInputs(2);
+  loadRefereePanels();
+  await loadLocalCache();
+  renderAll();
+  initCloud();
+});
+
+/* =========================================================
+   STORAGE — local cache (works everywhere: artifact preview
+   AND a plain static host like GitHub Pages) + optional
+   Firebase cloud sync layered on top for cross-device use.
+========================================================= */
+const EVENT_CODE_KEY = 'beyblade-x-event-code';
+const EVENT_ROLE_KEY = 'beyblade-x-event-role';
+const EVENT_VIEWER_KEY = 'beyblade-x-event-viewer-code';
+let dirtyMatchIds = new Set();
+function markDirty(id){ if(id) dirtyMatchIds.add(id); }
+function markAllDirty(){ state.matches.forEach(m => markDirty(m.id)); }
+
+async function loadLocalCache(){
+  try{
+    if(window.storage){
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        state = Object.assign(state, JSON.parse(res.value));
+        return;
+      }
+    }
+  }catch(e){}
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){
+    console.log('沒有已儲存的資料，使用預設值。', e);
+  }
+}
+
+async function saveState(){
+  const json = JSON.stringify(state);
+  try{ localStorage.setItem(STORAGE_KEY, json); }catch(e){}
+  if(window.storage){
+    try{ await window.storage.set(STORAGE_KEY, json, false); }catch(e){}
+  }
+  flashSaved();
+  await pushToCloud();
+}
+
+async function pushToCloud(){
+  if(!(window.cloudSync && window.cloudSync.ready && currentEventCode)) { dirtyMatchIds.clear(); return; }
+  try{
+    await window.cloudSync.pushMeta({
+      name: state.tournament.name,
+      pointsToWin: state.tournament.pointsToWin,
+      format: state.tournament.format,
+      quickMode: state.tournament.quickMode,
+      status: state.tournament.status,
+      players: state.players,
+      currentRound: state.currentRound
+    });
+    const ids = Array.from(dirtyMatchIds);
+    dirtyMatchIds.clear();
+    const toPush = state.matches.filter(m => ids.includes(m.id));
+    if(toPush.length) await window.cloudSync.pushMatches(toPush);
+  }catch(e){
+    console.error('雲端同步失敗（本機資料仍完整保存）', e);
+  }
+}
+
+function flashSaved(){
+  const flag = document.getElementById('saveFlag');
+  flag.classList.add('show');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>flag.classList.remove('show'), 900);
+}
+
+let actionToastTimer;
+function showToast(message){
+  const toast = document.getElementById('actionToast');
+  const msgEl = document.getElementById('actionToastMsg');
+  if(!toast || !msgEl) return;
+  msgEl.innerText = message;
+  toast.classList.add('show');
+  clearTimeout(actionToastTimer);
+  actionToastTimer = setTimeout(()=>toast.classList.remove('show'), 2200);
+}
+
+function buildShareLink(code){
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('code', code);
+  return url.toString();
+}
+
+async function copyShareLink(code, btnEl){
+  code = (code || '').trim().toUpperCase();
+  if(code.length !== 3) return;
+  const link = buildShareLink(code);
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(link);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = link;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    showToast('連結已複製到剪貼簿');
+    if(btnEl){
+      const original = btnEl.innerHTML;
+      btnEl.classList.add('copied');
+      btnEl.innerHTML = '✅ 已複製';
+      clearTimeout(btnEl._resetTimer);
+      btnEl._resetTimer = setTimeout(() => {
+        btnEl.classList.remove('copied');
+        btnEl.innerHTML = original;
+      }, 1600);
+    }
+  }catch(e){
+    console.error('複製連結失敗', e);
+    showToast('複製失敗，請手動複製連結');
+  }
+}
+
+/* =========================================================
+   CLOUD SYNC — event code join/create + realtime listeners
+========================================================= */
+let currentEventCode = null;   // canonical Firestore doc id (the referee/full-access code) — never shown to viewers
+let currentRole = 'referee';   // 'referee' (full access) | 'viewer' (read-only)
+let currentViewerCode = null;  // the read-only code paired with this event — safe to display to anyone
+let applyingRemote = false;
+
+function initCloud(){
+  const ready = () => {
+    updateCloudStatusUI();
+    if(!window.cloudSync.isConfigured()){
+      document.getElementById('cloudNotConfigured').classList.remove('hidden');
+      document.getElementById('cloudConfigured').classList.add('hidden');
+      return;
+    }
+    document.getElementById('cloudNotConfigured').classList.add('hidden');
+    document.getElementById('cloudConfigured').classList.remove('hidden');
+
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = (params.get('code') || '').trim().toUpperCase();
+    if(urlCode.length === 3){
+      joinEventByCode(urlCode).finally(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('code');
+        window.history.replaceState({}, '', url.toString());
+      });
+      return;
+    }
+
+    const savedCode = localStorage.getItem(EVENT_CODE_KEY);
+    const savedRole = localStorage.getItem(EVENT_ROLE_KEY) || 'referee';
+    const savedViewerCode = localStorage.getItem(EVENT_VIEWER_KEY) || null;
+    if(savedCode) joinCloudEvent(savedCode, savedRole, savedViewerCode);
+  };
+  if(window.cloudSync && window.cloudSync.ready !== undefined && (window.cloudSync.ready || !window.cloudSync.isConfigured())){
+    ready();
+  }
+  window.addEventListener('cloudsync-ready', ready, { once:true });
+}
+
+async function joinEventByCode(code){
+  try{
+    const result = await window.cloudSync.resolveCode(code);
+    if(!result) return false;
+    const viewerCode = result.role === 'viewer' ? code : (result.data && result.data.viewerCode) || null;
+    localStorage.setItem(EVENT_CODE_KEY, result.eventCode);
+    localStorage.setItem(EVENT_ROLE_KEY, result.role);
+    localStorage.setItem(EVENT_VIEWER_KEY, viewerCode || '');
+    joinCloudEvent(result.eventCode, result.role, viewerCode);
+    return true;
+  }catch(e){
+    console.error('透過分享連結加入賽事失敗', e);
+    return false;
+  }
+}
+
+function updateCloudStatusUI(){
+  const dot = document.getElementById('cloudDot');
+  const text = document.getElementById('cloudStatusText');
+  if(!dot || !text) return;
+  if(!window.cloudSync || !window.cloudSync.isConfigured()){
+    dot.className = 'cloud-dot off';
+    text.innerText = '僅本機儲存（未設定雲端）';
+  } else if(currentEventCode){
+    dot.className = 'cloud-dot on';
+    const shown = currentRole === 'viewer' ? (currentViewerCode || '---') : currentEventCode;
+    text.innerText = `已連線・代碼 ${shown}${currentRole === 'viewer' ? '（唯讀）' : ''}`;
+  } else {
+    dot.className = 'cloud-dot off';
+    text.innerText = '尚未加入任何賽事';
+  }
+}
+
+function genEventCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXY23456789'; // no O/0/I/1 to avoid confusion
+  let code = '';
+  for(let i=0; i<3; i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+function genDistinctCodePair(){
+  const a = genEventCode();
+  let b = genEventCode();
+  while(b === a) b = genEventCode();
+  return [a, b];
+}
+
+function openCloudModal(){
+  document.getElementById('cloudError').innerText = '';
+  document.getElementById('cloudCreatedResult').classList.add('hidden');
+  const cur = document.getElementById('cloudCurrent');
+  if(currentEventCode){
+    cur.classList.remove('hidden');
+    const codesEl = document.getElementById('cloudCurrentCodes');
+    if(currentRole === 'referee'){
+      codesEl.innerHTML = `
+        <div class="cloud-code-item">
+          <div class="cloud-code-tag">裁判用（完整功能）</div>
+          <div class="cloud-code-display">${escapeHtml(currentEventCode)}</div>
+          <button class="cloud-share-btn" onclick="copyShareLink('${currentEventCode}', this)">🔗 複製裁判連結</button>
+        </div>
+        ${currentViewerCode ? `
+        <div class="cloud-code-item">
+          <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
+          <div class="cloud-code-display">${escapeHtml(currentViewerCode)}</div>
+          <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">🔗 複製選手連結</button>
+        </div>` : ''}
+      `;
+    } else {
+      codesEl.innerHTML = `
+        <div class="cloud-code-item">
+          <div class="cloud-code-tag">目前身分：選手／觀眾（唯讀）</div>
+          <div class="cloud-code-display">${escapeHtml(currentViewerCode || '---')}</div>
+          ${currentViewerCode ? `<button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">🔗 複製選手連結</button>` : ''}
+        </div>
+      `;
+    }
+  } else {
+    cur.classList.add('hidden');
+  }
+  document.getElementById('cloudModal').classList.add('show');
+}
+function hideCloudModal(){
+  document.getElementById('cloudModal').classList.remove('show');
+}
+function switchCloudTab(which){
+  document.getElementById('cloudTabBtnCreate').classList.toggle('active', which==='create');
+  document.getElementById('cloudTabBtnJoin').classList.toggle('active', which==='join');
+  document.getElementById('cloudPaneCreate').classList.toggle('hidden', which!=='create');
+  document.getElementById('cloudPaneJoin').classList.toggle('hidden', which!=='join');
+}
+
+async function handleCreateEvent(){
+  const errEl = document.getElementById('cloudError');
+  errEl.innerText = '';
+  const [refCode, viewerCode] = genDistinctCodePair();
+  const name = document.getElementById('cloudNewName').value.trim();
+  try{
+    if(name) state.tournament.name = name;
+    await window.cloudSync.createEvent(refCode, viewerCode, {
+      name: state.tournament.name, pointsToWin: state.tournament.pointsToWin,
+      format: state.tournament.format, status: state.tournament.status,
+      players: state.players, currentRound: state.currentRound
+    });
+    if(state.matches.length) await window.cloudSync.pushMatches(state.matches);
+
+    localStorage.setItem(EVENT_CODE_KEY, refCode);
+    localStorage.setItem(EVENT_ROLE_KEY, 'referee');
+    localStorage.setItem(EVENT_VIEWER_KEY, viewerCode);
+    joinCloudEvent(refCode, 'referee', viewerCode);
+
+    document.getElementById('cloudResultRefCode').innerText = refCode;
+    document.getElementById('cloudResultViewerCode').innerText = viewerCode;
+    document.getElementById('cloudCreatedResult').classList.remove('hidden');
+    document.getElementById('cloudCurrent').classList.add('hidden');
+  }catch(e){
+    errEl.innerText = '建立失敗，請確認網路連線或 Firebase 設定後再試一次。';
+    console.error(e);
+  }
+}
+
+async function handleJoinEvent(){
+  const errEl = document.getElementById('cloudError');
+  errEl.innerText = '';
+  const code = document.getElementById('cloudJoinCode').value.trim().toUpperCase();
+  if(code.length !== 3){ errEl.innerText = '請輸入 3 碼賽事代碼。'; return; }
+  try{
+    const ok = await joinEventByCode(code);
+    if(!ok){ errEl.innerText = '找不到這組賽事代碼，請確認是否輸入正確。'; return; }
+    hideCloudModal();
+  }catch(e){
+    errEl.innerText = '加入失敗，請確認網路連線後再試一次。';
+    console.error(e);
+  }
+}
+
+function joinCloudEvent(refCode, role, viewerCode){
+  currentEventCode = refCode;
+  currentRole = role || 'referee';
+  currentViewerCode = viewerCode || currentViewerCode || null;
+  window.cloudSync.join(refCode, onCloudMeta, onCloudMatches);
+  applyRoleUI();
+  updateCloudStatusUI();
+}
+
+function applyRoleUI(){
+  document.body.classList.toggle('viewer-mode', currentRole === 'viewer');
+  if(currentRole === 'viewer'){
+    const activeTab = document.querySelector('.tab.active');
+    if(activeTab && (activeTab.dataset.tab === 'referee' || activeTab.dataset.tab === 'setup')){
+      switchTab('standings');
+    }
+  }
+  renderAll();
+}
+
+function leaveCloudEvent(){
+  showConfirm('離開此賽事後，這台裝置會回到「僅本機」模式，之後可再輸入代碼重新加入。確定要離開嗎？', () => {
+    if(window.cloudSync && window.cloudSync.leave) window.cloudSync.leave();
+    currentEventCode = null;
+    currentRole = 'referee';
+    currentViewerCode = null;
+    localStorage.removeItem(EVENT_CODE_KEY);
+    localStorage.removeItem(EVENT_ROLE_KEY);
+    localStorage.removeItem(EVENT_VIEWER_KEY);
+    document.body.classList.remove('viewer-mode');
+    updateCloudStatusUI();
+    hideCloudModal();
+  });
+}
+
+function onCloudMeta(data){
+  applyingRemote = true;
+  state.tournament.name = data.name ?? state.tournament.name;
+  state.tournament.pointsToWin = data.pointsToWin ?? state.tournament.pointsToWin;
+  state.tournament.format = data.format ?? state.tournament.format;
+  state.tournament.quickMode = data.quickMode ?? state.tournament.quickMode;
+  state.tournament.status = data.status ?? state.tournament.status;
+  state.players = Array.isArray(data.players) ? data.players : state.players;
+  state.currentRound = data.currentRound ?? state.currentRound;
+  if(data.viewerCode && currentRole === 'referee'){
+    currentViewerCode = data.viewerCode;
+    localStorage.setItem(EVENT_VIEWER_KEY, data.viewerCode);
+  }
+  // Referee-table assignments ("進行中" vs "即將上場" on the bracket) live in
+  // refereePanels. This used to be localStorage-only, so any device other
+  // than the one that made the assignment never learned which match was
+  // actually live and fell back to guessing its own "next" match — showing
+  // "即將上場" for a match that was really "進行中" on the referee's device.
+  // Apply the synced copy here so every device agrees.
+  if(Array.isArray(data.refereePanels) && data.refereePanels.length){
+    refereePanels = data.refereePanels;
+    try{ localStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
+  }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  renderAll();
+  updateCloudStatusUI();
+  applyingRemote = false;
+}
+
+// Fixed-field signature (not JSON.stringify) so key-order differences between
+// our local objects and Firestore-round-tripped ones never cause a false
+// "changed" positive — only fields that actually affect rendering are compared.
+function matchSignature(m){
+  if(!m) return '';
+  const log = Array.isArray(m.log) ? m.log.map(l => `${l.side}:${l.finish}:${l.points}`).join(',') : '';
+  return [m.playerA, m.playerB, m.status, m.pointsA, m.pointsB, m.winner, m.completedAt, log].join('|');
+}
+
+function onCloudMatches(list){
+  applyingRemote = true;
+  const incoming = list.slice().sort((a,b) => {
+    if(a.round !== b.round) return a.round - b.round;
+    const ai = parseInt(String(a.id).split('-')[1] || 0, 10) || 0;
+    const bi = parseInt(String(b.id).split('-')[1] || 0, 10) || 0;
+    return ai - bi;
+  });
+
+  // Perf: a snapshot fires for every push — including the echo of our own
+  // score taps — so diff against what's already rendered and only do the
+  // expensive full rebuild when something actually structural changed
+  // (match count, or more than one match at once). A single changed match
+  // (by far the common case) gets the same lightweight path as local taps.
+  const prevById = new Map(state.matches.map(m => [m.id, m]));
+  let structureChanged = incoming.length !== state.matches.length;
+  const changedIds = [];
+  incoming.forEach(m => {
+    const prev = prevById.get(m.id);
+    if(!prev){ structureChanged = true; return; }
+    if(matchSignature(prev) !== matchSignature(m)) changedIds.push(m.id);
+  });
+
+  state.matches = incoming;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+
+  if(structureChanged || changedIds.length > 1) renderAll();
+  else if(changedIds.length === 1) refreshAfterScoreChange(changedIds[0]);
+  applyingRemote = false;
+}
+
+/* =========================================================
+   SETUP: PLAYER ROWS
+========================================================= */
+function createPlayerInputs(n){
+  const container = document.getElementById('playerInputs');
+  container.innerHTML = '';
+  for(let i=0;i<n;i++) appendPlayerRow(container, '');
+}
+
+function appendPlayerRow(container, value){
+  const idx = container.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'player-input';
+  row.innerHTML = `
+    <div class="player-number">${String(idx).padStart(2,'0')}</div>
+    <input class="text-input player-name-input" placeholder="玩家 ${idx}" value="${escapeAttr(value)}">
+    <button class="icon-btn" onclick="removePlayerRow(this)" title="移除">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function addPlayerRow(){
+  appendPlayerRow(document.getElementById('playerInputs'), '');
+  renumberPlayerRows();
+}
+
+function onFormatChange(){
+  const isKnockout = document.getElementById('formatSelect').value === 'knockout';
+  document.getElementById('bulkAddSection').classList.toggle('hidden', !isKnockout);
+  document.getElementById('quickModeSection').classList.toggle('hidden', !isKnockout);
+  if(!isKnockout) document.getElementById('quickModeCheckbox').checked = false;
+  const note = document.getElementById('formatNote');
+  if(note){
+    note.innerText = isKnockout
+      ? '單淘汰賽模式：輸了立刻出局，「即時戰況」頁籤將顯示對戰樹狀圖，方便觀看晉級狀況。'
+      : '';
+  }
+}
+
+function applyBulkNames(){
+  const raw = document.getElementById('bulkNamesInput').value;
+  const names = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if(names.length < 2){
+    showAlert('請至少輸入 2 位玩家名稱，一行一個。');
+    return;
+  }
+  const container = document.getElementById('playerInputs');
+  container.innerHTML = '';
+  names.forEach(name => appendPlayerRow(container, name));
+  renumberPlayerRows();
+  showAlert(`已新增 ${names.length} 位玩家，請確認名單後按「開始比賽」。`);
+}
+
+function removePlayerRow(btn){
+  const container = document.getElementById('playerInputs');
+  if(container.children.length <= 2){
+    showAlert('至少需要保留 2 位玩家欄位。');
+    return;
+  }
+  btn.closest('.player-input').remove();
+  renumberPlayerRows();
+}
+
+function renumberPlayerRows(){
+  const rows = document.querySelectorAll('#playerInputs .player-input');
+  rows.forEach((row, i) => {
+    row.querySelector('.player-number').innerText = String(i+1).padStart(2,'0');
+    row.querySelector('.player-name-input').placeholder = `玩家 ${i+1}`;
+  });
+}
+
+/* =========================================================
+   LIVE ROSTER MANAGEMENT (rename / withdraw while running)
+========================================================= */
+function isWithdrawn(playerId){
+  const p = state.players.find(x => x.id === playerId);
+  return !!(p && p.withdrawn);
+}
+
+function renderRoster(){
+  const section = document.getElementById('rosterSection');
+  const list = document.getElementById('rosterList');
+  if(!section || !list) return;
+
+  const show = state.tournament.status === 'running' && state.players.length > 0;
+  section.classList.toggle('hidden', !show);
+  if(!show) return;
+
+  list.innerHTML = state.players.map(p => `
+    <div class="roster-row ${p.withdrawn ? 'withdrawn' : ''}">
+      <input class="text-input roster-name-input" value="${escapeAttr(p.name)}"
+             onchange="renamePlayer('${p.id}', this.value)" ${p.withdrawn?'disabled':''}>
+      ${p.withdrawn
+        ? `<span class="status-pill pending">已棄權</span>`
+        : `<button class="btn btn-danger btn-sm" onclick="confirmWithdraw('${p.id}')">標記棄權</button>`}
+    </div>
+  `).join('');
+}
+
+function renamePlayer(playerId, newName){
+  const name = newName.trim();
+  if(!name){ renderRoster(); return; }
+  const p = state.players.find(x => x.id === playerId);
+  if(!p) return;
+  const dup = state.players.some(x => x.id !== playerId && x.name === name);
+  if(dup){
+    showAlert('已有相同名稱的玩家，請換一個名稱。');
+    renderRoster();
+    return;
+  }
+  p.name = name;
+  saveState();
+  renderAll();
+}
+
+function confirmWithdraw(playerId){
+  const p = state.players.find(x => x.id === playerId);
+  if(!p || p.withdrawn) return;
+  showConfirm(`確定要將「${p.name}」標記為棄權嗎？系統會自動將其尚未進行的對戰判給對手獲勝，已完成的歷史戰績不會被清除。`, () => {
+    withdrawPlayer(playerId);
+  });
+}
+
+function withdrawPlayer(playerId){
+  const p = state.players.find(x => x.id === playerId);
+  if(!p || p.withdrawn) return;
+  p.withdrawn = true;
+
+  if(state.tournament.format === 'knockout'){
+    resolveByeCascade(state.matches);
+  } else {
+    forfeitPendingMatchesFor(playerId);
+  }
+
+  saveState();
+  renderAll();
+}
+
+function forfeitPendingMatchesFor(playerId){
+  state.matches.forEach(m => {
+    if(m.status === 'pending' && m.playerA && m.playerB &&
+       (m.playerA === playerId || m.playerB === playerId)){
+      const winnerId = m.playerA === playerId ? m.playerB : m.playerA;
+      if(isWithdrawn(winnerId)) return; // both sides withdrawn — leave for manual review
+      m.status = 'completed';
+      m.winner = winnerId;
+      m.completedAt = Date.now();
+      m.forfeited = true;
+      markDirty(m.id);
+    }
+  });
+}
+
+/* =========================================================
+   START TOURNAMENT
+========================================================= */
+function startTournament(){
+  const nameInputs = document.querySelectorAll('#playerInputs .player-name-input');
+  const names = Array.from(nameInputs).map(i=>i.value.trim()).filter(Boolean);
+
+  if(names.length < 2){
+    showAlert('至少需要 2 位玩家才能開始比賽。');
+    return;
+  }
+  const uniqueNames = new Set(names);
+  if(uniqueNames.size !== names.length){
+    showAlert('玩家名稱不可重複。');
+    return;
+  }
+
+  if(state.matches.length > 0){
+    const isRegenerate = state.tournament.status === 'running';
+    showConfirm('目前已有比賽資料，開始新賽事將清除所有紀錄，確定嗎？', () => {
+      finalizeStartTournament(names);
+      if(isRegenerate) showToast('對戰賽程已刷新');
+    });
+    return;
+  }
+
+  finalizeStartTournament(names);
+}
+
+function finalizeStartTournament(names){
+  const players = names.map((name,i)=>({ id:`P${String(i+1).padStart(2,'0')}`, name }));
+  const pointsToWin = Number(document.getElementById('pointsToWin').value);
+  const format = document.getElementById('formatSelect').value;
+  const quickMode = format === 'knockout' && document.getElementById('quickModeCheckbox').checked;
+
+  const newMatches = format === 'knockout' ? generateKnockoutBracket(players) : generateRoundRobin(players, format);
+  state.players = players;
+  state.matches = newMatches;
+  state.currentRound = 1;
+  state.tournament = {
+    name: document.getElementById('tournamentName').value.trim() || 'BEYBLADE X 對戰賽',
+    pointsToWin, format, quickMode, status:'running'
+  };
+  refereePanels.forEach(p => p.matchId = null);
+  savePanels();
+  markAllDirty();
+
+  (async () => {
+    if(window.cloudSync && window.cloudSync.ready && currentEventCode){
+      try{
+        // Push the updated player names FIRST. Otherwise other synced
+        // devices can receive the new match list (which only stores
+        // playerA/playerB as ids like "P01") before their copy of
+        // state.players knows those ids map to real names — so their
+        // schedule/referee screens briefly (or, if this push happens to
+        // fail, permanently) show "P01 VS P08" instead of the entered names.
+        await window.cloudSync.pushMeta({
+          name: state.tournament.name,
+          pointsToWin: state.tournament.pointsToWin,
+          format: state.tournament.format,
+          quickMode: state.tournament.quickMode,
+          status: state.tournament.status,
+          players: state.players,
+          currentRound: state.currentRound
+        });
+        // See note in finalizeScheduleShuffle: clearMatches()'s own snapshot
+        // echo can wipe state.matches before we push, so push newMatches
+        // directly and re-assert local state afterwards.
+        await window.cloudSync.clearMatches();
+        await window.cloudSync.pushMatches(newMatches);
+      }catch(e){ console.error(e); }
+    }
+    dirtyMatchIds.clear();
+    state.matches = newMatches;
+    renderAll();
+    saveState();
+  })();
+  renderAll();
+  switchTab('standings');
+}
+
+/* =========================================================
+   ROUND ROBIN GENERATION (circle method, supports double)
+========================================================= */
+function generateRoundRobin(players, format){
+  let list = [...players];
+  if(list.length % 2 !== 0) list.push({ id:'BYE', name:'BYE' });
+
+  const total = list.length;
+  const rounds = total - 1;
+  const half = total / 2;
+  let rotation = [...list];
+  const baseMatches = [];
+
+  for(let round=1; round<=rounds; round++){
+    for(let i=0;i<half;i++){
+      const a = rotation[i];
+      const b = rotation[total-1-i];
+      if(a.id !== 'BYE' && b.id !== 'BYE'){
+        baseMatches.push({ round, playerA:a.id, playerB:b.id });
+      }
+    }
+    const fixed = rotation[0];
+    const rest = rotation.slice(1);
+    rest.unshift(rest.pop());
+    rotation = [fixed, ...rest];
+  }
+
+  let allPairings = [...baseMatches];
+  if(format === 'double'){
+    const second = baseMatches.map(m => ({
+      round: m.round + rounds,
+      playerA: m.playerB,
+      playerB: m.playerA
+    }));
+    allPairings = allPairings.concat(second);
+  }
+
+  return allPairings.map((m, idx) => ({
+    id: `M${String(idx+1).padStart(3,'0')}`,
+    round: m.round,
+    playerA: m.playerA,
+    playerB: m.playerB,
+    log: [],
+    pointsA: 0,
+    pointsB: 0,
+    status: 'pending',
+    winner: null,
+    completedAt: null
+  }));
+}
+
+/* =========================================================
+   SINGLE-ELIMINATION BRACKET GENERATION
+========================================================= */
+function standardSeedOrder(size){
+  let order = [0,1];
+  while(order.length < size){
+    const len = order.length * 2;
+    const next = [];
+    order.forEach(x => {
+      next.push(x);
+      next.push(len - 1 - x);
+    });
+    order = next;
+  }
+  return order;
+}
+
+function generateKnockoutBracket(players){
+  const n = players.length;
+  const bracketSize = Math.pow(2, Math.ceil(Math.log2(n)));
+  const byeCount = bracketSize - n;
+
+  const seeds = [...players];
+  for(let i=0; i<byeCount; i++) seeds.push({ id:'BYE', name:'輪空' });
+
+  const order = standardSeedOrder(bracketSize);
+  const ordered = order.map(idx => seeds[idx]);
+
+  const numRounds = Math.log2(bracketSize);
+  const rounds = [];
+
+  for(let r=1; r<=numRounds; r++){
+    const matchCount = bracketSize / Math.pow(2, r);
+    const roundMatches = [];
+    for(let i=0; i<matchCount; i++){
+      roundMatches.push({
+        id: `K${r}-${i+1}`,
+        round: r,
+        playerA: r === 1 ? ordered[i*2].id : null,
+        playerB: r === 1 ? ordered[i*2+1].id : null,
+        log: [],
+        pointsA: 0,
+        pointsB: 0,
+        status: 'pending',
+        winner: null,
+        completedAt: null,
+        nextMatchId: null,
+        nextSlot: null,
+        loserNextMatchId: null,
+        loserNextSlot: null,
+        isBye: false,
+        thirdPlace: false
+      });
+    }
+    rounds.push(roundMatches);
+  }
+
+  for(let r=1; r<numRounds; r++){
+    rounds[r-1].forEach((m, i) => {
+      const nextMatch = rounds[r][Math.floor(i/2)];
+      m.nextMatchId = nextMatch.id;
+      m.nextSlot = i % 2 === 0 ? 'A' : 'B';
+    });
+  }
+
+  // Third-place (bronze) match: the two semifinal losers play each other.
+  // Only exists when there's an actual semifinal round (bracketSize >= 4).
+  let bronze = null;
+  if(numRounds >= 2){
+    bronze = {
+      id: 'BRONZE',
+      round: numRounds,
+      playerA: null,
+      playerB: null,
+      log: [],
+      pointsA: 0,
+      pointsB: 0,
+      status: 'pending',
+      winner: null,
+      completedAt: null,
+      nextMatchId: null,
+      nextSlot: null,
+      loserNextMatchId: null,
+      loserNextSlot: null,
+      isBye: false,
+      thirdPlace: true
+    };
+    const semifinals = rounds[numRounds - 2];
+    semifinals.forEach((m, i) => {
+      m.loserNextMatchId = bronze.id;
+      m.loserNextSlot = i === 0 ? 'A' : 'B';
+    });
+  }
+
+  const flat = rounds.flat();
+  if(bronze) flat.push(bronze);
+
+  // Auto-resolve any match where one side is a BYE placeholder, cascading
+  // forward (winner into the next round, and now also loser into the
+  // bronze/third-place match) until nothing changes.
+  resolveByeCascade(flat);
+
+  return flat;
+}
+
+function resolveByeCascade(list){
+  let changed = true;
+  while(changed){
+    changed = false;
+    list.forEach(m => {
+      if(m.status !== 'completed' && m.playerA && m.playerB){
+        const aOut = m.playerA === 'BYE' || isWithdrawn(m.playerA);
+        const bOut = m.playerB === 'BYE' || isWithdrawn(m.playerB);
+        if(aOut && bOut) return; // both sides unavailable — needs a referee's manual call
+        if(aOut || bOut){
+          m.status = 'completed';
+          m.winner = aOut ? m.playerB : m.playerA;
+          m.completedAt = Date.now();
+          if(m.playerA === 'BYE' || m.playerB === 'BYE') m.isBye = true;
+          else m.forfeited = true;
+          markDirty(m.id);
+          propagateKnockoutWinner(m, list);
+          changed = true;
+        }
+      }
+    });
+  }
+}
+
+function propagateKnockoutWinner(match, matchList){
+  const list = matchList || state.matches;
+
+  if(match.nextMatchId){
+    const next = list.find(m => m.id === match.nextMatchId);
+    if(next){
+      if(match.nextSlot === 'A') next.playerA = match.winner;
+      else next.playerB = match.winner;
+      markDirty(next.id);
+    }
+  }
+
+  if(match.loserNextMatchId){
+    const loser = match.winner === match.playerA ? match.playerB : match.playerA;
+    const bronzeMatch = list.find(m => m.id === match.loserNextMatchId);
+    if(bronzeMatch){
+      if(match.loserNextSlot === 'A') bronzeMatch.playerA = loser;
+      else bronzeMatch.playerB = loser;
+      markDirty(bronzeMatch.id);
+    }
+  }
+}
+
+/* =========================================================
+   MATCH SCORING
+========================================================= */
+function recomputeMatch(match){
+  match.pointsA = match.log.filter(l=>l.side==='A').reduce((s,l)=>s+l.points,0);
+  match.pointsB = match.log.filter(l=>l.side==='B').reduce((s,l)=>s+l.points,0);
+  const target = state.tournament.pointsToWin;
+  if(match.pointsA >= target || match.pointsB >= target){
+    match.status = 'completed';
+    match.winner = match.pointsA >= target ? match.playerA : match.playerB;
+    if(!match.completedAt) match.completedAt = Date.now();
+  } else {
+    match.status = 'pending';
+    match.winner = null;
+    match.completedAt = null;
+  }
+}
+
+function recordFinish(matchId, side, finishKey){
+  const match = state.matches.find(m=>m.id===matchId);
+  if(!match || match.status==='completed') return;
+  if(!match.playerA || !match.playerB) return;
+  match.log.push({ side, finish:finishKey, points:FINISH[finishKey].points });
+  recomputeMatch(match);
+  markDirty(match.id);
+  let structural = false;
+  if(match.status === 'completed' && state.tournament.format === 'knockout'){
+    propagateKnockoutWinner(match);
+    resolveByeCascade(state.matches);
+    structural = true; // bracket reshuffled downstream matches — needs a full refresh
+  }
+  lastFlash = { matchId, side, finish:finishKey, ts:Date.now() };
+  saveState();
+  if(structural) renderAll();
+  else refreshAfterScoreChange(matchId);
+}
+
+function undoLastPoint(matchId){
+  const match = state.matches.find(m=>m.id===matchId);
+  if(!match || match.log.length===0) return;
+  match.log.pop();
+  recomputeMatch(match);
+  markDirty(match.id);
+  saveState();
+  refreshAfterScoreChange(matchId);
+}
+
+// Quick mode: referee just taps who won — no points, no finish types, no
+// battery. Used only when state.tournament.quickMode is on (knockout only).
+function recordQuickWin(matchId, side){
+  const match = state.matches.find(m=>m.id===matchId);
+  if(!match || match.status==='completed') return;
+  if(!match.playerA || !match.playerB) return;
+  match.pointsA = 0;
+  match.pointsB = 0;
+  match.quickWin = true;
+  match.status = 'completed';
+  match.winner = side === 'A' ? match.playerA : match.playerB;
+  match.completedAt = Date.now();
+  markDirty(match.id);
+  if(state.tournament.format === 'knockout'){
+    propagateKnockoutWinner(match);
+    resolveByeCascade(state.matches);
+  }
+  saveState();
+  renderAll();
+}
+
+function resetMatch(matchId){
+  const match = state.matches.find(m=>m.id===matchId);
+  if(!match) return;
+  showConfirm('確定要重新開始這場對戰嗎？目前的紀錄將被清除。', () => {
+    performResetMatch(match);
+    saveState();
+    renderAll();
+  });
+}
+
+function performResetMatch(match){
+  const hadWinner = match.status === 'completed';
+  const prevWinner = match.winner;
+  const prevLoser = prevWinner === match.playerA ? match.playerB : match.playerA;
+  match.log = [];
+  match.quickWin = false;
+  recomputeMatch(match);
+  markDirty(match.id);
+
+  if(state.tournament.format === 'knockout' && hadWinner){
+    if(match.nextMatchId){
+      const next = state.matches.find(m => m.id === match.nextMatchId);
+      if(next){
+        if(match.nextSlot === 'A' && next.playerA === prevWinner){
+          next.playerA = null;
+          performResetMatch(next);
+        } else if(match.nextSlot === 'B' && next.playerB === prevWinner){
+          next.playerB = null;
+          performResetMatch(next);
+        }
+      }
+    }
+    if(match.loserNextMatchId){
+      const bronzeMatch = state.matches.find(m => m.id === match.loserNextMatchId);
+      if(bronzeMatch){
+        if(match.loserNextSlot === 'A' && bronzeMatch.playerA === prevLoser){
+          bronzeMatch.playerA = null;
+          performResetMatch(bronzeMatch);
+        } else if(match.loserNextSlot === 'B' && bronzeMatch.playerB === prevLoser){
+          bronzeMatch.playerB = null;
+          performResetMatch(bronzeMatch);
+        }
+      }
+    }
+  }
+}
+
+function undoLastMatch(){
+  const completed = state.matches.filter(m=>m.status==='completed' && m.completedAt);
+  if(completed.length===0){ showAlert('目前沒有已完成的對戰可以撤銷。'); return; }
+  completed.sort((a,b)=>b.completedAt-a.completedAt);
+  const last = completed[0];
+  showConfirm(`確定要撤銷「${nameOf(last.playerA)} vs ${nameOf(last.playerB)}」的結果嗎？`, () => {
+    performResetMatch(last);
+    saveState();
+    renderAll();
+  });
+}
+
+/* =========================================================
+   RANDOMIZE SCHEDULE (knockout bracket) — slot-machine reshuffle
+========================================================= */
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function randomizeSchedule(){
+  if(state.matches.length === 0){
+    showAlert('尚未產生對戰紀錄，請先於「賽事設定」開始比賽。');
+    return;
+  }
+  if(state.players.length < 2){
+    showAlert('至少需要 2 位玩家才能重新抽籤排表。');
+    return;
+  }
+  showConfirm('隨機刷新賽程將清除目前所有對戰紀錄，重新抽籤排出全新對戰紀錄，確定嗎？', () => {
+    runScheduleShuffleAnimation();
+  });
+}
+
+function runScheduleShuffleAnimation(){
+  const btn = document.getElementById('shuffleScheduleBtn');
+  const wrap = document.getElementById('bracketTree');
+  const nameEls = wrap ? Array.from(wrap.querySelectorAll('.bslot-name, .champ-name')) : [];
+  const pool = state.players.map(p => p.name).filter(Boolean);
+
+  if(btn){
+    btn.disabled = true;
+    btn.dataset.originalText = btn.innerHTML;
+    btn.innerHTML = '🎰 抽籤中…';
+  }
+
+  if(pool.length === 0 || nameEls.length === 0){
+    finalizeScheduleShuffle(btn);
+    return;
+  }
+
+  const duration = 1500;
+  const tickMs = 70;
+  let elapsed = 0;
+  const spinTimer = setInterval(() => {
+    nameEls.forEach(el => {
+      el.textContent = pool[Math.floor(Math.random() * pool.length)];
+    });
+    elapsed += tickMs;
+    if(elapsed >= duration){
+      clearInterval(spinTimer);
+      finalizeScheduleShuffle(btn);
+    }
+  }, tickMs);
+}
+
+function finalizeScheduleShuffle(btn){
+  const shuffledPlayers = shuffleArray(state.players);
+  const newMatches = generateKnockoutBracket(shuffledPlayers);
+  state.players = shuffledPlayers;
+  state.matches = newMatches;
+  state.currentRound = 1;
+  state.tournament.status = 'running';
+  refereePanels.forEach(p => p.matchId = null);
+  savePanels();
+  markAllDirty();
+
+  (async () => {
+    if(window.cloudSync && window.cloudSync.ready && currentEventCode){
+      try{
+        // Push the (possibly reshuffled) player list FIRST — same reasoning
+        // as finalizeStartTournament: other devices must know id→name
+        // mapping before they receive matches that reference those ids,
+        // or their screens show raw ids like "P01" instead of names.
+        await window.cloudSync.pushMeta({
+          name: state.tournament.name,
+          pointsToWin: state.tournament.pointsToWin,
+          format: state.tournament.format,
+          quickMode: state.tournament.quickMode,
+          status: state.tournament.status,
+          players: state.players,
+          currentRound: state.currentRound
+        });
+        // clearMatches() triggers our own onSnapshot listener with an empty
+        // list almost immediately, which would otherwise wipe state.matches
+        // before the new bracket gets pushed. Push newMatches directly
+        // (not state.matches, which may already be emptied by that echo),
+        // then re-assert local state afterwards so the race can't leave the
+        // schedule empty.
+        await window.cloudSync.clearMatches();
+        await window.cloudSync.pushMatches(newMatches);
+      }catch(e){ console.error(e); }
+    }
+    dirtyMatchIds.clear();
+    state.matches = newMatches;
+    renderAll();
+    saveState();
+  })();
+
+  renderAll();
+  showToast('對戰賽程已刷新');
+
+  if(btn){
+    btn.disabled = false;
+    btn.innerHTML = btn.dataset.originalText || '🎰 隨機刷新賽程';
+  }
+}
+
+/* =========================================================
+   STANDINGS
+========================================================= */
+function calculateStandings(){
+  const table = {};
+  state.players.forEach(p=>{
+    table[p.id] = { id:p.id, name:p.name, withdrawn:!!p.withdrawn, played:0, wins:0, losses:0, pointsFor:0, pointsAgainst:0, diff:0 };
+  });
+
+  state.matches.filter(m=>m.status==='completed').forEach(m=>{
+    const A = table[m.playerA], B = table[m.playerB];
+    if(!A || !B) return;
+    A.played++; B.played++;
+    A.pointsFor += m.pointsA; A.pointsAgainst += m.pointsB;
+    B.pointsFor += m.pointsB; B.pointsAgainst += m.pointsA;
+    if(m.winner === m.playerA){ A.wins++; B.losses++; } else { B.wins++; A.losses++; }
+  });
+
+  Object.values(table).forEach(p => p.diff = p.pointsFor - p.pointsAgainst);
+
+  return Object.values(table).sort((a,b)=>{
+    if(b.wins !== a.wins) return b.wins - a.wins;
+    if(b.diff !== a.diff) return b.diff - a.diff;
+    if(b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+/* =========================================================
+   RENDER: STANDINGS
+========================================================= */
+function renderStandings(){
+  const isKnockout = state.tournament.format === 'knockout';
+  document.getElementById('bracketSection').classList.toggle('hidden', !isKnockout);
+  document.getElementById('standingsSection').classList.toggle('hidden', isKnockout);
+
+  if(isKnockout){
+    renderBracketPodium();
+    renderBracket();
+    return;
+  }
+
+  const body = document.getElementById('standingsBody');
+  const podiumContainer = document.getElementById('podiumContainer');
+  const standings = calculateStandings();
+
+  document.getElementById('rulesSummary').innerText =
+    `先取得 ${state.tournament.pointsToWin || 4} 分獲勝・排序依：勝場 → 得失分 → 總得分`;
+
+  const isTournamentComplete = state.matches.length > 0 && state.matches.every(m => m.status === 'completed');
+
+  if(isTournamentComplete && standings.length > 0){
+    const medals = ['🥇','🥈','🥉'];
+    const titles = ['冠軍','亞軍','季軍'];
+    podiumContainer.innerHTML = `
+      <div class="podium">
+        ${standings.slice(0,3).map((p,i) => `
+          <div class="podium-item podium-${i+1}">
+            <div class="podium-medal">${medals[i]}</div>
+            <div class="podium-title">${titles[i]}</div>
+            <div class="podium-name">${escapeHtml(p.name)}</div>
+            <div class="podium-record">${p.wins}勝${p.losses}負・${p.pointsFor}分</div>
+          </div>
+        `).join('')}
+      </div>`;
+    podiumContainer.classList.remove('hidden');
+  } else {
+    podiumContainer.innerHTML = '';
+    podiumContainer.classList.add('hidden');
+  }
+
+  if(standings.length === 0){
+    body.innerHTML = `<tr class="empty-row"><td colspan="9">尚未有玩家，請前往「賽事設定」開始比賽。</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = standings.map((p, i) => {
+    const rank = i+1;
+    let rc = '';
+    if(rank===1) rc='rank-1'; else if(rank===2) rc='rank-2'; else if(rank===3) rc='rank-3';
+    return `
+      <tr>
+        <td class="rank-cell ${rc}">${rank}</td>
+        <td class="name">${escapeHtml(p.name)}${p.withdrawn ? ' <span class="status-pill pending" style="margin-left:4px;">已棄權</span>' : ''}</td>
+        <td>${p.played}</td>
+        <td>${p.wins}</td>
+        <td>${p.losses}</td>
+        <td>${p.pointsFor}</td>
+        <td>${p.pointsAgainst}</td>
+        <td>${p.diff > 0 ? '+'+p.diff : p.diff}</td>
+        <td class="points-cell">${p.pointsFor}</td>
+      </tr>`;
+  }).join('');
+}
+
+/* =========================================================
+   RENDER: KNOCKOUT PODIUM (champion only — runner-up/3rd
+   place aren't well defined without a 3rd-place playoff)
+========================================================= */
+function renderBracketPodium(){
+  const podiumContainer = document.getElementById('podiumContainer');
+  if(state.matches.length === 0){
+    podiumContainer.innerHTML = '';
+    podiumContainer.classList.add('hidden');
+    return;
+  }
+  const finalRound = Math.max(...state.matches.filter(m=>!m.thirdPlace).map(m=>m.round));
+  const finalMatch = state.matches.find(m=>m.round===finalRound && !m.thirdPlace);
+  if(!finalMatch || finalMatch.status !== 'completed'){
+    podiumContainer.innerHTML = '';
+    podiumContainer.classList.add('hidden');
+    return;
+  }
+  const champId = finalMatch.winner;
+  const runnerUpId = champId === finalMatch.playerA ? finalMatch.playerB : finalMatch.playerA;
+  const bronzeMatch = state.matches.find(m=>m.thirdPlace);
+  const thirdId = (bronzeMatch && bronzeMatch.status === 'completed') ? bronzeMatch.winner : null;
+  podiumContainer.innerHTML = `
+    <div class="podium">
+      <div class="podium-item podium-2">
+        <div class="podium-medal">🥈</div>
+        <div class="podium-title">亞軍</div>
+        <div class="podium-name">${escapeHtml(nameOf(runnerUpId))}</div>
+      </div>
+      <div class="podium-item podium-1">
+        <div class="podium-medal">🥇</div>
+        <div class="podium-title">冠軍</div>
+        <div class="podium-name">${escapeHtml(nameOf(champId))}</div>
+      </div>
+      <div class="podium-item podium-3">
+        <div class="podium-medal">🥉</div>
+        <div class="podium-title">季軍</div>
+        <div class="podium-name">${thirdId ? escapeHtml(nameOf(thirdId)) : (bronzeMatch ? '對戰中' : '－')}</div>
+      </div>
+    </div>`;
+  podiumContainer.classList.remove('hidden');
+}
+
+/* =========================================================
+   RENDER: KNOCKOUT BRACKET TREE
+========================================================= */
+function bracketMatchesByRound(){
+  const byRound = {};
+  state.matches.filter(m => !m.thirdPlace).forEach(m=>{
+    (byRound[m.round] = byRound[m.round] || []).push(m);
+  });
+  const rounds = Object.keys(byRound).map(Number).sort((a,b)=>a-b);
+  rounds.forEach(r=>{
+    byRound[r].sort((a,b)=>{
+      const ai = parseInt(String(a.id).split('-')[1] || 0, 10);
+      const bi = parseInt(String(b.id).split('-')[1] || 0, 10);
+      return ai - bi;
+    });
+  });
+  return { rounds, byRound };
+}
+
+function bracketRoundLabel(r, totalRounds){
+  const fromEnd = totalRounds - r;
+  if(fromEnd === 0) return '決賽';
+  if(fromEnd === 1) return '準決賽';
+  if(fromEnd === 2) return '八強賽';
+  if(fromEnd === 3) return '十六強賽';
+  return `第 ${r} 輪`;
+}
+
+function bracketMatchBoxHtml(m, top, liveIds, nextId){
+  const aWd = isWithdrawn(m.playerA);
+  const bWd = isWithdrawn(m.playerB);
+  const aName = escapeHtml(nameOf(m.playerA)) + (aWd ? '（棄權）' : '');
+  const bName = escapeHtml(nameOf(m.playerB)) + (bWd ? '（棄權）' : '');
+  const aWin = m.status === 'completed' && m.winner === m.playerA;
+  const bWin = m.status === 'completed' && m.winner === m.playerB;
+  const aBye = m.playerA === 'BYE';
+  const bBye = m.playerB === 'BYE';
+  const aLose = m.status === 'completed' && !aWin && !aBye && !aWd;
+  const bLose = m.status === 'completed' && !bWin && !bBye && !bWd;
+  const showPts = !m.quickWin;
+
+  const status = m.status === 'completed' ? null
+    : (liveIds && liveIds.has(m.id)) ? 'live'
+    : (nextId && m.id === nextId) ? 'next'
+    : null;
+  const statusClass = status === 'live' ? 'is-live' : status === 'next' ? 'is-next' : '';
+  const statusBadge = status === 'live'
+    ? `<div class="bracket-status-badge live"><span class="bracket-status-dot"></span>進行中</div>`
+    : status === 'next'
+      ? `<div class="bracket-status-badge next"><span class="bracket-status-dot"></span>即將上場</div>`
+      : '';
+
+  return `
+    <div class="bracket-match ${m.status==='completed' ? 'done':''} ${statusClass}" style="top:${top}px;">
+      ${statusBadge}
+      <div class="bracket-slot ${aWin?'winner':''} ${aLose?'loser':''} ${(aBye||aWd)?'bye':''}">
+        <span class="bslot-pts">${(m.playerA && !aBye && showPts) ? m.pointsA : ''}</span>
+        <span class="bslot-name">${aName}</span>
+        ${aWin ? '<span class="bslot-check">✓</span>' : ''}
+      </div>
+      <div class="bracket-slot ${bWin?'winner':''} ${bLose?'loser':''} ${(bBye||bWd)?'bye':''}">
+        <span class="bslot-pts">${(m.playerB && !bBye && showPts) ? m.pointsB : ''}</span>
+        <span class="bslot-name">${bName}</span>
+        ${bWin ? '<span class="bslot-check">✓</span>' : ''}
+      </div>
+    </div>`;
+}
+
+function renderBracket(){
+  const wrap = document.getElementById('bracketTree');
+  if(state.matches.length === 0){
+    wrap.innerHTML = `<div class="bracket-empty">尚未產生對戰紀錄，請先於「賽事設定」開始比賽。</div>`;
+    return;
+  }
+
+  const { rounds, byRound } = bracketMatchesByRound();
+  const round1Count = byRound[rounds[0]].length;
+  const UNIT = 88;      // px height reserved per round-1 leaf slot
+  const H = round1Count * UNIT;
+  const GAP = 42;       // px width of connector gap between columns
+  const COLW = 190;     // px width of each round column
+  const HALF = 37;      // half of .bracket-match height (74px)
+
+  // Matches currently loaded into a referee panel (being judged right now),
+  // and the very next match that would be picked up once a panel frees up.
+  const liveIds = new Set(
+    refereePanels
+      .filter(p => p.matchId)
+      .map(p => p.matchId)
+      .filter(id => {
+        const mm = state.matches.find(x => x.id === id);
+        return mm && mm.status !== 'completed' && mm.playerA && mm.playerB && !mm.isBye;
+      })
+  );
+  const nextMatch = nextPlayableMatch(Array.from(liveIds));
+  const nextId = nextMatch ? nextMatch.id : null;
+
+  let html = `<div class="bracket-inner" style="height:${H}px;">`;
+
+  rounds.forEach((r, ridx) => {
+    const matches = byRound[r];
+    const n = matches.length;
+
+    html += `<div class="bracket-col" style="width:${COLW}px;">
+      <div class="bracket-round-label">${bracketRoundLabel(r, rounds.length)}</div>
+      <div class="bracket-round-body" style="height:${H}px;">`;
+    matches.forEach((m, i) => {
+      const centerY = (i + 0.5) * (H / n);
+      html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId);
+    });
+    html += `</div></div>`;
+
+    if(ridx < rounds.length - 1){
+      const nextMatches = byRound[rounds[ridx+1]];
+      let lines = '';
+      nextMatches.forEach((nm, j) => {
+        const a = matches[j*2], b = matches[j*2+1];
+        if(!a || !b) return;
+        const yA = (j*2 + 0.5) * (H / n);
+        const yB = (j*2 + 1 + 0.5) * (H / n);
+        const yMid = (j + 0.5) * (H / nextMatches.length);
+        const top = Math.min(yA, yB);
+        const bottom = Math.max(yA, yB);
+        lines += `
+          <div class="bconn-h" style="top:${yA}px; left:0; width:${GAP/2}px;"></div>
+          <div class="bconn-h" style="top:${yB}px; left:0; width:${GAP/2}px;"></div>
+          <div class="bconn-v" style="top:${top}px; height:${bottom-top}px; left:${GAP/2}px;"></div>
+          <div class="bconn-h" style="top:${yMid}px; left:${GAP/2}px; width:${GAP/2}px;"></div>
+        `;
+      });
+      html += `<div class="bracket-conn-col" style="width:${GAP}px;">
+        <div class="bracket-round-label" style="visibility:hidden;">·</div>
+        <div class="bracket-conn" style="height:${H}px;">${lines}</div>
+      </div>`;
+    } else {
+      const finalMatch = matches[0];
+      const champId = (finalMatch && finalMatch.status === 'completed') ? finalMatch.winner : null;
+      const yFinal = 0.5 * (H / n);
+      html += `<div class="bracket-conn-col" style="width:${GAP}px;">
+        <div class="bracket-round-label" style="visibility:hidden;">·</div>
+        <div class="bracket-conn" style="height:${H}px;">
+          <div class="bconn-h" style="top:${yFinal}px; left:0; width:${GAP}px;"></div>
+        </div>
+      </div>`;
+      html += `<div class="bracket-col bracket-champion-col" style="width:${COLW}px;">
+        <div class="bracket-round-label">🏆 冠軍</div>
+        <div class="bracket-round-body" style="height:${H}px;">
+          <div class="bracket-champion-box" style="top:${yFinal-HALF}px;">
+            ${champId
+              ? `<span class="champ-trophy">🏆</span><span class="champ-name">${escapeHtml(nameOf(champId))}</span>`
+              : `<span class="champ-pending">待定</span>`}
+          </div>
+        </div>
+      </div>`;
+    }
+  });
+
+  html += `</div>`;
+
+  const bronzeMatch = state.matches.find(m => m.thirdPlace);
+  if(bronzeMatch){
+    html += `
+      <div class="bracket-bronze">
+        <div class="bracket-round-label">🥉 季軍戰</div>
+        <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextId)}</div>
+      </div>`;
+  }
+
+  wrap.innerHTML = html;
+}
+
+/* =========================================================
+   RENDER: MATCHES TAB
+========================================================= */
+function renderMatches(){
+  const matchList = document.getElementById('matchList');
+
+  if(state.matches.length === 0){
+    matchList.innerHTML = `<div class="referee-empty">尚未產生對戰紀錄，請先於「賽事設定」開始比賽。</div>`;
+    return;
+  }
+
+  const rounds = Math.max(...state.matches.map(m=>m.round), 1);
+  let html = '';
+
+  for(let r=1; r<=rounds; r++){
+    const matches = state.matches.filter(m=>m.round===r);
+    html += `<div class="round-heading">第 ${r} 輪</div>`;
+    html += matches.map(m => {
+      const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
+      const completed = m.status === 'completed';
+      const logChips = m.log.map(l => {
+        const side = l.side==='A' ? pa : pb;
+        const f = FINISH[l.finish];
+        const hex = resolveColor(f.color);
+        return `<span class="log-chip" style="background:${hex}22;color:${hex};border:1px solid ${hex}55;">${f.icon} ${escapeHtml(side)} ${f.label} +${f.points}</span>`;
+      }).join('');
+
+      return `
+        <div class="match ${completed?'completed':''}">
+          <div class="match-header">
+            <span>${m.id}</span>
+            <span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>
+          </div>
+          <div class="match-result">${completed ? `🏆 ${escapeHtml(pa)} VS ${escapeHtml(pb)} → ${escapeHtml(nameOf(m.winner))} 獲勝　${m.forfeited ? '(棄權判負)' : m.isBye ? '(輪空)' : m.quickWin ? '(快速模式)' : `(${m.pointsA} : ${m.pointsB})`}` : `${escapeHtml(pa)}　VS　${escapeHtml(pb)}`}</div>
+          ${logChips ? `<div class="match-log">${logChips}</div>` : ''}
+          <div class="match-actions">
+            <button class="btn btn-primary goto-referee-btn" onclick="goToReferee('${m.id}')">${completed ? '查看 / 修改' : '前往裁判台'}</button>
+            ${completed ? `<button class="btn btn-ghost" onclick="resetMatch('${m.id}')">重新比賽</button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  matchList.innerHTML = html;
+}
+
+function goToReferee(matchId){
+  if(refereePanels.length === 0) refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
+  refereePanels[0].matchId = matchId;
+  savePanels();
+  switchTab('referee');
+}
+
+/* =========================================================
+   RENDER: REFEREE TAB (multiple concurrent panels/tables)
+========================================================= */
+let refereePanels = [];
+let focusedPanelId = null;
+const PANELS_KEY = 'beyblade-x-referee-panels-v1';
+
+function loadRefereePanels(){
+  try{
+    const raw = localStorage.getItem(PANELS_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length) { refereePanels = parsed; return; }
+    }
+  }catch(e){}
+  refereePanels = [{ id: genPanelId(), matchId:null, label:'' }];
+}
+function savePanels(){
+  try{ localStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
+  pushPanelsToCloud();
+}
+
+// Pushes which match each referee table currently has loaded, so the
+// bracket's "進行中 / 即將上場" badges agree across every connected device
+// (see the matching comment in onCloudMeta). Skipped while we're in the
+// middle of applying an incoming snapshot (avoids an immediate echo write),
+// and viewers never own this data so they never push it.
+async function pushPanelsToCloud(){
+  if(applyingRemote) return;
+  if(currentRole === 'viewer') return;
+  if(!(window.cloudSync && window.cloudSync.ready && currentEventCode)) return;
+  try{
+    await window.cloudSync.pushMeta({ refereePanels });
+  }catch(e){
+    console.error('裁判面板同步失敗（本機資料仍完整保存）', e);
+  }
+}
+function genPanelId(){
+  return 'p' + Math.random().toString(36).slice(2,8);
+}
+
+function addRefereePanel(){
+  if(refereePanels.length >= 4){
+    showAlert('最多同時開啟 4 個裁判台面板。如需更多桌次同時進行，建議讓其他裁判用自己的手機/平板開啟同一個賽事代碼，會即時同步。');
+    return;
+  }
+  refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
+  savePanels();
+  renderReferee();
+}
+
+function removeRefereePanel(panelId){
+  if(refereePanels.length <= 1) return;
+  refereePanels = refereePanels.filter(p => p.id !== panelId);
+  if(focusedPanelId === panelId) focusedPanelId = null;
+  savePanels();
+  renderReferee();
+}
+
+function toggleFocusPanel(panelId){
+  focusedPanelId = (focusedPanelId === panelId) ? null : panelId;
+  renderReferee();
+}
+
+function renamePanel(panelId, label){
+  const panel = refereePanels.find(p => p.id === panelId);
+  if(panel) panel.label = label.trim();
+  savePanels();
+}
+
+function pickRefereeMatch(panelId, matchId){
+  const panel = refereePanels.find(p => p.id === panelId);
+  if(panel) panel.matchId = matchId;
+  savePanels();
+  renderReferee();
+}
+
+function autoAssignPanel(panel, excludeIds){
+  const cur = panel.matchId ? state.matches.find(m => m.id === panel.matchId) : null;
+  if(cur && !cur.isBye) return; // keep an existing valid pick (even if completed, so the result stays visible)
+  const nextUp = nextPlayableMatch(excludeIds);
+  panel.matchId = nextUp ? nextUp.id : ((state.matches.find(m => !m.isBye)) || state.matches[0]).id;
+}
+
+function renderReferee(){
+  const wrap = document.getElementById('refereePanels');
+  if(!wrap) return;
+
+  if(state.matches.length === 0){
+    wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未開始賽事</div>請先於「賽事設定」建立對戰紀錄。</div></div>`;
+    return;
+  }
+  if(refereePanels.length === 0) refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
+
+  const assignedSoFar = [];
+  refereePanels.forEach(panel => {
+    autoAssignPanel(panel, assignedSoFar);
+    assignedSoFar.push(panel.matchId);
+  });
+  savePanels();
+
+  // Referee panel assignments drive the bracket's "進行中 / 即將上場" badges,
+  // so treat any assignment change the same as a score change: refresh now
+  // if the standings/bracket tab happens to be visible, otherwise mark it
+  // dirty so it catches up next time the user switches there.
+  if(isTabVisible('standings')){ renderStandings(); standingsDirty = false; }
+  else standingsDirty = true;
+
+  if(focusedPanelId && !refereePanels.some(p => p.id === focusedPanelId)) focusedPanelId = null;
+
+  const banner = document.getElementById('refereeFocusBanner');
+  if(banner){
+    if(focusedPanelId && refereePanels.length > 1){
+      const idx = refereePanels.findIndex(p => p.id === focusedPanelId);
+      const focusedPanel = refereePanels[idx];
+      const label = focusedPanel.label || `裁判 ${idx+1}`;
+      banner.innerHTML = `
+        <div>目前僅顯示 <b>${escapeHtml(label)}</b> 面板，其他 ${refereePanels.length-1} 個面板已隱藏，避免誤按。</div>
+        <button class="btn btn-dark btn-sm" onclick="toggleFocusPanel('${focusedPanel.id}')">顯示所有面板</button>`;
+    } else {
+      banner.innerHTML = '';
+    }
+  }
+
+  const panelsToShow = (focusedPanelId && refereePanels.length > 1)
+    ? refereePanels.filter(p => p.id === focusedPanelId)
+    : refereePanels;
+
+  wrap.innerHTML = panelsToShow.map((panel) => {
+    const i = refereePanels.indexOf(panel);
+    return `
+    <div class="card referee-panel">
+      <div class="ref-panel-head">
+        <input class="text-input ref-panel-label" value="${escapeAttr(panel.label || '')}"
+               placeholder="裁判 ${i+1}／桌次名稱（選填）" onchange="renamePanel('${panel.id}', this.value)">
+        ${refereePanels.length > 1 ? `<button class="icon-btn focus-btn ${focusedPanelId===panel.id ? 'active':''}" title="${focusedPanelId===panel.id ? '顯示所有面板' : '隱藏其他面板，避免誤按'}" onclick="toggleFocusPanel('${panel.id}')">${focusedPanelId===panel.id ? '⊞' : '👁'}</button>` : ''}
+        ${refereePanels.length > 1 ? `<button class="icon-btn" title="移除此面板" onclick="removeRefereePanel('${panel.id}')">×</button>` : ''}
+      </div>
+      <div class="ref-picker">
+        <div class="field-label">選擇對戰</div>
+        <select class="text-input" id="refPicker-${panel.id}" onchange="pickRefereeMatch('${panel.id}', this.value)"></select>
+      </div>
+      <div id="refBody-${panel.id}"></div>
+    </div>
+  `;
+  }).join('');
+
+  const rounds = Math.max(...state.matches.map(m => m.round), 1);
+  panelsToShow.forEach(panel => {
+    const picker = document.getElementById(`refPicker-${panel.id}`);
+    let optionsHtml = '';
+    for(let r=1; r<=rounds; r++){
+      const ms = state.matches.filter(m => m.round === r && !m.isBye);
+      if(ms.length === 0) continue;
+      optionsHtml += `<optgroup label="第 ${r} 輪">`;
+      ms.forEach(m => {
+        const tag = m.status === 'completed' ? '✓ ' : '';
+        optionsHtml += `<option value="${m.id}">${tag}${escapeHtml(nameOf(m.playerA))} vs ${escapeHtml(nameOf(m.playerB))}</option>`;
+      });
+      optionsHtml += `</optgroup>`;
+    }
+    picker.innerHTML = optionsHtml;
+    picker.value = panel.matchId;
+
+    const match = state.matches.find(m => m.id === panel.matchId);
+    renderRefereeMatch(match, panel.id);
+  });
+}
+
+function nextPlayableMatch(excludeIds){
+  const ex = new Set(excludeIds || []);
+  return state.matches.find(m => m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !ex.has(m.id));
+}
+
+// Read-only preview of what advanceReferee() would load next for this panel,
+// used to show "下一場" under a just-decided winner without mutating state.
+function computeNextMatchForPanel(panelId){
+  const panel = refereePanels.find(p => p.id === panelId);
+  if(!panel) return null;
+  const currentRound = state.matches.find(x => x.id === panel.matchId)?.round;
+  const takenByOthers = refereePanels.filter(p => p.id !== panelId).map(p => p.matchId);
+  const sameRoundNext = state.matches.find(m =>
+    m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !takenByOthers.includes(m.id));
+  return sameRoundNext || nextPlayableMatch(takenByOthers) || nextPlayableMatch([]);
+}
+
+function renderRefereeMatch(match, panelId){
+  const body = document.getElementById(`refBody-${panelId}`);
+  if(!body || !match) return;
+  const quickMode = !!state.tournament.quickMode;
+  const target = state.tournament.pointsToWin;
+  const pa = nameOf(match.playerA), pb = nameOf(match.playerB);
+  const completed = match.status === 'completed';
+
+  const nextMatchPreview = completed ? computeNextMatchForPanel(panelId) : null;
+  const nextMatchHtml = nextMatchPreview
+    ? `<div class="text-muted">下一場・${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</div>`
+    : `<div class="text-muted">目前沒有下一場對戰了</div>`;
+
+  let flashHtml = '';
+  if(!quickMode && lastFlash && lastFlash.matchId === match.id && (Date.now() - lastFlash.ts) < 1100){
+    const f = FINISH[lastFlash.finish];
+    const hex = resolveColor(f.color);
+    const scorer = nameOf(lastFlash.side === 'A' ? match.playerA : match.playerB);
+    flashHtml = `
+      <div class="ref-flash">
+        <span class="ref-flash-badge" style="background:${hex}26;color:${hex};border:1px solid ${hex}80;">
+          ${escapeHtml(scorer)}　${f.label}　+${f.points}
+        </span>
+      </div>`;
+  }
+
+  const ringRowHtml = quickMode ? '' : `
+    <div class="ring-row">
+      <div class="ring-wrap">
+        ${buildBattery(match.pointsA, target)}
+        <div class="battery-value">${match.pointsA}<span class="of"> / ${target}</span></div>
+        <div class="ring-name">${escapeHtml(pa)}</div>
+      </div>
+      <div class="vs-mark">VS</div>
+      <div class="ring-wrap">
+        ${buildBattery(match.pointsB, target)}
+        <div class="battery-value">${match.pointsB}<span class="of"> / ${target}</span></div>
+        <div class="ring-name">${escapeHtml(pb)}</div>
+      </div>
+    </div>
+  `;
+
+  const mainHtml = completed ? `
+      <div class="winner-banner">
+        <div class="trophy">🏆</div>
+        <div class="wname">${escapeHtml(nameOf(match.winner))} 獲勝</div>
+        ${nextMatchHtml}
+      </div>
+    ` : (!match.playerA || !match.playerB) ? `
+      <div class="referee-empty" style="padding:36px 16px;">
+        <div class="big">尚有選手未決定</div>
+        請等待前面的對戰產生結果後，這場才能開始。
+      </div>
+    ` : quickMode ? `
+      <div class="quick-win-grid">
+        <button class="quick-win-btn side-blue" onclick="recordQuickWin('${match.id}','A')">
+          <span class="quick-win-name">${escapeHtml(pa)}</span>
+          <span class="quick-win-label">獲勝</span>
+        </button>
+        <div class="quick-vs-mark">VS</div>
+        <button class="quick-win-btn side-red" onclick="recordQuickWin('${match.id}','B')">
+          <span class="quick-win-name">${escapeHtml(pb)}</span>
+          <span class="quick-win-label">獲勝</span>
+        </button>
+      </div>
+    ` : `
+      <div class="finish-grid">
+        <div class="finish-col side-a">
+          <div class="finish-col-header">${escapeHtml(pa)}</div>
+          ${finishButtons(match.id, 'A')}
+        </div>
+        <div class="finish-col side-b">
+          <div class="finish-col-header">${escapeHtml(pb)}</div>
+          ${finishButtons(match.id, 'B')}
+        </div>
+      </div>
+    `;
+
+  body.innerHTML = `
+    <div class="referee-title">第 ${match.round} 輪${quickMode ? '・快速模式（僅選出勝者，不計分）' : `・先取得 ${target} 分獲勝`}</div>
+    ${flashHtml}
+    ${ringRowHtml}
+    ${mainHtml}
+
+    <div class="ref-footer">
+      ${quickMode ? '' : `<button class="btn btn-dark" onclick="undoLastPoint('${match.id}')" ${match.log.length===0?'disabled':''}>撤銷上一分</button>`}
+      <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>重新這場</button>
+      ${completed ? (hasPendingMatches()
+          ? `<button class="btn btn-primary" onclick="advanceReferee('${panelId}')">下一場對戰</button>`
+          : `<button class="btn btn-primary" onclick="showFinalResults()">🏆 戰績結算</button>`
+        ) : ''}
+    </div>
+  `;
+}
+
+function finishButtons(matchId, side){
+  return Object.entries(FINISH).map(([key, f]) => `
+    <button class="finish-btn ${f.cls}" onclick="recordFinish('${matchId}','${side}','${key}')">
+      <span class="finish-label"><span class="finish-icon">${f.icon}</span>${f.label}</span>
+      <span class="finish-pts">+${f.points}</span>
+    </button>
+  `).join('');
+}
+
+function resolveColor(varRef){
+  const name = varRef.replace('var(','').replace(')','');
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#39ff14';
+}
+
+/* =========================================================
+   CUSTOM MODAL (replaces window.confirm/alert, which are
+   blocked/auto-dismissed inside the sandboxed artifact preview)
+========================================================= */
+function showModal(message, buttons){
+  document.getElementById('customModalMessage').innerText = message;
+  const container = document.getElementById('customModalButtons');
+  container.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + b.className;
+    btn.innerText = b.label;
+    btn.onclick = () => { hideModal(); if(b.action) b.action(); };
+    container.appendChild(btn);
+  });
+  document.getElementById('customModal').classList.add('show');
+}
+
+function hideModal(){
+  document.getElementById('customModal').classList.remove('show');
+}
+
+function showAlert(message){
+  showModal(message, [{ label:'知道了', className:'btn-primary' }]);
+}
+
+function showConfirm(message, onConfirm){
+  showModal(message, [
+    { label:'取消', className:'btn-dark' },
+    { label:'確定', className:'btn-danger', action:onConfirm }
+  ]);
+}
+
+function buildBattery(points, target){
+  const capped = Math.min(points, target);
+  const isFull = points >= target;
+  const isDanger = points > 4;
+  const sevenMode = target > 4;
+
+  let cellsHtml = '';
+  for(let i=1; i<=target; i++){
+    cellsHtml += `<div class="battery-cell ${i<=capped ? 'lit':''}"></div>`;
+  }
+
+  let burstHtml = '';
+  if(isFull || isDanger){
+    const sparkCount = isDanger ? 14 : 10;
+    const sparks = Array.from({length:sparkCount}).map((_,i) => {
+      const ang = i * (360/sparkCount);
+      const color = isDanger ? (i % 2 ? '#ff2d2d' : '#39ff14') : (i % 2 ? '#ffea00' : '#ff1f4d');
+      const delay = (i * 0.03).toFixed(2);
+      return `<span class="spark" style="--ang:${ang}deg;--delay:${delay}s;--spark-color:${color};"></span>`;
+    }).join('');
+
+    const boltCount = isDanger ? 8 : 6;
+    const bolts = Array.from({length:boltCount}).map((_,i) => {
+      const ang = i * (360/boltCount) + 15;
+      const color = isDanger ? (i % 2 ? '#ff2d2d' : '#39ff14') : (i % 2 ? '#39ff14' : '#ffffff');
+      const delay = (i * 0.04).toFixed(2);
+      return `<span class="bolt" style="--ang:${ang}deg;--delay:${delay}s;--bolt-color:${color};"></span>`;
+    }).join('');
+
+    burstHtml = `<div class="battery-burst ${isDanger ? 'danger-burst':''}">${sparks}${bolts}</div>`;
+  }
+
+  const bodyClasses = [
+    sevenMode ? 'battery-seven' : '',
+    isDanger ? 'battery-danger' : (isFull ? 'battery-full battery-overcharge' : '')
+  ].filter(Boolean).join(' ');
+
+  const outerClasses = isDanger ? 'shake-inf' : (isFull ? 'shake-2x' : '');
+
+  return `
+    <div class="battery-outer ${outerClasses}">
+      <div class="battery-cap"></div>
+      <div class="battery-body ${bodyClasses}">
+        ${cellsHtml}
+        ${burstHtml}
+      </div>
+    </div>`;
+}
+
+function advanceReferee(panelId){
+  const panel = refereePanels.find(p => p.id === panelId);
+  if(!panel) return;
+  const currentRound = state.matches.find(x => x.id === panel.matchId)?.round;
+  const takenByOthers = refereePanels.filter(p => p.id !== panelId).map(p => p.matchId);
+  const sameRoundNext = state.matches.find(m =>
+    m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !takenByOthers.includes(m.id));
+  const next = sameRoundNext || nextPlayableMatch(takenByOthers) || nextPlayableMatch([]);
+  panel.matchId = next ? next.id : panel.matchId;
+  savePanels();
+  renderReferee();
+}
+
+function hasPendingMatches(){
+  return !!nextPlayableMatch();
+}
+
+function showFinalResults(){
+  switchTab('standings');
+}
+
+/* =========================================================
+   EXPORT: SAVE BRACKET / STANDINGS AS A PNG IMAGE
+========================================================= */
+async function exportAsImage(sectionId, filenamePrefix){
+  if(typeof html2canvas !== 'function'){
+    showAlert('圖片匯出功能載入失敗，請確認網路連線後重新整理頁面再試一次。');
+    return;
+  }
+  const section = document.getElementById(sectionId);
+  const podium = document.getElementById('podiumContainer');
+  if(!section) return;
+
+  const bg = (getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#050505').trim();
+  const targets = [];
+  if(podium && !podium.classList.contains('hidden')) targets.push(podium);
+  targets.push(section);
+
+  const hiddenBtns = document.querySelectorAll('.export-hide');
+  hiddenBtns.forEach(b => b.style.visibility = 'hidden');
+
+  try{
+    const canvases = [];
+    for(const t of targets){
+      canvases.push(await html2canvas(t, { backgroundColor: bg, scale: 2 }));
+    }
+    const width = Math.max(...canvases.map(c => c.width));
+    const gap = 24;
+    const totalHeight = canvases.reduce((sum, c) => sum + c.height, 0) + gap * (canvases.length - 1);
+
+    const out = document.createElement('canvas');
+    out.width = width;
+    out.height = totalHeight;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, totalHeight);
+    let y = 0;
+    canvases.forEach(c => {
+      ctx.drawImage(c, (width - c.width) / 2, y);
+      y += c.height + gap;
+    });
+
+    const safeName = (state.tournament.name || 'BEYBLADE_X').replace(/[^\w\u4e00-\u9fa5-]+/g, '_');
+    const link = document.createElement('a');
+    link.download = `${safeName}_${filenamePrefix}_${dateStamp()}.png`;
+    link.href = out.toDataURL('image/png');
+    link.click();
+  }catch(e){
+    console.error(e);
+    showAlert('匯出圖片時發生錯誤，請再試一次。');
+  }finally{
+    hiddenBtns.forEach(b => b.style.visibility = '');
+  }
+}
+
+function dateStamp(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+}
+
+/* =========================================================
+   STATS + SETUP SYNC
+========================================================= */
+function renderStats(){
+  const total = state.matches.length;
+  const completed = state.matches.filter(m=>m.status==='completed').length;
+  const progress = total>0 ? Math.round(completed/total*100) : 0;
+
+  document.getElementById('statPlayers').innerText = state.players.length;
+  document.getElementById('statTotal').innerText = total;
+  document.getElementById('statCompleted').innerText = completed;
+  document.getElementById('statProgress').innerText = progress + '%';
+  document.getElementById('statProgressBar').style.width = progress + '%';
+
+  document.getElementById('headerTName').innerText =
+    state.tournament.name ? state.tournament.name : '尚未設定賽事';
+}
+
+function loadSetupInputs(){
+  document.getElementById('tournamentName').value = state.tournament.name || '';
+  document.getElementById('pointsToWin').value = state.tournament.pointsToWin || 4;
+  document.getElementById('formatSelect').value = state.tournament.format || 'knockout';
+  document.getElementById('quickModeCheckbox').checked = !!state.tournament.quickMode;
+  onFormatChange();
+
+  if(state.players.length > 0){
+    createPlayerInputs(0);
+    const container = document.getElementById('playerInputs');
+    state.players.forEach(p => appendPlayerRow(container, p.name));
+  }
+
+  renderRoster();
+
+  const note = document.getElementById('setupNote');
+  const startBtn = document.getElementById('startBtn');
+  if(state.tournament.status === 'running'){
+    note.innerText = '賽事進行中：重新按下「開始比賽」將會清除目前所有對戰紀錄並重新產生賽程。';
+    startBtn.innerText = '重新產生賽程';
+  } else {
+    note.innerText = '';
+    startBtn.innerText = '開始比賽';
+  }
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+function resetTournament(){
+  showConfirm('確定要刪除目前所有比賽資料嗎？此動作無法復原。', async () => {
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    if(window.storage){ try{ await window.storage.delete(STORAGE_KEY, false); }catch(e){} }
+    if(window.cloudSync && window.cloudSync.ready && currentEventCode){
+      try{ await window.cloudSync.clearMatches(); }catch(e){}
+    }
+    state = {
+      tournament:{ name:'', pointsToWin:4, format:'knockout', quickMode:false, status:'registration' },
+      players:[], matches:[], currentRound:1
+    };
+    refereePanels = [{ id: genPanelId(), matchId:null, label:'' }];
+    savePanels();
+    createPlayerInputs(2);
+    renderAll();
+    if(currentEventCode) saveState();
+  });
+}
+
+/* =========================================================
+   TABS
+========================================================= */
+function switchTab(tab){
+  if(currentRole === 'viewer' && (tab === 'referee' || tab === 'setup')) return;
+  const tabs = ['standings','matches','referee','setup'];
+  tabs.forEach(name => {
+    document.getElementById(`tab-${name}`).classList.toggle('hidden', name !== tab);
+  });
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  if(tab === 'referee') renderReferee();
+  if(tab === 'standings' && standingsDirty){ renderStandings(); standingsDirty = false; }
+  if(tab === 'matches' && matchesDirty){ renderMatches(); matchesDirty = false; }
+}
+
+/* =========================================================
+   RENDER ALL
+========================================================= */
+function renderAll(){
+  renderStandings();
+  renderMatches();
+  standingsDirty = false;
+  matchesDirty = false;
+  renderStats();
+  const setupHasFocus = applyingRemote && document.activeElement &&
+    document.getElementById('tab-setup').contains(document.activeElement);
+  if(!setupHasFocus) loadSetupInputs();
+  if(!document.getElementById('tab-referee').classList.contains('hidden')) renderReferee();
+}
+
+/* =========================================================
+   PERF: lightweight refresh path for scoring taps
+   (see standingsDirty/matchesDirty comment above)
+========================================================= */
+function isTabVisible(tab){
+  const el = document.getElementById(`tab-${tab}`);
+  return !!el && !el.classList.contains('hidden');
+}
+
+function updateRefereePanelsForMatch(matchId){
+  const match = state.matches.find(m => m.id === matchId);
+  if(!match) return;
+  refereePanels.forEach(panel => {
+    if(panel.matchId === matchId) renderRefereeMatch(match, panel.id);
+  });
+}
+
+// Called after a single match's score/log changes (point added/undone). Avoids
+// tearing down and rebuilding the whole page — which was restarting every
+// battery/spark/glow animation on every tap — by only touching the referee
+// panel(s) actually showing this match, plus whichever other tab is currently
+// on screen. Tabs that aren't visible are marked dirty and catch up in
+// switchTab() once the user actually looks at them.
+function refreshAfterScoreChange(matchId){
+  renderStats();
+  if(isTabVisible('standings')){ renderStandings(); standingsDirty = false; }
+  else standingsDirty = true;
+  if(isTabVisible('matches')){ renderMatches(); matchesDirty = false; }
+  else matchesDirty = true;
+  if(isTabVisible('referee')) updateRefereePanelsForMatch(matchId);
+}
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function nameOf(id){
+  if(!id) return '待定';
+  if(id === 'BYE') return '輪空';
+  const p = state.players.find(p=>p.id===id);
+  return p ? p.name : id;
+}
+function escapeHtml(text){
+  const div = document.createElement('div');
+  div.textContent = text ?? '';
+  return div.innerHTML;
+}
+function escapeAttr(text){
+  return String(text ?? '').replace(/"/g,'&quot;');
+}
+</script>
+
+</body>
+</html>
