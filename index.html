@@ -645,7 +645,29 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 
 /* ===== Knockout Bracket Tree ===== */
-.bracket-scroll{ overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0; }
+.bracket-zoom-toolbar{ display:flex; align-items:center; gap:8px; margin:14px 0 4px; flex-wrap:wrap; }
+.bracket-zoom-btn{
+  width:34px; height:34px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
+  border:1px solid var(--border); color:var(--text); font-size:18px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1; cursor:pointer;
+}
+.bracket-zoom-btn:active{ background:var(--panel); }
+.bracket-zoom-label{
+  font-family:'Space Mono',monospace; font-size:13px; color:var(--muted);
+  min-width:44px; text-align:center; flex-shrink:0;
+}
+.bracket-zoom-reset{
+  height:34px; padding:0 12px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
+  border:1px solid var(--border); color:var(--muted); font-size:12px; font-weight:700; cursor:pointer;
+}
+.bracket-zoom-reset:active{ background:var(--panel); }
+.bracket-zoom-hint{ font-size:11.5px; color:var(--muted); margin-left:2px; }
+.bracket-scroll{
+  overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0;
+  -webkit-overflow-scrolling:touch; touch-action:pan-x; cursor:grab; user-select:none;
+}
+.bracket-scroll.dragging{ cursor:grabbing; }
+.bracket-zoom-wrap{ display:inline-block; transform-origin:0 0; }
 .bracket{ display:flex; flex-direction:column; align-items:flex-start; gap:22px; }
 .bracket-inner{ display:flex; align-items:flex-start; position:relative; width:max-content; }
 .bracket-col{ display:flex; flex-direction:column; flex-shrink:0; }
@@ -917,8 +939,18 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         </div>
       </div>
 
-      <div class="bracket-scroll">
-        <div class="bracket" id="bracketTree"></div>
+      <div class="bracket-zoom-toolbar export-hide">
+        <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
+        <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
+        <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
+        <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
+        <span class="bracket-zoom-hint">💡 可用手指縮放、左右滑動查看對戰樹</span>
+      </div>
+
+      <div class="bracket-scroll" id="bracketScroll">
+        <div class="bracket-zoom-wrap" id="bracketZoomWrap">
+          <div class="bracket" id="bracketTree"></div>
+        </div>
       </div>
     </div>
     <div class="card" id="standingsSection" style="margin-top:18px;">
@@ -1039,7 +1071,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 <div class="modal" id="cloudModal">
   <div class="modal-box" style="max-width:440px;">
-    <div class="modal-title">☁️ 雲端同步</div>
+    <div class="modal-title">☁️ 連線賽事</div>
 
     <div id="cloudNotConfigured" class="hidden">
       <div class="text-muted" style="font-size:13px; line-height:1.75;">
@@ -1147,7 +1179,99 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadLocalCache();
   renderAll();
   initCloud();
+  initBracketPanZoom();
 });
+
+/* =========================================================
+   BRACKET TREE — pinch-zoom / drag-to-pan (for players on
+   phones to comfortably view a large knockout bracket)
+========================================================= */
+let bracketZoom = 1;
+const BRACKET_ZOOM_MIN = 0.5;
+const BRACKET_ZOOM_MAX = 2.2;
+const BRACKET_ZOOM_STEP = 0.15;
+
+function applyBracketZoom(){
+  const wrap = document.getElementById('bracketZoomWrap');
+  if(wrap) wrap.style.transform = `scale(${bracketZoom})`;
+  const label = document.getElementById('bracketZoomLabel');
+  if(label) label.innerText = Math.round(bracketZoom * 100) + '%';
+}
+function bracketZoomIn(){
+  bracketZoom = Math.min(BRACKET_ZOOM_MAX, +(bracketZoom + BRACKET_ZOOM_STEP).toFixed(2));
+  applyBracketZoom();
+}
+function bracketZoomOut(){
+  bracketZoom = Math.max(BRACKET_ZOOM_MIN, +(bracketZoom - BRACKET_ZOOM_STEP).toFixed(2));
+  applyBracketZoom();
+}
+function bracketZoomReset(){
+  bracketZoom = 1;
+  applyBracketZoom();
+  const scroll = document.getElementById('bracketScroll');
+  if(scroll) scroll.scrollLeft = 0;
+}
+
+function initBracketPanZoom(){
+  const scroll = document.getElementById('bracketScroll');
+  if(!scroll) return;
+
+  applyBracketZoom();
+
+  // --- Mouse drag-to-pan (desktop / trackpad) ---
+  let isDown = false, startX = 0, scrollLeftStart = 0, dragged = false;
+  scroll.addEventListener('mousedown', (e) => {
+    isDown = true; dragged = false;
+    scroll.classList.add('dragging');
+    startX = e.pageX;
+    scrollLeftStart = scroll.scrollLeft;
+  });
+  window.addEventListener('mouseup', () => { isDown = false; scroll.classList.remove('dragging'); });
+  window.addEventListener('mouseleave', () => { isDown = false; scroll.classList.remove('dragging'); });
+  scroll.addEventListener('mousemove', (e) => {
+    if(!isDown) return;
+    const dx = e.pageX - startX;
+    if(Math.abs(dx) > 3) dragged = true;
+    scroll.scrollLeft = scrollLeftStart - dx;
+  });
+  // Prevent an accidental click firing right after a drag.
+  scroll.addEventListener('click', (e) => {
+    if(dragged){ e.preventDefault(); e.stopPropagation(); dragged = false; }
+  }, true);
+
+  // --- Two-finger pinch to zoom (touch) ---
+  let pinchStartDist = null, pinchStartZoom = 1;
+  function touchDist(touches){
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  scroll.addEventListener('touchstart', (e) => {
+    if(e.touches.length === 2){
+      pinchStartDist = touchDist(e.touches);
+      pinchStartZoom = bracketZoom;
+    }
+  }, { passive:true });
+  scroll.addEventListener('touchmove', (e) => {
+    if(e.touches.length === 2 && pinchStartDist){
+      e.preventDefault();
+      const ratio = touchDist(e.touches) / pinchStartDist;
+      bracketZoom = Math.min(BRACKET_ZOOM_MAX, Math.max(BRACKET_ZOOM_MIN, +(pinchStartZoom * ratio).toFixed(2)));
+      applyBracketZoom();
+    }
+  }, { passive:false });
+  scroll.addEventListener('touchend', (e) => {
+    if(e.touches.length < 2) pinchStartDist = null;
+  });
+
+  // --- Ctrl/Cmd + scroll-wheel to zoom (desktop trackpads) ---
+  scroll.addEventListener('wheel', (e) => {
+    if(e.ctrlKey || e.metaKey){
+      e.preventDefault();
+      if(e.deltaY < 0) bracketZoomIn(); else bracketZoomOut();
+    }
+  }, { passive:false });
+}
 
 /* =========================================================
    STORAGE — local cache (works everywhere: artifact preview
@@ -1284,6 +1408,7 @@ function initCloud(){
     if(!window.cloudSync.isConfigured()){
       document.getElementById('cloudNotConfigured').classList.remove('hidden');
       document.getElementById('cloudConfigured').classList.add('hidden');
+      openCloudModal(); // 強制彈出：告知目前僅能本機運作
       return;
     }
     document.getElementById('cloudNotConfigured').classList.add('hidden');
@@ -1303,7 +1428,13 @@ function initCloud(){
     const savedCode = localStorage.getItem(EVENT_CODE_KEY);
     const savedRole = localStorage.getItem(EVENT_ROLE_KEY) || 'referee';
     const savedViewerCode = localStorage.getItem(EVENT_VIEWER_KEY) || null;
-    if(savedCode) joinCloudEvent(savedCode, savedRole, savedViewerCode);
+    if(savedCode){
+      joinCloudEvent(savedCode, savedRole, savedViewerCode);
+    } else {
+      // 尚未連線過任何賽事 → 一進站就強制跳出連線視窗，
+      // 使用者可選擇建立/加入賽事，或按「關閉」改為本機運行（無連線功能）。
+      openCloudModal();
+    }
   };
   if(window.cloudSync && window.cloudSync.ready !== undefined && (window.cloudSync.ready || !window.cloudSync.isConfigured())){
     ready();
@@ -1394,6 +1525,9 @@ function openCloudModal(){
 }
 function hideCloudModal(){
   document.getElementById('cloudModal').classList.remove('show');
+  if(!currentEventCode){
+    showToast('已改為本機運行，無連線功能');
+  }
 }
 function switchCloudTab(which){
   document.getElementById('cloudTabBtnCreate').classList.toggle('active', which==='create');
@@ -3004,6 +3138,18 @@ async function exportAsImage(sectionId, filenamePrefix){
   const hiddenBtns = document.querySelectorAll('.export-hide');
   hiddenBtns.forEach(b => b.style.visibility = 'hidden');
 
+  // Bracket may be zoomed/panned by the viewer — export it at its normal
+  // 100% scale and from the start of the scroll, then restore afterwards.
+  const isBracket = sectionId === 'bracketSection';
+  const zoomBefore = bracketZoom;
+  const scrollEl = document.getElementById('bracketScroll');
+  const scrollLeftBefore = scrollEl ? scrollEl.scrollLeft : 0;
+  if(isBracket && zoomBefore !== 1){
+    bracketZoom = 1;
+    applyBracketZoom();
+  }
+  if(isBracket && scrollEl) scrollEl.scrollLeft = 0;
+
   try{
     const canvases = [];
     for(const t of targets){
@@ -3035,6 +3181,11 @@ async function exportAsImage(sectionId, filenamePrefix){
     showAlert('匯出圖片時發生錯誤，請再試一次。');
   }finally{
     hiddenBtns.forEach(b => b.style.visibility = '');
+    if(isBracket){
+      bracketZoom = zoomBefore;
+      applyBracketZoom();
+      if(scrollEl) scrollEl.scrollLeft = scrollLeftBefore;
+    }
   }
 }
 
