@@ -652,14 +652,15 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 
 /* ===== Knockout Bracket Tree ===== */
+.bracket-theme-row{ display:flex; align-items:center; gap:10px; margin:14px 0 2px; flex-wrap:wrap; }
+.bracket-theme-row .field-label{ white-space:nowrap; }
 .theme-swatch{
-  width:16px; height:16px; border-radius:50%; flex-shrink:0;
+  width:18px; height:18px; border-radius:50%; flex-shrink:0;
   background:rgb(var(--theme-rgb)); border:1px solid rgba(255,255,255,.25);
   box-shadow:0 0 8px rgba(var(--theme-rgb),.6);
   transition:background .15s ease, box-shadow .15s ease;
 }
-.theme-select{ width:auto; min-width:118px; flex:0 0 auto; padding:7px 10px; font-size:12.5px; height:34px; }
-.bracket-toolbar-divider{ width:1px; height:22px; background:var(--border); flex-shrink:0; }
+.theme-select{ width:auto; min-width:150px; flex:1 1 150px; max-width:240px; }
 .bracket-zoom-toolbar{ display:flex; align-items:center; gap:8px; margin:14px 0 4px; flex-wrap:wrap; }
 .bracket-zoom-btn{
   width:34px; height:34px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
@@ -719,6 +720,16 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   overflow-wrap:break-word;
   z-index:0;
   user-select:none;
+}
+/* Phone portrait: scale the watermark to the viewport width so long event
+   names wrap naturally between characters instead of being squeezed by a
+   fixed 40px size. Desktop / landscape / tablet layouts are untouched. */
+@media (max-width: 700px) and (orientation: portrait){
+  .bracket-watermark{
+    max-width:46%;
+    font-size:clamp(16px, 6vw, 32px);
+    line-height:1.15;
+  }
 }
 #bracketSection{ position:relative; overflow:hidden; }
 #bracketScroll{ position:relative; z-index:1; }
@@ -984,9 +995,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
       </div>
 
       <div class="bracket-zoom-toolbar export-hide">
-        <span class="theme-swatch" aria-hidden="true"></span>
-        <select id="bracketThemeSelect" class="text-input theme-select" title="顏色主題" aria-label="顏色主題" onchange="setBracketTheme(this.value)"></select>
-        <span class="bracket-toolbar-divider" aria-hidden="true"></span>
         <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
         <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
         <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
@@ -1001,6 +1009,13 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
       </div>
       <div class="bracket-watermark" id="bracketWatermark"></div>
     </div>
+
+    <div class="bracket-theme-row export-hide hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
+      <span class="theme-swatch" aria-hidden="true"></span>
+      <span class="field-label" style="margin:0;">顏色主題</span>
+      <select id="bracketThemeSelect" class="text-input theme-select" onchange="setBracketTheme(this.value)"></select>
+    </div>
+
     <div class="card" id="standingsSection" style="margin-top:18px;">
       <div class="space-between">
         <div>
@@ -2494,6 +2509,7 @@ function calculateStandings(){
 function renderStandings(){
   const isKnockout = state.tournament.format === 'knockout';
   document.getElementById('bracketSection').classList.toggle('hidden', !isKnockout);
+  document.getElementById('bracketThemeRow').classList.toggle('hidden', !isKnockout);
   document.getElementById('standingsSection').classList.toggle('hidden', isKnockout);
 
   if(isKnockout){
