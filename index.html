@@ -711,6 +711,21 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .bracket-zoom-reset:active{ background:var(--panel); }
 .bracket-zoom-hint{ font-size:11.5px; color:var(--muted); margin-left:2px; }
+.bracket-fullscreen-btn{
+  height:34px; width:34px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
+  border:1px solid var(--border); color:var(--muted); font-size:16px; line-height:1;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  margin-left:auto;
+}
+.bracket-fullscreen-btn:active{ background:var(--panel); }
+#bracketSection:fullscreen{
+  background:var(--bg,#0b0b0f); padding:16px; display:flex; flex-direction:column; overflow:auto;
+}
+#bracketSection:-webkit-full-screen{
+  background:var(--bg,#0b0b0f); padding:16px; display:flex; flex-direction:column; overflow:auto;
+}
+#bracketSection:fullscreen .bracket-scroll,
+#bracketSection:-webkit-full-screen .bracket-scroll{ flex:1; }
 .bracket-scroll{
   overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0;
   -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; cursor:grab; user-select:none;
@@ -896,7 +911,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 </style>
 </head>
 <body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <!-- =========================================================
      ☁️ CLOUD SYNC (Firebase) — optional, for cross-device use
@@ -1071,17 +1085,17 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
           <div class="card-sub" id="bracketRulesSummary">單淘汰賽</div>
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-dark export-hide" onclick="exportAsImage('bracketSection','對戰樹狀圖')">📸 匯出成圖片</button>
-          <button class="btn btn-warning export-hide undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">🎰 隨機刷新賽程</button>
+          <button class="btn btn-warning undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">🎰 隨機刷新賽程</button>
         </div>
       </div>
 
-      <div class="bracket-zoom-toolbar export-hide">
+      <div class="bracket-zoom-toolbar">
         <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
         <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
         <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
         <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
         <span class="bracket-zoom-hint">💡 可用手指縮放、左右滑動查看對戰樹</span>
+        <button class="bracket-fullscreen-btn" id="bracketFullscreenBtn" onclick="toggleBracketFullscreen()" aria-label="全螢幕" title="全螢幕">⛶</button>
       </div>
 
       <div class="bracket-scroll" id="bracketScroll">
@@ -1092,7 +1106,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
       <div class="bracket-watermark" id="bracketWatermark"></div>
     </div>
 
-    <div class="bracket-theme-row export-hide hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
+    <div class="bracket-theme-row hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
       <span class="theme-swatch" aria-hidden="true"></span>
       <span class="field-label" style="margin:0;">顏色主題</span>
       <div class="theme-dropdown" id="bracketThemeDropdown">
@@ -1113,8 +1127,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
           <div class="card-sub" id="rulesSummary">先取得 4 分獲勝・排序依：勝場 → 得失分 → 總得分</div>
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-dark export-hide" onclick="exportAsImage('standingsSection','即時戰況')">📸 匯出成圖片</button>
-          <button class="btn btn-warning export-hide undo-btn" onclick="undoLastMatch()">撤銷最近一場</button>
+          <button class="btn btn-warning undo-btn" onclick="undoLastMatch()">撤銷最近一場</button>
         </div>
       </div>
 
@@ -1533,6 +1546,30 @@ function initBracketPanZoom(){
     }
   }, { passive:false });
 }
+
+// --- Full screen toggle (mirrors Challonge's "Full Screen" button) ---
+function toggleBracketFullscreen(){
+  const el = document.getElementById('bracketSection');
+  if(!el) return;
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  if(!isFs){
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(req) req.call(el);
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if(exit) exit.call(document);
+  }
+}
+function updateBracketFullscreenBtn(){
+  const btn = document.getElementById('bracketFullscreenBtn');
+  if(!btn) return;
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  btn.innerHTML = isFs ? '⤡' : '⛶';
+  btn.title = isFs ? '離開全螢幕' : '全螢幕';
+}
+['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(evt =>
+  document.addEventListener(evt, updateBracketFullscreenBtn)
+);
 
 /* =========================================================
    STORAGE — local cache (works everywhere: artifact preview
@@ -3393,111 +3430,6 @@ function hasPendingMatches(){
 
 function showFinalResults(){
   switchTab('standings');
-}
-
-/* =========================================================
-   EXPORT: SAVE BRACKET / STANDINGS AS A PNG IMAGE
-========================================================= */
-async function exportAsImage(sectionId, filenamePrefix){
-  if(typeof html2canvas !== 'function'){
-    showAlert('圖片匯出功能載入失敗，請確認網路連線後重新整理頁面再試一次。');
-    return;
-  }
-  const section = document.getElementById(sectionId);
-  const podium = document.getElementById('podiumContainer');
-  if(!section) return;
-
-  const bg = (getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#050505').trim();
-  const targets = [];
-  if(podium && !podium.classList.contains('hidden')) targets.push(podium);
-  targets.push(section);
-
-  const hiddenBtns = document.querySelectorAll('.export-hide');
-  hiddenBtns.forEach(b => b.style.visibility = 'hidden');
-
-  // The bracket tree lives inside a horizontally-scrolling, overflow-clipped
-  // box (so players can pan/zoom a large tree on screen). A plain screenshot
-  // of that box only captures whatever's currently visible/scrolled into
-  // view, cropping the rest of the tree. For export we temporarily: reset
-  // zoom/scroll to show it at 100% from the start, remove the clipping
-  // (overflow) on both the scroll box and the card around it, and stretch
-  // the card's own width to match the tree's true full width — so nothing
-  // gets cut off and the bottom-right watermark still lands in the correct
-  // corner of the full image instead of the corner of the old, narrower box.
-  const isBracket = sectionId === 'bracketSection';
-  const zoomBefore = bracketZoom;
-  const scrollEl = document.getElementById('bracketScroll');
-  const zoomWrapEl = document.getElementById('bracketZoomWrap');
-  const scrollLeftBefore = scrollEl ? scrollEl.scrollLeft : 0;
-
-  const restoreStyles = [];
-  function tempStyle(el, prop, value){
-    if(!el) return;
-    restoreStyles.push([el, prop, el.style[prop]]);
-    el.style[prop] = value;
-  }
-
-  let exportWidth = null;
-  if(isBracket && zoomBefore !== 1){ bracketZoom = 1; applyBracketZoom(); }
-  if(isBracket && scrollEl) scrollEl.scrollLeft = 0;
-  if(isBracket && scrollEl && zoomWrapEl){
-    tempStyle(scrollEl, 'overflowX', 'visible');
-    tempStyle(scrollEl, 'overflowY', 'visible');
-    tempStyle(section, 'overflow', 'visible');
-    const sectionPaddingX = 40; // matches .card's 20px left+right padding
-    exportWidth = Math.ceil(zoomWrapEl.scrollWidth + sectionPaddingX);
-    tempStyle(section, 'width', exportWidth + 'px');
-  }
-
-  try{
-    const canvases = [];
-    for(const t of targets){
-      const opts = { backgroundColor: bg, scale: 2 };
-      if(isBracket && t === section && exportWidth){
-        opts.width = exportWidth;
-        opts.windowWidth = Math.max(exportWidth, window.innerWidth);
-      }
-      canvases.push(await html2canvas(t, opts));
-    }
-    const width = Math.max(...canvases.map(c => c.width));
-    const gap = 24;
-    const totalHeight = canvases.reduce((sum, c) => sum + c.height, 0) + gap * (canvases.length - 1);
-
-    const out = document.createElement('canvas');
-    out.width = width;
-    out.height = totalHeight;
-    const ctx = out.getContext('2d');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, width, totalHeight);
-    let y = 0;
-    canvases.forEach(c => {
-      ctx.drawImage(c, (width - c.width) / 2, y);
-      y += c.height + gap;
-    });
-
-    const safeName = (state.tournament.name || 'BEYBLADE_X').replace(/[^\w\u4e00-\u9fa5-]+/g, '_');
-    const link = document.createElement('a');
-    link.download = `${safeName}_${filenamePrefix}_${dateStamp()}.png`;
-    link.href = out.toDataURL('image/png');
-    link.click();
-  }catch(e){
-    console.error(e);
-    showAlert('匯出圖片時發生錯誤，請再試一次。');
-  }finally{
-    hiddenBtns.forEach(b => b.style.visibility = '');
-    restoreStyles.reverse().forEach(([el, prop, value]) => { el.style[prop] = value; });
-    if(isBracket){
-      bracketZoom = zoomBefore;
-      applyBracketZoom();
-      if(scrollEl) scrollEl.scrollLeft = scrollLeftBefore;
-    }
-  }
-}
-
-function dateStamp(){
-  const d = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
 }
 
 /* =========================================================
