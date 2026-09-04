@@ -25,6 +25,12 @@
   --bronze:#d38a52;
   --amber:#ffa726;
   --theme-rgb:255,167,38; /* 樹狀圖顏色主題（預設：琥珀橙），由玩家於下拉選單選擇後即時更新 */
+  /* Header-only "HUD" palette — cooler electric blue/indigo reads more like a
+     control-interface readout than the app's green accent; scoped to the
+     header so the rest of the UI's color language is untouched. */
+  --hdr-blue:#00d9ff;
+  --hdr-blue-soft:#7fe0ff;
+  --hdr-red:#ff1a3c;
   /* Finish-type colors: chosen to stay distinguishable under common forms of
      color-blindness (deuteranopia/protanopia/tritanopia), each also paired
      with its own icon glyph so nothing relies on color alone. */
@@ -56,26 +62,49 @@ button{ cursor:pointer; }
 
 /* ===== Header ===== */
 .header{
-  background:linear-gradient(160deg,#141a24 0%,#0d1119 100%);
+  background:linear-gradient(160deg,#101a26 0%,#0a0e17 100%);
   border-bottom:1px solid var(--border);
-  padding:26px 20px;
+  padding:20px 20px 18px;
   position:relative;
   overflow:hidden;
 }
-.header::after{
-  content:"";
-  position:absolute; right:-60px; top:-60px;
-  width:220px; height:220px; border-radius:50%;
-  border:2px dashed rgba(57,255,20,.18);
-}
+/* faint industrial grid — reinforces "control interface" without competing for attention */
 .header::before{
   content:"";
-  position:absolute; right:0px; top:10px;
-  width:150px; height:150px; border-radius:50%;
-  border:2px solid rgba(255,31,77,.15);
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(0,217,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,217,255,.055) 1px, transparent 1px);
+  background-size:22px 22px;
+  -webkit-mask-image:linear-gradient(155deg, rgba(0,0,0,.85), transparent 62%);
+  mask-image:linear-gradient(155deg, rgba(0,0,0,.85), transparent 62%);
+  pointer-events:none;
+}
+/* corner-bracket accent, top-right — a framing motif instead of a purely decorative circle */
+.header::after{
+  content:"";
+  position:absolute; right:18px; top:16px;
+  width:20px; height:20px;
+  border-top:2px solid rgba(0,217,255,.4);
+  border-right:2px solid rgba(0,217,255,.4);
 }
 .header-inner{ max-width:1160px; margin:auto; position:relative; z-index:1; }
+
+/* system tag — small, monospace, eyebrow above the wordmark */
+.sys-tag{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:'Space Mono',monospace;
+  font-size:11px; font-weight:700; letter-spacing:3px;
+  color:var(--hdr-blue-soft);
+  text-transform:uppercase;
+}
+.sys-tag::before{
+  content:""; width:6px; height:6px; border-radius:50%; flex-shrink:0;
+  background:var(--hdr-blue); box-shadow:0 0 7px rgba(0,217,255,.9);
+}
+
 .logo{
+  margin-top:9px;
   font-family:'Rajdhani',sans-serif;
   font-size:32px;
   font-weight:900;
@@ -88,22 +117,46 @@ button{ cursor:pointer; }
   gap:9px;
 }
 .logo-main{
-  background:linear-gradient(90deg,#fff, var(--cyan) 75%);
+  background:linear-gradient(90deg,#fff, var(--hdr-blue) 75%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   position:relative;
 }
 .logo-main::after{
   content:""; position:absolute; left:1px; right:6%; bottom:-5px; height:3px;
-  background:linear-gradient(90deg, var(--cyan), var(--violet));
+  background:linear-gradient(90deg, var(--hdr-blue), var(--hdr-red));
   border-radius:2px;
 }
-.logo span{ color:var(--orange); -webkit-text-fill-color:var(--orange); }
-.logo-sub{
-  font-style:normal; font-weight:700; font-size:13px; letter-spacing:3px;
-  color:var(--muted); -webkit-text-fill-color:var(--muted); align-self:center;
+.logo span{ color:var(--hdr-red); -webkit-text-fill-color:var(--hdr-red); text-shadow:0 0 10px rgba(255,26,60,.55); }
+
+/* tech divider with a leading tick, standing in for a plain <hr> */
+.header-rule{
+  margin-top:14px; height:1px; position:relative;
+  background:linear-gradient(90deg, var(--hdr-blue) 0%, rgba(0,217,255,.2) 45%, transparent 75%);
 }
-.subtitle{ color:var(--muted); margin-top:10px; font-size:13px; letter-spacing:.5px; }
-.tname{ margin-top:14px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:27px; letter-spacing:.4px; color:var(--silver); }
+.header-rule::before{
+  content:""; position:absolute; left:0; top:-2px; width:3px; height:5px; background:var(--hdr-blue);
+}
+
+/* meta strip — version / update date / live event readout, table-like hierarchy */
+.header-meta{
+  margin-top:12px;
+  display:flex; align-items:center; flex-wrap:wrap; row-gap:6px;
+  font-family:'Space Mono',monospace;
+  font-size:11px;
+}
+.header-meta .meta-item{
+  display:flex; align-items:baseline; gap:6px;
+  padding:0 12px; border-right:1px solid var(--border);
+  max-width:100%;
+}
+.header-meta .meta-item:first-child{ padding-left:0; }
+.header-meta .meta-item:last-child{ border-right:none; }
+.header-meta .meta-label{ color:var(--muted); letter-spacing:1.5px; flex-shrink:0; }
+.header-meta .meta-value{
+  color:var(--silver); font-weight:700; letter-spacing:.3px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.header-meta .meta-value.accent{ color:var(--hdr-blue-soft); }
 
 /* ===== Tabs ===== */
 .tabs{
@@ -639,7 +692,11 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 @media (max-width:700px){
   .container{ padding:0 12px 50px; }
-  .tname{ font-size:21px; }
+  .header{ padding:18px 16px 16px; }
+  .logo{ font-size:26px; }
+  .header-meta{ font-size:10.5px; }
+  .header-meta .meta-item{ padding:0 9px; }
+  .header-meta .meta-value{ max-width:120px; }
   .cloud-status-actions{ align-items:flex-start; }
   .cloud-status-hint{ text-align:left; }
   .stats{ grid-template-columns:repeat(2,1fr); }
@@ -661,7 +718,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   .finish-btn{ padding:12px 8px; min-height:52px; }
   .finish-label{ font-size:17px; }
   .finish-pts{ font-size:14px; padding:3px 8px; margin-left:6px; }
-  .logo{ font-size:26px; }
   .bracket-col{ width:150px !important; }
 }
 
@@ -1037,9 +1093,14 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 <header class="header">
   <div class="header-inner">
-    <div class="logo"><span class="logo-main">BEYBLADE <span>X</span></span><span class="logo-sub">對戰系統</span></div>
-    <div class="subtitle">輕鬆比賽　輕鬆玩</div>
-    <div class="tname" id="headerTName">尚未設定賽事</div>
+    <div class="sys-tag">Tournament System</div>
+    <div class="logo"><span class="logo-main">BEYBLADE <span>X</span></span></div>
+    <div class="header-rule"></div>
+    <div class="header-meta">
+      <span class="meta-item"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></span>
+      <span class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.2</span></span>
+      <span class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/4</span></span>
+    </div>
   </div>
 </header>
 
@@ -3027,7 +3088,7 @@ function renderMatches(){
   for(let r=1; r<=rounds; r++){
     const matches = state.matches.filter(m=>m.round===r);
     html += `<div class="round-heading">第 ${r} 輪</div>`;
-    html += matches.map(m => {
+    html += matches.map((m, idx) => {
       const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
       const completed = m.status === 'completed';
       const logChips = m.log.map(l => {
@@ -3040,7 +3101,7 @@ function renderMatches(){
       return `
         <div class="match ${completed?'completed':''}">
           <div class="match-header">
-            <span>${m.id}</span>
+            <span>第 ${idx+1} 場</span>
             <span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>
           </div>
           <div class="match-result">${completed ? `🏆 ${escapeHtml(pa)} VS ${escapeHtml(pb)} → ${escapeHtml(nameOf(m.winner))} 獲勝　${m.forfeited ? '(棄權判負)' : m.isBye ? '(輪空)' : m.quickWin ? '(快速模式)' : `(${m.pointsA} : ${m.pointsB})`}` : `${escapeHtml(pa)}　VS　${escapeHtml(pb)}`}</div>
