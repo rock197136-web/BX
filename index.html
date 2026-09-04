@@ -652,15 +652,14 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 
 /* ===== Knockout Bracket Tree ===== */
-.bracket-theme-row{ display:flex; align-items:center; gap:10px; margin:16px 0 2px; flex-wrap:wrap; }
-.bracket-theme-row .field-label{ margin:0; white-space:nowrap; }
 .theme-swatch{
-  width:18px; height:18px; border-radius:50%; flex-shrink:0;
+  width:16px; height:16px; border-radius:50%; flex-shrink:0;
   background:rgb(var(--theme-rgb)); border:1px solid rgba(255,255,255,.25);
   box-shadow:0 0 8px rgba(var(--theme-rgb),.6);
   transition:background .15s ease, box-shadow .15s ease;
 }
-.theme-select{ width:auto; min-width:150px; flex:0 0 auto; padding:9px 12px; }
+.theme-select{ width:auto; min-width:118px; flex:0 0 auto; padding:7px 10px; font-size:12.5px; height:34px; }
+.bracket-toolbar-divider{ width:1px; height:22px; background:var(--border); flex-shrink:0; }
 .bracket-zoom-toolbar{ display:flex; align-items:center; gap:8px; margin:14px 0 4px; flex-wrap:wrap; }
 .bracket-zoom-btn{
   width:34px; height:34px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
@@ -712,7 +711,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   font-weight:900;
   transform:skewX(-5deg);
   transform-origin:right bottom;
-  font-size:48.4px; line-height:1.1;
+  font-size:40px; line-height:1.1;
   color:#ffffff; opacity:.4;
   text-align:right;
   pointer-events:none;
@@ -984,13 +983,10 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         </div>
       </div>
 
-      <div class="bracket-theme-row export-hide">
-        <span class="theme-swatch" aria-hidden="true"></span>
-        <label class="field-label" for="bracketThemeSelect">顏色主題</label>
-        <select id="bracketThemeSelect" class="text-input theme-select" onchange="setBracketTheme(this.value)"></select>
-      </div>
-
       <div class="bracket-zoom-toolbar export-hide">
+        <span class="theme-swatch" aria-hidden="true"></span>
+        <select id="bracketThemeSelect" class="text-input theme-select" title="顏色主題" aria-label="顏色主題" onchange="setBracketTheme(this.value)"></select>
+        <span class="bracket-toolbar-divider" aria-hidden="true"></span>
         <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
         <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
         <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
@@ -3245,22 +3241,49 @@ async function exportAsImage(sectionId, filenamePrefix){
   const hiddenBtns = document.querySelectorAll('.export-hide');
   hiddenBtns.forEach(b => b.style.visibility = 'hidden');
 
-  // Bracket may be zoomed/panned by the viewer — export it at its normal
-  // 100% scale and from the start of the scroll, then restore afterwards.
+  // The bracket tree lives inside a horizontally-scrolling, overflow-clipped
+  // box (so players can pan/zoom a large tree on screen). A plain screenshot
+  // of that box only captures whatever's currently visible/scrolled into
+  // view, cropping the rest of the tree. For export we temporarily: reset
+  // zoom/scroll to show it at 100% from the start, remove the clipping
+  // (overflow) on both the scroll box and the card around it, and stretch
+  // the card's own width to match the tree's true full width — so nothing
+  // gets cut off and the bottom-right watermark still lands in the correct
+  // corner of the full image instead of the corner of the old, narrower box.
   const isBracket = sectionId === 'bracketSection';
   const zoomBefore = bracketZoom;
   const scrollEl = document.getElementById('bracketScroll');
+  const zoomWrapEl = document.getElementById('bracketZoomWrap');
   const scrollLeftBefore = scrollEl ? scrollEl.scrollLeft : 0;
-  if(isBracket && zoomBefore !== 1){
-    bracketZoom = 1;
-    applyBracketZoom();
+
+  const restoreStyles = [];
+  function tempStyle(el, prop, value){
+    if(!el) return;
+    restoreStyles.push([el, prop, el.style[prop]]);
+    el.style[prop] = value;
   }
+
+  let exportWidth = null;
+  if(isBracket && zoomBefore !== 1){ bracketZoom = 1; applyBracketZoom(); }
   if(isBracket && scrollEl) scrollEl.scrollLeft = 0;
+  if(isBracket && scrollEl && zoomWrapEl){
+    tempStyle(scrollEl, 'overflowX', 'visible');
+    tempStyle(scrollEl, 'overflowY', 'visible');
+    tempStyle(section, 'overflow', 'visible');
+    const sectionPaddingX = 40; // matches .card's 20px left+right padding
+    exportWidth = Math.ceil(zoomWrapEl.scrollWidth + sectionPaddingX);
+    tempStyle(section, 'width', exportWidth + 'px');
+  }
 
   try{
     const canvases = [];
     for(const t of targets){
-      canvases.push(await html2canvas(t, { backgroundColor: bg, scale: 2 }));
+      const opts = { backgroundColor: bg, scale: 2 };
+      if(isBracket && t === section && exportWidth){
+        opts.width = exportWidth;
+        opts.windowWidth = Math.max(exportWidth, window.innerWidth);
+      }
+      canvases.push(await html2canvas(t, opts));
     }
     const width = Math.max(...canvases.map(c => c.width));
     const gap = 24;
@@ -3288,6 +3311,7 @@ async function exportAsImage(sectionId, filenamePrefix){
     showAlert('匯出圖片時發生錯誤，請再試一次。');
   }finally{
     hiddenBtns.forEach(b => b.style.visibility = '');
+    restoreStyles.reverse().forEach(([el, prop, value]) => { el.style[prop] = value; });
     if(isBracket){
       bracketZoom = zoomBefore;
       applyBracketZoom();
