@@ -711,31 +711,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .bracket-zoom-reset:active{ background:var(--panel); }
 .bracket-zoom-hint{ font-size:11.5px; color:var(--muted); margin-left:2px; }
-.bracket-fullscreen-btn{
-  height:34px; width:34px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
-  border:1px solid var(--border); color:var(--muted); font-size:16px; line-height:1;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  margin-left:auto;
-}
-.bracket-fullscreen-btn:active{ background:var(--panel); }
-.bracket-viewport{ position:relative; overflow:hidden; }
-/* "全螢幕" is implemented as a fixed-position overlay rather than the native
-   Fullscreen API — iOS Safari and most in-app browsers (LINE, IG, etc.)
-   either don't support requestFullscreen on arbitrary elements or silently
-   swallow it, so this CSS-only approach is what actually works everywhere.
-   It targets .bracket-viewport (toolbar + tree + watermark only) rather
-   than the whole card, so the title/sub/shuffle-button row stays out of
-   the full-screen view. */
-.bracket-viewport.bracket-maximized{
-  position:fixed; inset:0; z-index:9999; margin:0; border-radius:0;
-  display:flex; flex-direction:column; overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  background:var(--bg,#0b0b0f);
-  padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
-          calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
-}
-html.bracket-maximized-lock, body.bracket-maximized-lock{ overflow:hidden; height:100%; }
-.bracket-viewport.bracket-maximized .bracket-scroll{ flex:1; }
 .bracket-scroll{
   overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0;
   -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; cursor:grab; user-select:none;
@@ -877,11 +852,11 @@ html.bracket-maximized-lock, body.bracket-maximized-lock{ overflow:hidden; heigh
 .bracket-empty{ text-align:center; padding:50px 20px; color:var(--muted); }
 
 .bracket-bronze{
-  display:flex; flex-direction:column; align-items:center; gap:8px;
-  padding-top:22px; margin-top:8px; border-top:1px dashed var(--border); width:100%;
+  display:flex; flex-direction:column; gap:8px;
+  padding-top:20px; margin-top:32px; border-top:1px dashed var(--border); width:100%;
 }
-.bracket-bronze .bracket-round-label{ color:var(--bronze); font-size:13px; padding-bottom:0; }
-.bracket-bronze-body{ position:relative; height:74px; width:190px; max-width:92%; }
+.bracket-bronze .bracket-round-label{ color:var(--bronze); font-size:13px; padding-bottom:8px; }
+.bracket-bronze-body{ position:relative; height:74px; width:190px; max-width:100%; }
 .bracket-bronze-body .bracket-match{
   border-color:rgba(211,138,82,.55);
   box-shadow:0 0 0 1px rgba(211,138,82,.15), 0 0 18px rgba(211,138,82,.2);
@@ -1099,23 +1074,20 @@ html.bracket-maximized-lock, body.bracket-maximized-lock{ overflow:hidden; heigh
         </div>
       </div>
 
-      <div class="bracket-viewport" id="bracketViewport">
-        <div class="bracket-zoom-toolbar">
-          <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
-          <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
-          <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
-          <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
-          <span class="bracket-zoom-hint">💡 可用手指縮放、左右滑動查看對戰樹</span>
-          <button class="bracket-fullscreen-btn" id="bracketFullscreenBtn" onclick="toggleBracketFullscreen()" aria-label="全螢幕" title="全螢幕">⛶</button>
-        </div>
-
-        <div class="bracket-scroll" id="bracketScroll">
-          <div class="bracket-zoom-wrap" id="bracketZoomWrap">
-            <div class="bracket" id="bracketTree"></div>
-          </div>
-        </div>
-        <div class="bracket-watermark" id="bracketWatermark"></div>
+      <div class="bracket-zoom-toolbar">
+        <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
+        <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
+        <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
+        <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
+        <span class="bracket-zoom-hint">💡 可用手指縮放、左右滑動查看對戰樹</span>
       </div>
+
+      <div class="bracket-scroll" id="bracketScroll">
+        <div class="bracket-zoom-wrap" id="bracketZoomWrap">
+          <div class="bracket" id="bracketTree"></div>
+        </div>
+      </div>
+      <div class="bracket-watermark" id="bracketWatermark"></div>
     </div>
 
     <div class="bracket-theme-row hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
@@ -1576,42 +1548,6 @@ function initBracketPanZoom(){
     }
   }, { passive:false });
 }
-
-// --- Full screen toggle (mirrors Challonge's "Full Screen" button).
-// Uses a CSS overlay instead of the native Fullscreen API — many mobile
-// browsers (iOS Safari, LINE/IG in-app browsers, etc.) either lack
-// requestFullscreen for arbitrary elements or quietly ignore the call,
-// so a real element.requestFullscreen() ends up doing nothing on phones
-// even though it works fine on desktop. The overlay approach behaves
-// identically on every platform. ---
-function toggleBracketFullscreen(){
-  const el = document.getElementById('bracketViewport');
-  if(!el) return;
-  if(el.classList.contains('bracket-maximized')){
-    el.classList.remove('bracket-maximized');
-    document.documentElement.classList.remove('bracket-maximized-lock');
-    document.body.classList.remove('bracket-maximized-lock');
-  } else {
-    el.classList.add('bracket-maximized');
-    document.documentElement.classList.add('bracket-maximized-lock');
-    document.body.classList.add('bracket-maximized-lock');
-  }
-  updateBracketFullscreenBtn();
-}
-function updateBracketFullscreenBtn(){
-  const btn = document.getElementById('bracketFullscreenBtn');
-  const el = document.getElementById('bracketViewport');
-  if(!btn || !el) return;
-  const isMax = el.classList.contains('bracket-maximized');
-  btn.innerHTML = isMax ? '⤡' : '⛶';
-  btn.title = isMax ? '離開全螢幕' : '全螢幕';
-}
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape'){
-    const el = document.getElementById('bracketViewport');
-    if(el && el.classList.contains('bracket-maximized')) toggleBracketFullscreen();
-  }
-});
 
 /* =========================================================
    STORAGE — local cache (works everywhere: artifact preview
@@ -2941,22 +2877,35 @@ function renderBracket(){
   );
   const nextMatch = nextPlayableMatch(Array.from(liveIds));
   const nextId = nextMatch ? nextMatch.id : null;
+  const bronzeMatch = state.matches.find(m => m.thirdPlace);
 
-  let html = `<div class="bracket-inner" style="height:${H}px;">`;
+  let html = `<div class="bracket-inner">`;
 
   rounds.forEach((r, ridx) => {
     const matches = byRound[r];
     const n = matches.length;
+    const isFinalRound = ridx === rounds.length - 1;
 
     html += `<div class="bracket-col" style="width:${COLW}px;">
       <div class="bracket-round-label">${bracketRoundLabel(r, rounds.length)}</div>
       <div class="bracket-round-body" style="height:${H}px;">`;
     matches.forEach((m, i) => {
       const centerY = (i + 0.5) * (H / n);
-      const isFinal = ridx === rounds.length - 1;
-      html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinal);
+      html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinalRound);
     });
-    html += `</div></div>`;
+    html += `</div>`;
+
+    // 季軍戰 sits directly under the final match, in the final round's own
+    // column, rather than centered under the whole tree — so it always
+    // lines up with the last (rightmost) column regardless of round count.
+    if(isFinalRound && bronzeMatch){
+      html += `
+        <div class="bracket-bronze">
+          <div class="bracket-round-label">🥉 季軍戰</div>
+          <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextId)}</div>
+        </div>`;
+    }
+    html += `</div>`;
 
     if(ridx < rounds.length - 1){
       const nextMatches = byRound[rounds[ridx+1]];
@@ -2988,15 +2937,6 @@ function renderBracket(){
   });
 
   html += `</div>`;
-
-  const bronzeMatch = state.matches.find(m => m.thirdPlace);
-  if(bronzeMatch){
-    html += `
-      <div class="bracket-bronze">
-        <div class="bracket-round-label">🥉 季軍戰</div>
-        <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextId)}</div>
-      </div>`;
-  }
 
   wrap.innerHTML = html;
 
