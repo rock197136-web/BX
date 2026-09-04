@@ -661,6 +661,38 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   transition:background .15s ease, box-shadow .15s ease;
 }
 .theme-select{ width:auto; min-width:150px; flex:1 1 150px; max-width:240px; }
+
+/* Custom theme dropdown (replaces native <select> so option colors also
+   show on mobile, where the OS native picker ignores custom <option> styles) */
+.theme-dropdown{ position:relative; flex:1 1 150px; max-width:240px; }
+.theme-dropdown-btn{
+  display:flex; align-items:center; gap:9px; width:100%; cursor:pointer;
+  text-align:left; background:#0d1119; appearance:none; box-sizing:border-box;
+}
+.theme-dropdown-btn:active{ background:#11151f; }
+.theme-dropdown-dot{
+  width:12px; height:12px; border-radius:50%; flex-shrink:0;
+  border:1px solid rgba(255,255,255,.3);
+}
+.theme-dropdown-label{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+.theme-dropdown-arrow{
+  color:var(--muted); font-size:11px; flex-shrink:0; transition:transform .15s ease;
+}
+.theme-dropdown-btn[aria-expanded="true"] .theme-dropdown-arrow{ transform:rotate(180deg); }
+.theme-dropdown-list{
+  position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:30;
+  background:#0d1119; border:1px solid var(--border); border-radius:10px;
+  list-style:none; margin:0; padding:6px; max-height:280px; overflow-y:auto;
+  box-shadow:0 14px 32px rgba(0,0,0,.55);
+}
+.theme-dropdown-option{
+  display:flex; align-items:center; gap:10px; padding:11px 10px; border-radius:8px;
+  cursor:pointer; font-size:14px; font-weight:600;
+}
+.theme-dropdown-option:hover{ background:var(--panel-2); }
+.theme-dropdown-option .theme-dropdown-dot{ width:11px; height:11px; }
+.theme-dropdown-check{ margin-left:auto; opacity:0; color:var(--text); font-size:13px; flex-shrink:0; }
+.theme-dropdown-option.selected .theme-dropdown-check{ opacity:1; }
 .bracket-zoom-toolbar{ display:flex; align-items:center; gap:8px; margin:14px 0 4px; flex-wrap:wrap; }
 .bracket-zoom-btn{
   width:34px; height:34px; flex-shrink:0; border-radius:9px; background:var(--panel-2);
@@ -1013,7 +1045,15 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <div class="bracket-theme-row export-hide hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
       <span class="theme-swatch" aria-hidden="true"></span>
       <span class="field-label" style="margin:0;">顏色主題</span>
-      <select id="bracketThemeSelect" class="text-input theme-select" onchange="setBracketTheme(this.value)"></select>
+      <div class="theme-dropdown" id="bracketThemeDropdown">
+        <button type="button" class="theme-dropdown-btn text-input theme-select" id="bracketThemeBtn"
+                aria-haspopup="listbox" aria-expanded="false" onclick="toggleThemeDropdown()">
+          <span class="theme-dropdown-dot" id="bracketThemeBtnDot"></span>
+          <span class="theme-dropdown-label" id="bracketThemeBtnLabel"></span>
+          <span class="theme-dropdown-arrow" aria-hidden="true">▾</span>
+        </button>
+        <ul class="theme-dropdown-list hidden" id="bracketThemeList" role="listbox" tabindex="-1"></ul>
+      </div>
     </div>
 
     <div class="card" id="standingsSection" style="margin-top:18px;">
@@ -1236,19 +1276,54 @@ const BRACKET_THEME_KEY = 'beyblade-x-bracket-theme';
 const BRACKET_THEME_DEFAULT = 'amber';
 
 function populateThemeSelect(){
-  const sel = document.getElementById('bracketThemeSelect');
-  if(!sel) return;
-  sel.innerHTML = Object.entries(BRACKET_THEMES).map(([key, t]) =>
-    `<option value="${key}" style="color:${t.hex};">● ${t.label}</option>`
-  ).join('');
+  const list = document.getElementById('bracketThemeList');
+  if(!list) return;
+  list.innerHTML = Object.entries(BRACKET_THEMES).map(([key, t]) => `
+    <li class="theme-dropdown-option" role="option" data-key="${key}" onclick="selectBracketTheme('${key}')">
+      <span class="theme-dropdown-dot" style="background:${t.hex};"></span>
+      <span style="color:${t.hex};">${t.label}</span>
+      <span class="theme-dropdown-check">✓</span>
+    </li>
+  `).join('');
+}
+
+function toggleThemeDropdown(forceOpen){
+  const btn = document.getElementById('bracketThemeBtn');
+  const list = document.getElementById('bracketThemeList');
+  if(!btn || !list) return;
+  const willOpen = forceOpen !== undefined ? forceOpen : list.classList.contains('hidden');
+  list.classList.toggle('hidden', !willOpen);
+  btn.setAttribute('aria-expanded', String(willOpen));
+}
+
+function closeThemeDropdownOnOutsideClick(e){
+  const wrap = document.getElementById('bracketThemeDropdown');
+  if(wrap && !wrap.contains(e.target)) toggleThemeDropdown(false);
+}
+document.addEventListener('click', closeThemeDropdownOnOutsideClick);
+
+function selectBracketTheme(key){
+  applyBracketTheme(key, true);
+  toggleThemeDropdown(false);
 }
 
 function applyBracketTheme(key, persist){
   const finalKey = BRACKET_THEMES[key] ? key : BRACKET_THEME_DEFAULT;
   const t = BRACKET_THEMES[finalKey];
   document.documentElement.style.setProperty('--theme-rgb', t.rgb);
-  const sel = document.getElementById('bracketThemeSelect');
-  if(sel) sel.value = finalKey;
+
+  const dot = document.getElementById('bracketThemeBtnDot');
+  const label = document.getElementById('bracketThemeBtnLabel');
+  if(dot) dot.style.background = t.hex;
+  if(label){ label.textContent = t.label; label.style.color = t.hex; }
+
+  const list = document.getElementById('bracketThemeList');
+  if(list){
+    list.querySelectorAll('.theme-dropdown-option').forEach(li =>
+      li.classList.toggle('selected', li.dataset.key === finalKey)
+    );
+  }
+
   if(persist){
     try{ localStorage.setItem(BRACKET_THEME_KEY, finalKey); }catch(e){}
   }
