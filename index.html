@@ -728,15 +728,66 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket-round-body{ position:relative; }
 .bracket-conn-col{ display:flex; flex-direction:column; flex-shrink:0; }
 .bracket-conn{ position:relative; }
-.bconn-h{ position:absolute; height:2px; background:var(--border); }
-.bconn-v{ position:absolute; width:2px; background:var(--border); }
+.bracket-conn-svg{ position:absolute; top:0; left:0; overflow:visible; }
+.conn-path{
+  fill:none; stroke:var(--border); stroke-width:2; stroke-linecap:square; stroke-linejoin:miter;
+  transition:stroke .25s ease, filter .25s ease;
+}
+.conn-path.active{
+  stroke:rgb(var(--theme-rgb));
+  filter:drop-shadow(0 0 3px rgba(var(--theme-rgb),.9)) drop-shadow(0 0 7px rgba(var(--theme-rgb),.5));
+}
 
 .bracket-match{
   position:absolute; left:2px; right:2px; height:74px;
   background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
-  overflow:hidden; transition:border-color .2s;
+  overflow:hidden; transition:border-color .2s, box-shadow .2s;
 }
-.bracket-match.done{ border-color:rgba(var(--theme-rgb),.35); }
+.bracket-match.done{
+  border-color:rgb(var(--theme-rgb));
+  box-shadow:0 0 0 1px rgba(var(--theme-rgb),.25), 0 0 10px rgba(var(--theme-rgb),.35);
+}
+
+/* 決賽 (final round) match box — distinct gilded treatment with a soft
+   glow and a few tiny twinkling sparkle points beside the frame. */
+.bracket-match.final-match{
+  overflow:visible;
+  border-color:rgba(245,196,66,.65);
+  box-shadow:0 0 0 1px rgba(245,196,66,.22), 0 0 20px rgba(245,196,66,.28);
+  background:linear-gradient(135deg, rgba(245,196,66,.14), var(--panel-2) 65%);
+}
+.bracket-match.final-match.done{
+  border-color:rgba(245,196,66,.9);
+  box-shadow:0 0 0 1px rgba(245,196,66,.32), 0 0 28px rgba(245,196,66,.42);
+}
+/* 決賽勝者：整組（左邊框、姓名、分數、打勾徽章）統一改用金色，
+   不再混用主題色，避免金框裡出現一塊不連接的主題色色塊。 */
+.bracket-match.final-match .bracket-slot.winner{
+  border-left-color:rgba(245,196,66,.95);
+  background:linear-gradient(90deg, rgba(245,196,66,.24), rgba(245,196,66,.04) 85%);
+}
+.bracket-match.final-match .bracket-slot.winner .bslot-pts{ color:rgba(245,196,66,.95); }
+.bracket-match.final-match .bracket-slot.winner .bslot-name{
+  color:rgba(245,196,66,.95); text-shadow:0 0 10px rgba(245,196,66,.5);
+}
+.bracket-match.final-match .bslot-check{
+  background:rgba(245,196,66,.95); color:#3a2400;
+  box-shadow:0 0 8px rgba(245,196,66,.65);
+}
+
+.final-sparkle{
+  position:absolute; border-radius:50%; pointer-events:none;
+  width:4px; height:4px; background:#fff3cf;
+  box-shadow:0 0 6px 2px rgba(255,224,140,.9);
+  animation:finalSparkle 2.6s ease-in-out infinite;
+  opacity:0;
+}
+@keyframes finalSparkle{
+  0%{ opacity:0; transform:scale(.4); }
+  18%{ opacity:1; transform:scale(1); }
+  65%{ opacity:1; transform:scale(1); }
+  100%{ opacity:0; transform:scale(.4); }
+}
 
 .bracket-watermark{
   position:absolute; right:16px; bottom:8px;
@@ -1271,6 +1322,7 @@ const BRACKET_THEMES = {
   crimson:   { label:'赤紅',   hex:'#ff4545', rgb:'255,69,69'   },
   rose:      { label:'玫瑰粉', hex:'#ec4899', rgb:'236,72,153'  },
   iceblue:   { label:'冰藍',   hex:'#38bdf8', rgb:'56,189,248'  },
+  clawgreen: { label:'魔爪綠', hex:'#7cff00', rgb:'124,255,0'   },
   metalgray: { label:'金屬灰', hex:'#c9d0dc', rgb:'201,208,220' }
 };
 const BRACKET_THEME_KEY = 'beyblade-x-bracket-theme';
@@ -2718,7 +2770,7 @@ function bracketRoundLabel(r, totalRounds){
   return `第 ${r} 輪`;
 }
 
-function bracketMatchBoxHtml(m, top, liveIds, nextId){
+function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
   const aWd = isWithdrawn(m.playerA);
   const bWd = isWithdrawn(m.playerB);
   const aName = escapeHtml(nameOf(m.playerA)) + (aWd ? '（棄權）' : '');
@@ -2741,9 +2793,14 @@ function bracketMatchBoxHtml(m, top, liveIds, nextId){
     : status === 'next'
       ? `<div class="bracket-status-badge next"><span class="bracket-status-dot"></span>即將上場</div>`
       : '';
+  const finalClass = isFinal ? 'final-match' : '';
+  const sparkles = isFinal
+    ? [0,1,2].map(i => `<span class="final-sparkle" style="animation-delay:${(i*0.7).toFixed(1)}s;"></span>`).join('')
+    : '';
 
   return `
-    <div class="bracket-match ${m.status==='completed' ? 'done':''} ${statusClass}" style="top:${top}px;">
+    <div class="bracket-match ${m.status==='completed' ? 'done':''} ${statusClass} ${finalClass}" style="top:${top}px;">
+      ${sparkles}
       ${statusBadge}
       <div class="bracket-slot ${aWin?'winner':''} ${aLose?'loser':''} ${(aBye||aWd)?'bye':''}">
         <span class="bslot-pts">${(m.playerA && !aBye && showPts) ? m.pointsA : ''}</span>
@@ -2800,53 +2857,38 @@ function renderBracket(){
       <div class="bracket-round-body" style="height:${H}px;">`;
     matches.forEach((m, i) => {
       const centerY = (i + 0.5) * (H / n);
-      html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId);
+      const isFinal = ridx === rounds.length - 1;
+      html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinal);
     });
     html += `</div></div>`;
 
     if(ridx < rounds.length - 1){
       const nextMatches = byRound[rounds[ridx+1]];
-      let lines = '';
+      let paths = '';
       nextMatches.forEach((nm, j) => {
         const a = matches[j*2], b = matches[j*2+1];
         if(!a || !b) return;
+        const topDone = a.status === 'completed';
+        const botDone = b.status === 'completed';
         const yA = (j*2 + 0.5) * (H / n);
         const yB = (j*2 + 1 + 0.5) * (H / n);
         const yMid = (j + 0.5) * (H / nextMatches.length);
-        const top = Math.min(yA, yB);
-        const bottom = Math.max(yA, yB);
-        lines += `
-          <div class="bconn-h" style="top:${yA}px; left:0; width:${GAP/2}px;"></div>
-          <div class="bconn-h" style="top:${yB}px; left:0; width:${GAP/2}px;"></div>
-          <div class="bconn-v" style="top:${top}px; height:${bottom-top}px; left:${GAP/2}px;"></div>
-          <div class="bconn-h" style="top:${yMid}px; left:${GAP/2}px; width:${GAP/2}px;"></div>
+        // Square elbow connector: flat out of the box, a right-angle bend,
+        // then flat into the next one.
+        paths += `
+          <path class="conn-path ${topDone?'active':''}" d="M0,${yA} H${GAP/2} V${yMid} H${GAP}"></path>
+          <path class="conn-path ${botDone?'active':''}" d="M0,${yB} H${GAP/2} V${yMid} H${GAP}"></path>
         `;
       });
       html += `<div class="bracket-conn-col" style="width:${GAP}px;">
         <div class="bracket-round-label" style="visibility:hidden;">·</div>
-        <div class="bracket-conn" style="height:${H}px;">${lines}</div>
-      </div>`;
-    } else {
-      const finalMatch = matches[0];
-      const champId = (finalMatch && finalMatch.status === 'completed') ? finalMatch.winner : null;
-      const yFinal = 0.5 * (H / n);
-      html += `<div class="bracket-conn-col" style="width:${GAP}px;">
-        <div class="bracket-round-label" style="visibility:hidden;">·</div>
         <div class="bracket-conn" style="height:${H}px;">
-          <div class="bconn-h" style="top:${yFinal}px; left:0; width:${GAP}px;"></div>
-        </div>
-      </div>`;
-      html += `<div class="bracket-col bracket-champion-col" style="width:${COLW}px;">
-        <div class="bracket-round-label">🏆 冠軍</div>
-        <div class="bracket-round-body" style="height:${H}px;">
-          <div class="bracket-champion-box" style="top:${yFinal-HALF}px;">
-            ${champId
-              ? `<span class="champ-trophy">🏆</span><span class="champ-name">${escapeHtml(nameOf(champId))}</span>`
-              : `<span class="champ-pending">待定</span>`}
-          </div>
+          <svg class="bracket-conn-svg" width="${GAP}" height="${H}" viewBox="0 0 ${GAP} ${H}" preserveAspectRatio="none">${paths}</svg>
         </div>
       </div>`;
     }
+    // Final round (決賽) is now the last visible column — no trailing
+    // champion column/connector is drawn after it anymore.
   });
 
   html += `</div>`;
@@ -2861,6 +2903,29 @@ function renderBracket(){
   }
 
   wrap.innerHTML = html;
+
+  // Set up the final-match sparkles: each one fades in at a random spot
+  // around the frame, fades out, then jumps to a new random spot for the
+  // next cycle (rather than blinking in a fixed position).
+  wrap.querySelectorAll('.final-sparkle').forEach(el => {
+    randomizeSparklePosition(el);
+    el.addEventListener('animationiteration', () => randomizeSparklePosition(el));
+  });
+}
+
+function randomizeSparklePosition(el){
+  const box = el.parentElement;
+  const w = (box && box.offsetWidth) || 186;
+  const h = (box && box.offsetHeight) || 74;
+  const pad = 6;
+  const edge = Math.floor(Math.random() * 4);
+  let top, left;
+  if(edge === 0){ left = Math.random() * w; top = -pad; }
+  else if(edge === 1){ left = w + pad; top = Math.random() * h; }
+  else if(edge === 2){ left = Math.random() * w; top = h + pad; }
+  else { left = -pad; top = Math.random() * h; }
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
 }
 
 /* =========================================================
