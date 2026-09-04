@@ -718,11 +718,15 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   margin-left:auto;
 }
 .bracket-fullscreen-btn:active{ background:var(--panel); }
+.bracket-viewport{ position:relative; overflow:hidden; }
 /* "全螢幕" is implemented as a fixed-position overlay rather than the native
    Fullscreen API — iOS Safari and most in-app browsers (LINE, IG, etc.)
    either don't support requestFullscreen on arbitrary elements or silently
-   swallow it, so this CSS-only approach is what actually works everywhere. */
-#bracketSection.bracket-maximized{
+   swallow it, so this CSS-only approach is what actually works everywhere.
+   It targets .bracket-viewport (toolbar + tree + watermark only) rather
+   than the whole card, so the title/sub/shuffle-button row stays out of
+   the full-screen view. */
+.bracket-viewport.bracket-maximized{
   position:fixed; inset:0; z-index:9999; margin:0; border-radius:0;
   display:flex; flex-direction:column; overflow-y:auto;
   -webkit-overflow-scrolling:touch;
@@ -731,7 +735,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
           calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
 }
 html.bracket-maximized-lock, body.bracket-maximized-lock{ overflow:hidden; height:100%; }
-#bracketSection.bracket-maximized .bracket-scroll{ flex:1; }
+.bracket-viewport.bracket-maximized .bracket-scroll{ flex:1; }
 .bracket-scroll{
   overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0;
   -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; cursor:grab; user-select:none;
@@ -1095,21 +1099,23 @@ html.bracket-maximized-lock, body.bracket-maximized-lock{ overflow:hidden; heigh
         </div>
       </div>
 
-      <div class="bracket-zoom-toolbar">
-        <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
-        <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
-        <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
-        <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
-        <span class="bracket-zoom-hint">💡 可用手指縮放、左右滑動查看對戰樹</span>
-        <button class="bracket-fullscreen-btn" id="bracketFullscreenBtn" onclick="toggleBracketFullscreen()" aria-label="全螢幕" title="全螢幕">⛶</button>
-      </div>
-
-      <div class="bracket-scroll" id="bracketScroll">
-        <div class="bracket-zoom-wrap" id="bracketZoomWrap">
-          <div class="bracket" id="bracketTree"></div>
+      <div class="bracket-viewport" id="bracketViewport">
+        <div class="bracket-zoom-toolbar">
+          <button class="bracket-zoom-btn" onclick="bracketZoomOut()" aria-label="縮小">－</button>
+          <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
+          <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
+          <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
+          <span class="bracket-zoom-hint">💡 可用手指縮放、左右滑動查看對戰樹</span>
+          <button class="bracket-fullscreen-btn" id="bracketFullscreenBtn" onclick="toggleBracketFullscreen()" aria-label="全螢幕" title="全螢幕">⛶</button>
         </div>
+
+        <div class="bracket-scroll" id="bracketScroll">
+          <div class="bracket-zoom-wrap" id="bracketZoomWrap">
+            <div class="bracket" id="bracketTree"></div>
+          </div>
+        </div>
+        <div class="bracket-watermark" id="bracketWatermark"></div>
       </div>
-      <div class="bracket-watermark" id="bracketWatermark"></div>
     </div>
 
     <div class="bracket-theme-row hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
@@ -1452,7 +1458,25 @@ const BRACKET_ZOOM_STEP = 0.15;
 
 function applyBracketZoom(){
   const wrap = document.getElementById('bracketZoomWrap');
-  if(wrap) wrap.style.transform = `scale(${bracketZoom})`;
+  const tree = document.getElementById('bracketTree');
+  if(wrap){
+    wrap.style.transform = `scale(${bracketZoom})`;
+    // CSS transform only changes how the box is *painted* — it doesn't
+    // shrink the space this inline-block reserves in normal flow, so at
+    // any zoom other than 100% the scroll container was left reserving
+    // room for the full-size (unscaled) tree, showing as blank space
+    // below/right of the visibly smaller content. Sizing the wrapper's
+    // real width/height to the scaled size keeps the reserved space (and
+    // therefore the page height) matching what's actually drawn.
+    // tree.offsetWidth/Height always report the tree's own natural,
+    // unscaled size — transforms on this wrap (its ancestor) don't affect
+    // a descendant's offset measurements, so this stays accurate at any
+    // zoom level without needing a separately cached "natural size".
+    if(tree){
+      wrap.style.width = (tree.offsetWidth * bracketZoom) + 'px';
+      wrap.style.height = (tree.offsetHeight * bracketZoom) + 'px';
+    }
+  }
   const label = document.getElementById('bracketZoomLabel');
   if(label) label.innerText = Math.round(bracketZoom * 100) + '%';
 }
@@ -1561,7 +1585,7 @@ function initBracketPanZoom(){
 // even though it works fine on desktop. The overlay approach behaves
 // identically on every platform. ---
 function toggleBracketFullscreen(){
-  const el = document.getElementById('bracketSection');
+  const el = document.getElementById('bracketViewport');
   if(!el) return;
   if(el.classList.contains('bracket-maximized')){
     el.classList.remove('bracket-maximized');
@@ -1576,7 +1600,7 @@ function toggleBracketFullscreen(){
 }
 function updateBracketFullscreenBtn(){
   const btn = document.getElementById('bracketFullscreenBtn');
-  const el = document.getElementById('bracketSection');
+  const el = document.getElementById('bracketViewport');
   if(!btn || !el) return;
   const isMax = el.classList.contains('bracket-maximized');
   btn.innerHTML = isMax ? '⤡' : '⛶';
@@ -1584,7 +1608,7 @@ function updateBracketFullscreenBtn(){
 }
 document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape'){
-    const el = document.getElementById('bracketSection');
+    const el = document.getElementById('bracketViewport');
     if(el && el.classList.contains('bracket-maximized')) toggleBracketFullscreen();
   }
 });
@@ -2715,6 +2739,7 @@ function renderStandings(){
   if(isKnockout){
     renderBracketPodium();
     renderBracket();
+    applyBracketZoom(); // re-sync the zoom wrapper's size to the freshly rendered tree
     return;
   }
 
