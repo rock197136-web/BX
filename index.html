@@ -616,6 +616,19 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .cloud-share-btn:hover{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.08); }
 .cloud-share-btn.copied{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.12); }
+.cloud-qr-btn{ margin-top:6px; }
+
+.qr-modal-box{ text-align:center; }
+.qr-code-wrap{
+  background:#fff; border-radius:12px; padding:14px; display:inline-flex;
+  align-items:center; justify-content:center; margin:6px 0 14px;
+}
+.qr-code-wrap img{ display:block; width:220px; height:220px; }
+.qr-code-link{
+  font-family:'Space Mono',monospace; font-size:12px; color:var(--muted);
+  word-break:break-all; background:var(--panel-2); border:1px solid var(--border);
+  border-radius:8px; padding:10px; margin-bottom:14px; line-height:1.5;
+}
 
 /* Viewer (read-only) mode: hide anything that can write data */
 .viewer-mode .tab[data-tab="referee"],
@@ -1221,7 +1234,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 <div class="modal" id="cloudModal">
   <div class="modal-box" style="max-width:440px;">
-    <div class="modal-title">☁️ 連線賽事</div>
+    <div class="modal-title">📡 連線賽事</div>
 
     <div id="cloudNotConfigured" class="hidden">
       <div class="text-muted" style="font-size:13px; line-height:1.75;">
@@ -1259,6 +1272,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
               <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
               <div class="cloud-code-display" id="cloudResultViewerCode">---</div>
               <button class="cloud-share-btn" id="cloudResultViewerShareBtn" onclick="copyShareLink(document.getElementById('cloudResultViewerCode').innerText, this)">🔗 複製選手連結</button>
+              <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode(document.getElementById('cloudResultViewerCode').innerText)">📱 生成QR碼</button>
             </div>
           </div>
           <div class="text-muted" style="font-size:12px; margin-top:10px; line-height:1.6;">
@@ -1284,6 +1298,18 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     </div>
 
     <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="hideCloudModal()">關閉</button>
+  </div>
+</div>
+
+<div class="modal" id="qrModal">
+  <div class="modal-box qr-modal-box" style="max-width:320px;">
+    <div class="modal-title">📱 選手／觀眾連結 QR 碼</div>
+    <div class="qr-code-wrap">
+      <img id="qrCodeImg" src="" alt="QR Code">
+    </div>
+    <div class="qr-code-link" id="qrCodeLink"></div>
+    <button class="btn btn-primary btn-block" id="qrCopyBtn" onclick="copyShareLink(currentQRCode, this)">🔗 複製連結</button>
+    <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="hideQRModal()">關閉</button>
   </div>
 </div>
 
@@ -1636,6 +1662,23 @@ function buildShareLink(code){
   return url.toString();
 }
 
+let currentQRCode = null;
+
+function showQRCode(code){
+  code = (code || '').trim().toUpperCase();
+  if(code.length !== 3) return;
+  currentQRCode = code;
+  const link = buildShareLink(code);
+  const img = document.getElementById('qrCodeImg');
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(link)}`;
+  document.getElementById('qrCodeLink').innerText = link;
+  document.getElementById('qrModal').classList.add('show');
+}
+
+function hideQRModal(){
+  document.getElementById('qrModal').classList.remove('show');
+}
+
 async function copyShareLink(code, btnEl){
   code = (code || '').trim().toUpperCase();
   if(code.length !== 3) return;
@@ -1783,6 +1826,7 @@ function openCloudModal(){
           <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode)}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">🔗 複製選手連結</button>
+          <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode('${currentViewerCode}')">📱 生成QR碼</button>
         </div>` : ''}
       `;
     } else {
@@ -1790,7 +1834,9 @@ function openCloudModal(){
         <div class="cloud-code-item">
           <div class="cloud-code-tag">目前身分：選手／觀眾（唯讀）</div>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode || '---')}</div>
-          ${currentViewerCode ? `<button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">🔗 複製選手連結</button>` : ''}
+          ${currentViewerCode ? `
+          <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">🔗 複製選手連結</button>
+          <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode('${currentViewerCode}')">📱 生成QR碼</button>` : ''}
         </div>
       `;
     }
