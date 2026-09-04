@@ -718,14 +718,20 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   margin-left:auto;
 }
 .bracket-fullscreen-btn:active{ background:var(--panel); }
-#bracketSection:fullscreen{
-  background:var(--bg,#0b0b0f); padding:16px; display:flex; flex-direction:column; overflow:auto;
+/* "全螢幕" is implemented as a fixed-position overlay rather than the native
+   Fullscreen API — iOS Safari and most in-app browsers (LINE, IG, etc.)
+   either don't support requestFullscreen on arbitrary elements or silently
+   swallow it, so this CSS-only approach is what actually works everywhere. */
+#bracketSection.bracket-maximized{
+  position:fixed; inset:0; z-index:9999; margin:0; border-radius:0;
+  display:flex; flex-direction:column; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  background:var(--bg,#0b0b0f);
+  padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+          calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
 }
-#bracketSection:-webkit-full-screen{
-  background:var(--bg,#0b0b0f); padding:16px; display:flex; flex-direction:column; overflow:auto;
-}
-#bracketSection:fullscreen .bracket-scroll,
-#bracketSection:-webkit-full-screen .bracket-scroll{ flex:1; }
+html.bracket-maximized-lock, body.bracket-maximized-lock{ overflow:hidden; height:100%; }
+#bracketSection.bracket-maximized .bracket-scroll{ flex:1; }
 .bracket-scroll{
   overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0;
   -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; cursor:grab; user-select:none;
@@ -1547,29 +1553,41 @@ function initBracketPanZoom(){
   }, { passive:false });
 }
 
-// --- Full screen toggle (mirrors Challonge's "Full Screen" button) ---
+// --- Full screen toggle (mirrors Challonge's "Full Screen" button).
+// Uses a CSS overlay instead of the native Fullscreen API — many mobile
+// browsers (iOS Safari, LINE/IG in-app browsers, etc.) either lack
+// requestFullscreen for arbitrary elements or quietly ignore the call,
+// so a real element.requestFullscreen() ends up doing nothing on phones
+// even though it works fine on desktop. The overlay approach behaves
+// identically on every platform. ---
 function toggleBracketFullscreen(){
   const el = document.getElementById('bracketSection');
   if(!el) return;
-  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
-  if(!isFs){
-    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-    if(req) req.call(el);
+  if(el.classList.contains('bracket-maximized')){
+    el.classList.remove('bracket-maximized');
+    document.documentElement.classList.remove('bracket-maximized-lock');
+    document.body.classList.remove('bracket-maximized-lock');
   } else {
-    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-    if(exit) exit.call(document);
+    el.classList.add('bracket-maximized');
+    document.documentElement.classList.add('bracket-maximized-lock');
+    document.body.classList.add('bracket-maximized-lock');
   }
+  updateBracketFullscreenBtn();
 }
 function updateBracketFullscreenBtn(){
   const btn = document.getElementById('bracketFullscreenBtn');
-  if(!btn) return;
-  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
-  btn.innerHTML = isFs ? '⤡' : '⛶';
-  btn.title = isFs ? '離開全螢幕' : '全螢幕';
+  const el = document.getElementById('bracketSection');
+  if(!btn || !el) return;
+  const isMax = el.classList.contains('bracket-maximized');
+  btn.innerHTML = isMax ? '⤡' : '⛶';
+  btn.title = isMax ? '離開全螢幕' : '全螢幕';
 }
-['fullscreenchange','webkitfullscreenchange','msfullscreenchange'].forEach(evt =>
-  document.addEventListener(evt, updateBracketFullscreenBtn)
-);
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    const el = document.getElementById('bracketSection');
+    if(el && el.classList.contains('bracket-maximized')) toggleBracketFullscreen();
+  }
+});
 
 /* =========================================================
    STORAGE — local cache (works everywhere: artifact preview
