@@ -621,6 +621,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .viewer-mode .tab[data-tab="referee"],
 .viewer-mode .tab[data-tab="setup"],
 .viewer-mode .goto-referee-btn,
+.viewer-mode .referee-only-btn,
 .viewer-mode .undo-btn{ display:none !important; }
 
 @media (max-width:700px){
@@ -2382,6 +2383,7 @@ function recordQuickWin(matchId, side){
 }
 
 function resetMatch(matchId){
+  if(currentRole === 'viewer') return;
   const match = state.matches.find(m=>m.id===matchId);
   if(!match) return;
   showConfirm('確定要重新開始這場對戰嗎？目前的紀錄將被清除。', () => {
@@ -2898,7 +2900,7 @@ function renderMatches(){
           ${logChips ? `<div class="match-log">${logChips}</div>` : ''}
           <div class="match-actions">
             <button class="btn btn-primary goto-referee-btn" onclick="goToReferee('${m.id}')">${completed ? '查看 / 修改' : '前往裁判台'}</button>
-            ${completed ? `<button class="btn btn-ghost" onclick="resetMatch('${m.id}')">重新比賽</button>` : ''}
+            ${completed ? `<button class="btn btn-ghost referee-only-btn" onclick="resetMatch('${m.id}')">重新比賽</button>` : ''}
           </div>
         </div>`;
     }).join('');
