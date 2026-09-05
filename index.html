@@ -2583,8 +2583,13 @@ function generateKnockoutBracket(players){
     });
   }
 
-  const flat = rounds.flat();
+  // Order the flat match list so the bronze (third-place) match is scheduled
+  // right before the final, and the final is always the very last match.
+  const finalRoundMatches = rounds[numRounds - 1];
+  const earlierRoundsFlat = rounds.slice(0, numRounds - 1).flat();
+  const flat = [...earlierRoundsFlat];
   if(bronze) flat.push(bronze);
+  flat.push(...finalRoundMatches);
 
   // Auto-resolve any match where one side is a BYE placeholder, cascading
   // forward (winner into the next round, and now also loser into the
@@ -3576,9 +3581,11 @@ function renderRefereeMatch(match, panelId){
       </div>
     `;
 
-  const refTitleLabel = match.thirdPlace ? '季軍戰' : (isFinalMatch(match) ? '決賽' : `第 ${match.round} 輪`);
+  const isKnockoutFmt = state.tournament.format === 'knockout';
+  const maxRound = isKnockoutFmt ? Math.max(...state.matches.map(x => x.round)) : match.round;
+  const refTitleLabel = match.thirdPlace ? '季軍戰' : (isKnockoutFmt ? bracketRoundLabel(match.round, maxRound) : `第 ${match.round} 輪`);
   body.innerHTML = `
-    <div class="referee-title">${refTitleLabel}${quickMode ? '・快速模式（僅選出勝者，不計分）' : `・先取得 ${target} 分獲勝`}</div>
+    <div class="referee-title">${refTitleLabel}</div>
     ${flashHtml}
     ${ringRowHtml}
     ${mainHtml}
