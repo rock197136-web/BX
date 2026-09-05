@@ -227,6 +227,40 @@ button{ cursor:pointer; }
 }
 .card-sub{ color:var(--muted); font-size:13px; margin-top:-8px; margin-bottom:16px; }
 
+/* ===== Collapsible roster ===== */
+.roster-toggle{
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; user-select:none;
+  margin-bottom:0;
+}
+.roster-toggle .card-title{ margin-bottom:4px; }
+.roster-toggle-right{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.roster-count-pill{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px; font-weight:600; letter-spacing:.03em;
+  color:var(--muted);
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:3px 10px;
+  white-space:nowrap;
+}
+.roster-chevron{
+  width:20px; height:20px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted);
+  transition:transform .2s ease;
+}
+.roster-chevron svg{ width:14px; height:14px; }
+#rosterSection.expanded .roster-chevron{ transform:rotate(180deg); }
+#rosterBody{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .22s ease;
+}
+#rosterSection.expanded #rosterBody{ grid-template-rows:1fr; }
+#rosterBody-inner{ overflow:hidden; min-height:0; }
+
 /* ===== Setup ===== */
 .field-label{ font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; letter-spacing:.4px; }
 .text-input, select.text-input{
@@ -1364,9 +1398,21 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   <!-- SETUP -->
   <section id="tab-setup" class="hidden">
     <div class="card hidden" id="rosterSection" style="margin-bottom:18px;">
-      <div class="card-title">選手名單管理</div>
-      <div class="card-sub">比賽進行中可直接改名或標記棄權（自動判負・保留歷史戰績）</div>
-      <div id="rosterList" style="margin-top:14px;"></div>
+      <div class="roster-toggle" onclick="toggleRosterSection()">
+        <div>
+          <div class="card-title" style="margin-bottom:2px;">選手名單管理</div>
+          <div class="card-sub" style="margin-top:0; margin-bottom:0;">比賽進行中可直接改名或標記棄權（自動判負・保留歷史戰績）</div>
+        </div>
+        <div class="roster-toggle-right">
+          <span class="roster-count-pill" id="rosterCountPill"></span>
+          <span class="roster-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </span>
+        </div>
+      </div>
+      <div id="rosterBody"><div id="rosterBody-inner">
+        <div id="rosterList" style="margin-top:14px;"></div>
+      </div></div>
     </div>
 
     <div class="card">
@@ -2329,14 +2375,29 @@ function isWithdrawn(playerId){
   return !!(p && p.withdrawn);
 }
 
+function toggleRosterSection(){
+  const section = document.getElementById('rosterSection');
+  if(!section) return;
+  section.classList.toggle('expanded');
+}
+
 function renderRoster(){
   const section = document.getElementById('rosterSection');
   const list = document.getElementById('rosterList');
+  const countPill = document.getElementById('rosterCountPill');
   if(!section || !list) return;
 
   const show = state.tournament.status === 'running' && state.players.length > 0;
   section.classList.toggle('hidden', !show);
   if(!show) return;
+
+  if(countPill){
+    const activeCount = state.players.filter(p => !p.withdrawn).length;
+    const withdrawnCount = state.players.length - activeCount;
+    countPill.textContent = withdrawnCount > 0
+      ? `${state.players.length} 位選手・${withdrawnCount} 位棄權`
+      : `${state.players.length} 位選手`;
+  }
 
   list.innerHTML = state.players.map(p => `
     <div class="roster-row ${p.withdrawn ? 'withdrawn' : ''}">
