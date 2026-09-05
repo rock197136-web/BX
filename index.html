@@ -87,10 +87,18 @@ button{ cursor:pointer; }
   100%{ background-position:0 0, 120px 0, 0 120px; }
 }
 /* corner frame, top-right — broken L with a small node, not a solid box */
-.corner-frame{ position:absolute; right:22px; top:20px; width:20px; height:20px; pointer-events:none; }
-.corner-frame .h{ position:absolute; top:0; right:5px; width:15px; height:1.5px; background:rgba(255,157,66,.4); }
-.corner-frame .v{ position:absolute; top:5px; right:0; width:1.5px; height:15px; background:rgba(255,157,66,.4); }
-.corner-frame .node{ position:absolute; top:-2px; right:-2px; width:4px; height:4px; border-radius:50%; background:var(--hdr-blue); box-shadow:0 0 4px rgba(255,157,66,.65); }
+.corner-frame{ position:absolute; right:14px; top:8px; width:26px; height:26px; pointer-events:none; }
+.corner-frame .blk{
+  position:absolute; background:rgba(255,157,66,.5); border-radius:1px;
+}
+.corner-frame .blk:nth-child(1){ width:4px; height:4px; top:0;    right:2px;  opacity:.35; }
+.corner-frame .blk:nth-child(2){ width:3px; height:3px; top:9px;  right:14px; opacity:.55; }
+.corner-frame .blk:nth-child(3){ width:5px; height:5px; top:15px; right:0;    opacity:.25; background:var(--hdr-blue); box-shadow:0 0 4px rgba(255,157,66,.5); }
+.corner-frame .blk:nth-child(4){ width:2px; height:2px; top:3px;  right:20px; opacity:.4; }
+.corner-frame .blk:nth-child(5){ width:3px; height:3px; top:20px; right:9px;  opacity:.3; }
+@media (max-width:700px){
+  .corner-frame{ right:10px; top:4px; }
+}
 
 .header-inner{ max-width:1160px; margin:auto; position:relative; z-index:1; }
 
@@ -346,17 +354,42 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   transition:border-color .2s ease, transform .15s ease, box-shadow .2s ease;
 }
 .match:hover{ border-color:#3a3a3a; transform:translateY(-1px); box-shadow:0 6px 18px -8px rgba(0,0,0,.5); }
-.match.completed{ border-color:rgba(57,255,20,.4); border-left-color:var(--cyan); }
+.match.completed{ border-color:rgba(255,157,66,.4); border-left-color:var(--hdr-blue); }
+.match.match-highlight{
+  animation: matchJumpHighlight 1.6s ease-out;
+}
+@keyframes matchJumpHighlight{
+  0%{ background:rgba(255,255,255,.12); box-shadow:0 0 0 2px rgba(255,157,66,.9), 0 0 24px 4px rgba(255,157,66,.5); border-color:var(--hdr-blue); }
+  100%{ background:transparent; box-shadow:none; }
+}
 .match-header{ display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; margin-bottom:12px; font-family:'Space Mono',monospace; }
 .status-pill{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
 .status-pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
 .status-pill.pending{ background:rgba(125,134,152,.15); color:var(--muted); }
-.status-pill.done{ background:rgba(57,255,20,.15); color:var(--cyan-soft); }
-.match-result{ margin-top:2px; text-align:center; color:var(--cyan-soft); font-weight:700; font-size:19px; font-family:'Rajdhani',sans-serif; letter-spacing:.3px; }
-.match-log{ margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-.log-chip{ font-size:15px; font-weight:700; padding:5px 12px; border-radius:20px; font-family:'Space Mono',monospace; }
+.status-pill.done{ background:rgba(255,157,66,.15); color:var(--hdr-blue-soft); }
+.match-result{ margin-top:2px; text-align:center; font-weight:700; font-size:19px; font-family:'Rajdhani',sans-serif; letter-spacing:.3px; }
+.mr-versus{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+.mr-outcome{ display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.mr-name{ color:var(--hdr-blue-soft); }
+.mr-vs, .mr-arrow, .mr-suffix{ color:var(--text); font-weight:500; }
+.mr-vs{ font-size:14px; color:var(--muted); }
+.mr-score{ color:var(--muted); font-family:'Space Mono',monospace; font-size:13px; font-weight:600; letter-spacing:.5px; }
+.match-log{
+  margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:16px;
+}
+.match-log-side{ display:flex; flex-direction:column; gap:6px; align-items:center; }
+.match-log-name{
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; color:var(--muted);
+  margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+}
+.log-chip{
+  font-size:11px; font-weight:700; padding:3px 9px; border-radius:16px; font-family:'Space Mono',monospace;
+  white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis;
+}
 .match-actions{ margin-top:14px; display:flex; justify-content:center; gap:8px; }
 .match-actions .btn{ flex:1; max-width:220px; }
+.match .btn-primary{ background:linear-gradient(90deg,var(--hdr-blue),var(--hdr-blue-soft)); color:#2a1400; }
+.match .btn-ghost{ border-color:rgba(255,157,66,.35); color:var(--hdr-blue-soft); }
 
 /* ===== Referee ===== */
 .ref-picker{ margin-bottom:18px; }
@@ -427,6 +460,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   padding:9px 20px; border-radius:30px;
   font-family:'Rajdhani',sans-serif; font-weight:900; font-size:19px; letter-spacing:.4px;
   animation: flashPop 1.1s ease forwards; pointer-events:none;
+  will-change:transform,opacity;
 }
 @keyframes flashPop{
   0%{ opacity:0; transform:translateY(10px) scale(.85); }
@@ -471,11 +505,18 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .battery-body.battery-full{
   border-color:var(--cyan);
+}
+.battery-body.battery-full::after{
+  content:"";
+  position:absolute; inset:-2px; border-radius:inherit; pointer-events:none;
+  box-shadow:0 0 18px 5px rgba(57,255,20,.7), 0 0 34px 12px rgba(57,255,20,.4);
   animation: batteryPulseGlow 1.3s ease-in-out infinite;
+  will-change:opacity;
 }
 @keyframes batteryPulseGlow{
-  0%,100%{ box-shadow:0 0 10px 2px rgba(57,255,20,.5), 0 0 22px 6px rgba(57,255,20,.25); }
-  50%{ box-shadow:0 0 18px 5px rgba(57,255,20,.8), 0 0 38px 14px rgba(57,255,20,.45); }}
+  0%,100%{ opacity:.55; }
+  50%{ opacity:1; }
+}
 .battery-value{ font-family:'Space Mono',monospace; font-size:20px; font-weight:700; text-align:center; }
 .battery-value .of{ font-size:11px; color:var(--muted); }
 
@@ -487,20 +528,23 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   animation: sparkFly .9s ease-out forwards;
   animation-delay:var(--delay,0s);
   transform:translate(-50%,-50%);
+  will-change:transform,opacity;
 }
 @keyframes sparkFly{
   0%{ opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) translateY(0) scale(1); }
   100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) translateY(-64px) scale(.2); }
 }
 
-/* electric current-overflow streaks */
+/* electric current-overflow streaks — glow baked into a box-shadow (cheaper
+   than an animated drop-shadow filter, which forces a full repaint on mobile) */
 .bolt{
   position:absolute; top:50%; left:50%; width:3px; height:50px;
   background:linear-gradient(180deg, #fff, var(--bolt-color,#39ff14) 55%, transparent);
+  box-shadow:0 0 5px var(--bolt-color,#39ff14);
   opacity:0; transform-origin:top center; border-radius:2px;
-  filter:drop-shadow(0 0 6px var(--bolt-color,#39ff14));
   animation: boltFly .7s ease-out forwards;
   animation-delay:var(--delay,0s);
+  will-change:transform,opacity;
 }
 @keyframes boltFly{
   0%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(.2); }
@@ -508,11 +552,12 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) scaleY(1.5) translateY(-26px); }
 }
 
-.battery-body.battery-overcharge{
+.battery-body.battery-overcharge::after{
   animation: batteryPulseGlow .4s ease-in-out infinite;
 }
 .battery-outer.shake-2x{
   animation: overchargeShake .55s cubic-bezier(.36,.07,.19,.97) 2;
+  will-change:transform;
 }
 @keyframes overchargeShake{
   0%,100%{ transform:translate(0,0) rotate(0deg); }
@@ -527,17 +572,31 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   90%{ transform:translate(-1px,0); }
 }
 
-/* Danger state: score exceeds 4 points (e.g. 5, 6 in longer matches) */
+/* Danger state: score exceeds 4 points (e.g. 5, 6 in longer matches).
+   Border-color still toggles (cheap paint), but the glow lives in a ::after
+   layer whose box-shadow is only swapped, not recomputed as a blur tween —
+   much lighter on mobile GPUs than animating box-shadow directly every frame. */
 .battery-body.battery-danger{
   border-color:#ff2d2d;
-  animation: dangerFlash .45s steps(1,end) infinite;
+  animation: dangerBorderFlash .45s steps(1,end) infinite;
+}
+.battery-body.battery-danger::after{
+  content:"";
+  position:absolute; inset:-2px; border-radius:inherit; pointer-events:none;
+  animation: dangerGlowFlash .45s steps(1,end) infinite;
+  will-change:box-shadow;
 }
 .battery-outer.shake-inf{
   animation: overchargeShake .55s cubic-bezier(.36,.07,.19,.97) infinite;
+  will-change:transform;
 }
-@keyframes dangerFlash{
-  0%,49%{ border-color:#ff2d2d; box-shadow:0 0 16px 4px rgba(255,45,45,.75), 0 0 32px 12px rgba(255,45,45,.4); }
-  50%,100%{ border-color:#39ff14; box-shadow:0 0 16px 4px rgba(57,255,20,.75), 0 0 32px 12px rgba(57,255,20,.4); }
+@keyframes dangerBorderFlash{
+  0%,49%{ border-color:#ff2d2d; }
+  50%,100%{ border-color:#39ff14; }
+}
+@keyframes dangerGlowFlash{
+  0%,49%{ box-shadow:0 0 16px 4px rgba(255,45,45,.75), 0 0 32px 12px rgba(255,45,45,.4); }
+  50%,100%{ box-shadow:0 0 16px 4px rgba(57,255,20,.75), 0 0 32px 12px rgba(57,255,20,.4); }
 }
 .battery-burst.danger-burst .spark{ width:11px; height:11px; animation-name:sparkFlyBig; }
 @keyframes sparkFlyBig{
@@ -896,7 +955,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 /* 決賽勝者：整組（左邊框、姓名、分數、打勾徽章）統一改用金色，
    不再混用主題色，避免金框裡出現一塊不連接的主題色色塊。 */
 .bracket-match.final-match .bracket-slot.winner{
-  border-left-color:rgba(245,196,66,.95);
   background:linear-gradient(90deg, rgba(245,196,66,.24), rgba(245,196,66,.04) 85%);
 }
 .bracket-match.final-match .bracket-slot.winner .bslot-pts{ color:rgba(245,196,66,.95); }
@@ -958,7 +1016,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket-slot:last-child{ border-bottom:0; }
 .bracket-slot.bye{ color:var(--muted); font-style:italic; }
 .bracket-slot.winner{
-  padding-left:7px; border-left:3px solid rgb(var(--theme-rgb));
   background:linear-gradient(90deg, rgba(var(--theme-rgb),.2), rgba(var(--theme-rgb),.03) 85%);
 }
 .bslot-pts{ font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); width:14px; text-align:center; flex-shrink:0; }
@@ -1165,7 +1222,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 </script>
 
 <header class="header">
-  <span class="corner-frame" aria-hidden="true"><span class="h"></span><span class="v"></span><span class="node"></span></span>
+  <span class="corner-frame" aria-hidden="true"><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span><span class="blk"></span></span>
   <div class="header-inner">
     <div class="header-row1">
       <div class="sys-tag"><span class="sys-dot"></span>Tournament System</div>
@@ -1174,7 +1231,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <div class="header-rule"><span class="rule-sweep"></span></div>
     <div class="header-meta">
       <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.3</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.5</span></div>
       <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/5</span></div>
     </div>
   </div>
@@ -1283,7 +1340,10 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   <!-- MATCHES -->
   <section id="tab-matches" class="hidden">
     <div class="card">
-      <div class="card-title">對戰紀錄</div>
+      <div class="space-between" style="margin-bottom:14px;">
+        <div class="card-title" style="margin:0;">對戰紀錄</div>
+        <button class="btn btn-primary btn-sm" onclick="jumpToNextPendingMatch()">快速前往判決</button>
+      </div>
       <div class="match-list" id="matchList"></div>
     </div>
   </section>
@@ -1743,13 +1803,13 @@ async function loadLocalCache(){
   }
 }
 
-async function saveState(){
+async function saveState(silent){
   const json = JSON.stringify(state);
   try{ localStorage.setItem(STORAGE_KEY, json); }catch(e){}
   if(window.storage){
     try{ await window.storage.set(STORAGE_KEY, json, false); }catch(e){}
   }
-  flashSaved();
+  if(!silent) flashSaved();
   await pushToCloud();
 }
 
@@ -2613,7 +2673,7 @@ function recordFinish(matchId, side, finishKey){
     structural = true; // bracket reshuffled downstream matches — needs a full refresh
   }
   lastFlash = { matchId, side, finish:finishKey, ts:Date.now() };
-  saveState();
+  saveState(true);
   if(structural) renderAll();
   else refreshAfterScoreChange(matchId);
 }
@@ -2645,7 +2705,7 @@ function recordQuickWin(matchId, side){
     propagateKnockoutWinner(match);
     resolveByeCascade(state.matches);
   }
-  saveState();
+  saveState(true);
   renderAll();
 }
 
@@ -3007,7 +3067,7 @@ function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
   const bBye = m.playerB === 'BYE';
   const aLose = m.status === 'completed' && !aWin && !aBye && !aWd;
   const bLose = m.status === 'completed' && !bWin && !bBye && !bWd;
-  const showPts = !m.quickWin;
+  const showPts = !m.quickWin && !state.tournament.quickMode;
 
   const status = m.status === 'completed' ? null
     : (liveIds && liveIds.has(m.id)) ? 'live'
@@ -3169,39 +3229,60 @@ function renderMatches(){
     return;
   }
 
-  const rounds = Math.max(...state.matches.map(m=>m.round), 1);
   let html = '';
 
-  for(let r=1; r<=rounds; r++){
-    const matches = state.matches.filter(m=>m.round===r);
-    html += `<div class="round-heading">第 ${r} 輪</div>`;
-    html += matches.map((m, idx) => {
-      const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
-      const completed = m.status === 'completed';
-      const logChips = m.log.map(l => {
-        const side = l.side==='A' ? pa : pb;
-        const f = FINISH[l.finish];
-        const hex = resolveColor(f.color);
-        return `<span class="log-chip" style="background:${hex}22;color:${hex};border:1px solid ${hex}55;">${f.icon} ${escapeHtml(side)} ${f.label} +${f.points}</span>`;
-      }).join('');
+  html += state.matches.map((m, idx) => {
+    const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
+    const completed = m.status === 'completed';
+    const chip = (l) => {
+      const f = FINISH[l.finish];
+      const hex = resolveColor(f.color);
+      return `<span class="log-chip" style="background:${hex}22;color:${hex};border:1px solid ${hex}55;">${f.icon} ${f.label} +${f.points}</span>`;
+    };
+    const logAHtml = m.log.filter(l=>l.side==='A').map(chip).join('');
+    const logBHtml = m.log.filter(l=>l.side==='B').map(chip).join('');
 
-      return `
-        <div class="match ${completed?'completed':''}">
-          <div class="match-header">
-            <span>第 ${idx+1} 場</span>
-            <span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>
+    return `
+      <div class="match ${completed?'completed':''}">
+        <div class="match-header">
+          <span>第 ${idx+1} 場</span>
+          <span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>
+        </div>
+        <div class="match-result">${completed ? `
+          <div class="mr-versus"><span class="mr-name">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name">${escapeHtml(pb)}</span></div>
+          <div class="mr-outcome"><span class="mr-arrow">→</span><span class="mr-name">${escapeHtml(nameOf(m.winner))}</span><span class="mr-suffix">獲勝</span><span class="mr-score">${m.forfeited ? '棄權判負' : m.isBye ? '輪空' : m.quickWin ? '快速模式' : `${m.pointsA} : ${m.pointsB}`}</span></div>
+        ` : `<div class="mr-versus"><span class="mr-name">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name">${escapeHtml(pb)}</span></div>`}</div>
+        ${(logAHtml || logBHtml) ? `
+        <div class="match-log">
+          <div class="match-log-side">
+            <div class="match-log-name">${escapeHtml(pa)}</div>
+            ${logAHtml}
           </div>
-          <div class="match-result">${completed ? `🏆 ${escapeHtml(pa)} VS ${escapeHtml(pb)} → ${escapeHtml(nameOf(m.winner))} 獲勝　${m.forfeited ? '(棄權判負)' : m.isBye ? '(輪空)' : m.quickWin ? '(快速模式)' : `(${m.pointsA} : ${m.pointsB})`}` : `${escapeHtml(pa)}　VS　${escapeHtml(pb)}`}</div>
-          ${logChips ? `<div class="match-log">${logChips}</div>` : ''}
+          <div class="match-log-side">
+            <div class="match-log-name">${escapeHtml(pb)}</div>
+            ${logBHtml}
+            </div>
+          </div>` : ''}
+          ${m.isBye ? '' : `
           <div class="match-actions">
             <button class="btn btn-primary goto-referee-btn" onclick="goToReferee('${m.id}')">${completed ? '查看 / 修改' : '前往裁判台'}</button>
             ${completed ? `<button class="btn btn-ghost referee-only-btn" onclick="resetMatch('${m.id}')">重新比賽</button>` : ''}
-          </div>
+          </div>`}
         </div>`;
-    }).join('');
-  }
+  }).join('');
 
   matchList.innerHTML = html;
+}
+
+function jumpToNextPendingMatch(){
+  if(matchesDirty){ renderMatches(); matchesDirty = false; }
+  const target = document.querySelector('#matchList .match:not(.completed)');
+  if(!target){ showToast('目前沒有尚未開始的對戰'); return; }
+  target.scrollIntoView({ behavior:'smooth', block:'center' });
+  target.classList.remove('match-highlight');
+  void target.offsetWidth; // restart animation if already used
+  target.classList.add('match-highlight');
+  setTimeout(()=>target.classList.remove('match-highlight'), 1600);
 }
 
 function goToReferee(matchId){
@@ -3359,18 +3440,33 @@ function renderReferee(){
   }).join('');
 
   const rounds = Math.max(...state.matches.map(m => m.round), 1);
+  const isKnockoutFmt = state.tournament.format === 'knockout';
   panelsToShow.forEach(panel => {
     const picker = document.getElementById(`refPicker-${panel.id}`);
     let optionsHtml = '';
     for(let r=1; r<=rounds; r++){
-      const ms = state.matches.filter(m => m.round === r && !m.isBye);
-      if(ms.length === 0) continue;
-      optionsHtml += `<optgroup label="第 ${r} 輪">`;
-      ms.forEach(m => {
-        const tag = m.status === 'completed' ? '✓ ' : '';
-        optionsHtml += `<option value="${m.id}">${tag}${escapeHtml(nameOf(m.playerA))} vs ${escapeHtml(nameOf(m.playerB))}</option>`;
-      });
-      optionsHtml += `</optgroup>`;
+      const msAll = state.matches.filter(m => m.round === r && !m.isBye);
+      if(msAll.length === 0) continue;
+      const bronzeMs = msAll.filter(m => m.thirdPlace);
+      const normalMs = msAll.filter(m => !m.thirdPlace);
+      const roundLabel = isKnockoutFmt ? bracketRoundLabel(r, rounds) : `第 ${r} 輪`;
+
+      if(bronzeMs.length){
+        optionsHtml += `<optgroup label="季軍戰">`;
+        bronzeMs.forEach(m => {
+          const tag = m.status === 'completed' ? '✓ ' : '';
+          optionsHtml += `<option value="${m.id}">${tag}${escapeHtml(nameOf(m.playerA))} vs ${escapeHtml(nameOf(m.playerB))}</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
+      if(normalMs.length){
+        optionsHtml += `<optgroup label="${roundLabel}">`;
+        normalMs.forEach(m => {
+          const tag = m.status === 'completed' ? '✓ ' : '';
+          optionsHtml += `<option value="${m.id}">${tag}${escapeHtml(nameOf(m.playerA))} vs ${escapeHtml(nameOf(m.playerB))}</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
     }
     picker.innerHTML = optionsHtml;
     picker.value = panel.matchId;
@@ -3447,7 +3543,6 @@ function renderRefereeMatch(match, panelId){
 
   const mainHtml = completed ? `
       <div class="winner-banner">
-        <div class="trophy">🏆</div>
         <div class="wname">${escapeHtml(nameOf(match.winner))} 獲勝</div>
         ${nextMatchHtml}
       </div>
@@ -3493,7 +3588,7 @@ function renderRefereeMatch(match, panelId){
       <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>重新這場</button>
       ${completed ? (hasPendingMatches()
           ? `<button class="btn btn-primary" onclick="advanceReferee('${panelId}')">下一場對戰</button>`
-          : `<button class="btn btn-primary" onclick="showFinalResults()">🏆 戰績結算</button>`
+          : `<button class="btn btn-primary" onclick="showFinalResults()">戰績結算</button>`
         ) : ''}
     </div>
   `;
@@ -3559,7 +3654,7 @@ function buildBattery(points, target){
 
   let burstHtml = '';
   if(isFull || isDanger){
-    const sparkCount = isDanger ? 14 : 10;
+    const sparkCount = isDanger ? 9 : 7;
     const sparks = Array.from({length:sparkCount}).map((_,i) => {
       const ang = i * (360/sparkCount);
       const color = isDanger ? (i % 2 ? '#ff2d2d' : '#39ff14') : (i % 2 ? '#ffea00' : '#ff1f4d');
@@ -3567,7 +3662,7 @@ function buildBattery(points, target){
       return `<span class="spark" style="--ang:${ang}deg;--delay:${delay}s;--spark-color:${color};"></span>`;
     }).join('');
 
-    const boltCount = isDanger ? 8 : 6;
+    const boltCount = isDanger ? 5 : 4;
     const bolts = Array.from({length:boltCount}).map((_,i) => {
       const ang = i * (360/boltCount) + 15;
       const color = isDanger ? (i % 2 ? '#ff2d2d' : '#39ff14') : (i % 2 ? '#39ff14' : '#ffffff');
