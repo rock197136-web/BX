@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BEYBLADE X 對戰系統</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
   --bg:#050505;
@@ -28,15 +28,15 @@
   /* Header-only "HUD" palette — cooler electric blue/indigo reads more like a
      control-interface readout than the app's green accent; scoped to the
      header so the rest of the UI's color language is untouched. */
-  --hdr-blue:#00d9ff;
-  --hdr-blue-soft:#7fe0ff;
-  --hdr-red:#ff1a3c;
+  --hdr-blue:#ff9d42;
+  --hdr-blue-soft:#ffc98a;
+  --hdr-red:#ff4726;
   /* Finish-type colors: chosen to stay distinguishable under common forms of
      color-blindness (deuteranopia/protanopia/tritanopia), each also paired
      with its own icon glyph so nothing relies on color alone. */
   --fin-spin:#22c55e;    /* green  */
   --fin-over:#ffb020;    /* amber  */
-  --fin-burst:#c77dff;   /* purple */
+  --fin-burst:#1ec8e8;   /* 青藍色 cyan-blue */
   --fin-xtreme:#ff5c5c;  /* red    */
 }
 
@@ -62,98 +62,125 @@ button{ cursor:pointer; }
 
 /* ===== Header ===== */
 .header{
-  background:linear-gradient(160deg,#101a26 0%,#0a0e17 100%);
+  background:linear-gradient(160deg,#170f22 0%,#0c0810 100%);
   border-bottom:1px solid var(--border);
-  padding:20px 20px 18px;
+  padding:26px 24px 22px;
   position:relative;
   overflow:hidden;
 }
-/* faint industrial grid — reinforces "control interface" without competing for attention */
+/* faint grid + scanlines — texture only, kept low-contrast on purpose */
 .header::before{
   content:"";
   position:absolute; inset:0;
   background-image:
-    linear-gradient(rgba(0,217,255,.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,217,255,.055) 1px, transparent 1px);
-  background-size:22px 22px;
-  -webkit-mask-image:linear-gradient(155deg, rgba(0,0,0,.85), transparent 62%);
-  mask-image:linear-gradient(155deg, rgba(0,0,0,.85), transparent 62%);
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0px, rgba(255,255,255,.018) 1px, transparent 1px, transparent 3px),
+    linear-gradient(rgba(190,110,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190,110,255,.05) 1px, transparent 1px);
+  background-size:auto, 24px 24px, 24px 24px;
+  -webkit-mask-image:linear-gradient(160deg, rgba(0,0,0,.85), transparent 62%);
+  mask-image:linear-gradient(160deg, rgba(0,0,0,.85), transparent 62%);
+  animation:hdrGridDrift 60s linear infinite;
   pointer-events:none;
 }
-/* corner-bracket accent, top-right — a framing motif instead of a purely decorative circle */
-.header::after{
-  content:"";
-  position:absolute; right:18px; top:16px;
-  width:20px; height:20px;
-  border-top:2px solid rgba(0,217,255,.4);
-  border-right:2px solid rgba(0,217,255,.4);
+@keyframes hdrGridDrift{
+  0%{ background-position:0 0, 0 0, 0 0; }
+  100%{ background-position:0 0, 120px 0, 0 120px; }
 }
+/* corner frame, top-right — broken L with a small node, not a solid box */
+.corner-frame{ position:absolute; right:22px; top:20px; width:20px; height:20px; pointer-events:none; }
+.corner-frame .h{ position:absolute; top:0; right:5px; width:15px; height:1.5px; background:rgba(255,157,66,.4); }
+.corner-frame .v{ position:absolute; top:5px; right:0; width:1.5px; height:15px; background:rgba(255,157,66,.4); }
+.corner-frame .node{ position:absolute; top:-2px; right:-2px; width:4px; height:4px; border-radius:50%; background:var(--hdr-blue); box-shadow:0 0 4px rgba(255,157,66,.65); }
+
 .header-inner{ max-width:1160px; margin:auto; position:relative; z-index:1; }
 
-/* system tag — small, monospace, eyebrow above the wordmark */
+/* row 1 — small system tag left, wordmark right, deliberately uneven */
+.header-row1{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:5px; flex-wrap:nowrap;
+}
 .sys-tag{
-  display:inline-flex; align-items:center; gap:7px;
-  font-family:'Space Mono',monospace;
-  font-size:11px; font-weight:700; letter-spacing:3px;
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:'Space Grotesk','Rajdhani',sans-serif;
+  font-weight:500;
+  font-size:clamp(8.5px, 2.5vw, 10px); letter-spacing:.13em;
   color:var(--hdr-blue-soft);
   text-transform:uppercase;
+  white-space:nowrap; flex-shrink:0;
+  padding-bottom:5px;
 }
-.sys-tag::before{
-  content:""; width:6px; height:6px; border-radius:50%; flex-shrink:0;
-  background:var(--hdr-blue); box-shadow:0 0 7px rgba(0,217,255,.9);
+.sys-tag .sys-dot{
+  width:5px; height:5px; border-radius:50%; flex-shrink:0;
+  background:var(--hdr-blue); box-shadow:0 0 5px rgba(255,157,66,.75);
 }
 
 .logo{
-  margin-top:9px;
+  position:relative;
   font-family:'Rajdhani',sans-serif;
-  font-size:32px;
-  font-weight:900;
-  letter-spacing:2px;
+  font-weight:800;
+  letter-spacing:.5px;
   line-height:1;
-  font-style:italic;
-  transform:skewX(-4deg);
-  display:inline-flex;
-  align-items:baseline;
-  gap:9px;
+  white-space:nowrap;
+  min-width:0;
+  font-size:clamp(19px, 6.8vw, 34px);
 }
 .logo-main{
-  background:linear-gradient(90deg,#fff, var(--hdr-blue) 75%);
+  background:linear-gradient(90deg,#fff 0%, var(--hdr-blue) 45%, var(--hdr-red) 88%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  position:relative;
 }
-.logo-main::after{
-  content:""; position:absolute; left:1px; right:6%; bottom:-5px; height:3px;
-  background:linear-gradient(90deg, var(--hdr-blue), var(--hdr-red));
-  border-radius:2px;
+.logo::after{
+  content:""; position:absolute; left:1px; right:1%; bottom:-5px; height:2px; border-radius:1px;
+  background:linear-gradient(90deg, rgba(255,71,38,.1), var(--hdr-blue) 35%, var(--hdr-red) 70%, rgba(255,71,38,.1));
+  background-size:200% 100%;
+  box-shadow:0 0 5px rgba(255,71,38,.4);
+  animation:hdrUnderlineFlow 7s linear infinite;
 }
-.logo span{ color:var(--hdr-red); -webkit-text-fill-color:var(--hdr-red); text-shadow:0 0 10px rgba(255,26,60,.55); }
+@keyframes hdrUnderlineFlow{
+  0%{ background-position:0% 0; }
+  100%{ background-position:200% 0; }
+}
 
-/* tech divider with a leading tick, standing in for a plain <hr> */
+/* divider between row 1 and row 2, with an occasional light sweep */
 .header-rule{
-  margin-top:14px; height:1px; position:relative;
-  background:linear-gradient(90deg, var(--hdr-blue) 0%, rgba(0,217,255,.2) 45%, transparent 75%);
+  margin:16px 0 14px; height:1px; position:relative;
+  background:rgba(255,157,66,.22);
+  overflow:hidden;
 }
 .header-rule::before{
-  content:""; position:absolute; left:0; top:-2px; width:3px; height:5px; background:var(--hdr-blue);
+  content:""; position:absolute; left:0; top:-1.5px; width:3px; height:4px; background:var(--hdr-blue);
+}
+.rule-sweep{
+  position:absolute; top:0; left:-25%; width:25%; height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,157,66,.9), transparent);
+  animation:hdrSweep 8s ease-in-out infinite;
+}
+@keyframes hdrSweep{
+  0%{ left:-25%; opacity:0; }
+  8%{ opacity:1; }
+  55%{ left:100%; opacity:1; }
+  65%{ opacity:0; }
+  100%{ left:100%; opacity:0; }
 }
 
-/* meta strip — version / update date / live event readout, table-like hierarchy */
+/* row 2 — three stacked label/value groups, thin faint dividers between them */
 .header-meta{
-  margin-top:12px;
-  display:flex; align-items:center; flex-wrap:wrap; row-gap:6px;
-  font-family:'Space Mono',monospace;
-  font-size:11px;
+  display:flex; align-items:stretch; flex-wrap:nowrap;
+  font-family:'IBM Plex Mono','Noto Sans TC',monospace;
 }
 .header-meta .meta-item{
-  display:flex; align-items:baseline; gap:6px;
-  padding:0 12px; border-right:1px solid var(--border);
-  max-width:100%;
+  display:flex; flex-direction:column; gap:3px;
+  padding:0 14px; border-right:1px solid rgba(255,255,255,.07);
+  min-width:0;
 }
 .header-meta .meta-item:first-child{ padding-left:0; }
-.header-meta .meta-item:last-child{ border-right:none; }
-.header-meta .meta-label{ color:var(--muted); letter-spacing:1.5px; flex-shrink:0; }
+.header-meta .meta-item:last-child{ border-right:none; padding-right:0; }
+.header-meta .meta-item.meta-event{ flex:1 1 auto; min-width:0; }
+.header-meta .meta-item:not(.meta-event){ flex:0 0 auto; }
+.header-meta .meta-label{
+  font-size:9px; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; white-space:nowrap;
+}
 .header-meta .meta-value{
-  color:var(--silver); font-weight:700; letter-spacing:.3px;
+  font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--silver);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .header-meta .meta-value.accent{ color:var(--hdr-blue-soft); }
@@ -335,6 +362,51 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .ref-picker{ margin-bottom:18px; }
 .referee-panels{ display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; align-items:start; }
 .referee-panel{ margin:0; }
+/* 季軍戰載入裁判台時，整張面板改用青銅色氛圍（外框＋脈動光暈），取代預設灰框 */
+.referee-panel.referee-panel-bronze{
+  border-color:rgba(211,138,82,.55);
+  animation: refPanelBronzePulse 2.4s ease-in-out infinite;
+}
+@keyframes refPanelBronzePulse{
+  0%,100%{ box-shadow:0 0 0 1px rgba(211,138,82,.22), 0 0 16px rgba(211,138,82,.16); }
+  50%{ box-shadow:0 0 0 1px rgba(211,138,82,.45), 0 0 26px rgba(211,138,82,.32); }
+}
+/* 決賽載入裁判台時，整張面板改用金色氛圍（外框＋脈動光暈＋流動光芒） */
+.referee-panel.referee-panel-final{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(245,196,66,.65);
+  animation: refPanelGoldPulse 2.4s ease-in-out infinite;
+}
+@keyframes refPanelGoldPulse{
+  0%,100%{ box-shadow:0 0 0 1px rgba(245,196,66,.25), 0 0 18px rgba(245,196,66,.18); }
+  50%{ box-shadow:0 0 0 1px rgba(245,196,66,.55), 0 0 30px rgba(245,196,66,.4); }
+}
+.referee-panel.referee-panel-final::before{
+  content:"";
+  position:absolute; top:0; left:-45%; width:45%; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(255,224,140,.95), transparent);
+  animation: refPanelGoldSweep 3.2s ease-in-out infinite;
+  pointer-events:none;
+  z-index:1;
+}
+@keyframes refPanelGoldSweep{
+  0%{ left:-45%; opacity:0; }
+  10%{ opacity:1; }
+  55%{ left:100%; opacity:1; }
+  65%{ opacity:0; }
+  100%{ left:100%; opacity:0; }
+}
+/* 決賽面板底層淡金霧化點綴：低透明度的柔霧色塊，緩慢飄移，
+   純裝飾用途，蓋在黑底之上、面板內容之下 */
+.referee-panel.referee-panel-final::after{
+  content:"";
+  position:absolute; inset:0;
+  background:rgba(245,196,66,.06);
+  pointer-events:none;
+  z-index:0;
+}
+.referee-panel.referee-panel-final > *{ position:relative; z-index:2; }
 .ref-panel-head{ display:flex; gap:10px; align-items:center; margin-bottom:16px; }
 .icon-btn.focus-btn.active{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.12); }
 .referee-focus-banner{
@@ -491,8 +563,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   flex:1 1 0; min-width:0;
   background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px;
 }
-.finish-col.side-a{ border-left:3px solid var(--cyan); }
-.finish-col.side-b{ border-right:3px solid var(--violet); }
+.finish-col.side-a{}
+.finish-col.side-b{}
 .finish-col-header{
   font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16px; text-align:center;
   color:var(--text); padding-bottom:8px; margin-bottom:2px; border-bottom:1px solid var(--border);
@@ -526,15 +598,11 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   background:linear-gradient(90deg,#ff2d55,#ffd60a,#39ff14,#00c3ff,#b18cff,#ff2d55);
   background-size:250% auto;
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  animation: xtremeShimmer 3s linear infinite, xtremeGlow 1.6s ease-in-out infinite;
+  animation: xtremeShimmer 3s linear infinite;
 }
 @keyframes xtremeShimmer{
   0%{ background-position:0% center; }
   100%{ background-position:250% center; }
-}
-@keyframes xtremeGlow{
-  0%,100%{ filter:drop-shadow(0 0 4px rgba(255,255,255,.55)) drop-shadow(0 0 10px rgba(255,45,85,.45)) drop-shadow(0 0 16px rgba(0,195,255,.35)); }
-  50%{ filter:drop-shadow(0 0 9px rgba(255,255,255,.95)) drop-shadow(0 0 20px rgba(255,214,10,.65)) drop-shadow(0 0 30px rgba(0,195,255,.6)); }
 }
 .finish-icon{ margin-right:6px; }
 .finish-pts{ font-family:'Space Mono',monospace; font-size:18px; font-weight:700; padding:4px 12px; border-radius:8px; color:#04141a; flex-shrink:0; margin-left:10px; }
@@ -614,7 +682,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .hidden{ display:none !important; }
 
 .progress{ height:7px; background:var(--panel-2); border-radius:20px; overflow:hidden; margin-top:12px; }
-.progress-bar{ height:100%; background:linear-gradient(90deg,var(--cyan),var(--violet)); transition:width .3s; }
+.progress-bar{ height:100%; background:linear-gradient(90deg,#ffffff,#ffb347,#8b1a1a); transition:width .3s; }
 
 .save-flag{ position:fixed; bottom:18px; right:18px; background:var(--panel); border:1px solid var(--border); color:var(--muted); padding:8px 14px; border-radius:20px; font-size:12px; opacity:0; transition:opacity .3s; pointer-events:none; }
 .save-flag.show{ opacity:1; }
@@ -692,11 +760,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 @media (max-width:700px){
   .container{ padding:0 12px 50px; }
-  .header{ padding:18px 16px 16px; }
-  .logo{ font-size:26px; }
-  .header-meta{ font-size:10.5px; }
-  .header-meta .meta-item{ padding:0 9px; }
-  .header-meta .meta-value{ max-width:120px; }
+  .header-meta .meta-item{ padding:0 10px; }
   .cloud-status-actions{ align-items:flex-start; }
   .cloud-status-hint{ text-align:left; }
   .stats{ grid-template-columns:repeat(2,1fr); }
@@ -944,6 +1008,15 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   0%,100%{ box-shadow:0 0 0 1px rgba(255,69,69,.28), 0 0 14px rgba(255,69,69,.22); }
   50%{ box-shadow:0 0 0 1px rgba(255,69,69,.5), 0 0 22px rgba(255,69,69,.42); }
 }
+/* 季軍戰（單淘汰賽制限定）：即使「進行中」也維持青銅色外框，不套用一般對戰的紅色高亮 */
+.bracket-bronze-body .bracket-match.is-live{
+  border-color:var(--bronze);
+  animation: bmBronzeLivePulse 1.6s ease-in-out infinite;
+}
+@keyframes bmBronzeLivePulse{
+  0%,100%{ box-shadow:0 0 0 1px rgba(211,138,82,.32), 0 0 14px rgba(211,138,82,.26); }
+  50%{ box-shadow:0 0 0 1px rgba(211,138,82,.58), 0 0 24px rgba(211,138,82,.46); }
+}
 .bracket-status-badge{
   position:absolute; top:-11px; left:50%; transform:translateX(-50%);
   display:flex; align-items:center; gap:5px; z-index:2;
@@ -1092,16 +1165,20 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 </script>
 
 <header class="header">
+  <span class="corner-frame" aria-hidden="true"><span class="h"></span><span class="v"></span><span class="node"></span></span>
   <div class="header-inner">
-    <div class="sys-tag">Tournament System</div>
-    <div class="logo"><span class="logo-main">BEYBLADE <span>X</span></span></div>
-    <div class="header-rule"></div>
+    <div class="header-row1">
+      <div class="sys-tag"><span class="sys-dot"></span>Tournament System</div>
+      <div class="logo"><span class="logo-main">BEYBLADE X</span></div>
+    </div>
+    <div class="header-rule"><span class="rule-sweep"></span></div>
     <div class="header-meta">
-      <span class="meta-item"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></span>
-      <span class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.2</span></span>
-      <span class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/4</span></span>
+      <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.3</span></div>
+      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/5</span></div>
     </div>
   </div>
+
 </header>
 
 <div class="container">
@@ -2900,6 +2977,16 @@ function bracketMatchesByRound(){
   return { rounds, byRound };
 }
 
+// A match is the true final only for single-elimination (knockout) brackets,
+// on the last round, and never the third-place (bronze) match sharing that round.
+function isFinalMatch(match){
+  if(!match || match.thirdPlace) return false;
+  if(!state.tournament || state.tournament.format !== 'knockout') return false;
+  if(!state.matches || state.matches.length === 0) return false;
+  const maxRound = Math.max(...state.matches.map(m => m.round));
+  return match.round === maxRound;
+}
+
 function bracketRoundLabel(r, totalRounds){
   const fromEnd = totalRounds - r;
   if(fromEnd === 0) return '決賽';
@@ -3312,7 +3399,13 @@ function computeNextMatchForPanel(panelId){
 
 function renderRefereeMatch(match, panelId){
   const body = document.getElementById(`refBody-${panelId}`);
-  if(!body || !match) return;
+  if(!body) return;
+  const panelCard = body.closest('.referee-panel');
+  if(panelCard){
+    panelCard.classList.toggle('referee-panel-bronze', !!(match && match.thirdPlace));
+    panelCard.classList.toggle('referee-panel-final', isFinalMatch(match));
+  }
+  if(!match) return;
   const quickMode = !!state.tournament.quickMode;
   const target = state.tournament.pointsToWin;
   const pa = nameOf(match.playerA), pb = nameOf(match.playerB);
@@ -3388,8 +3481,9 @@ function renderRefereeMatch(match, panelId){
       </div>
     `;
 
+  const refTitleLabel = match.thirdPlace ? '季軍戰' : (isFinalMatch(match) ? '決賽' : `第 ${match.round} 輪`);
   body.innerHTML = `
-    <div class="referee-title">第 ${match.round} 輪${quickMode ? '・快速模式（僅選出勝者，不計分）' : `・先取得 ${target} 分獲勝`}</div>
+    <div class="referee-title">${refTitleLabel}${quickMode ? '・快速模式（僅選出勝者，不計分）' : `・先取得 ${target} 分獲勝`}</div>
     ${flashHtml}
     ${ringRowHtml}
     ${mainHtml}
@@ -3455,7 +3549,7 @@ function showConfirm(message, onConfirm){
 function buildBattery(points, target){
   const capped = Math.min(points, target);
   const isFull = points >= target;
-  const isDanger = points > 4;
+  const isDanger = points >= target && target > 4;
   const sevenMode = target > 4;
 
   let cellsHtml = '';
