@@ -293,12 +293,57 @@ button{ cursor:pointer; }
 }
 .text-input:focus, select.text-input:focus{ outline:2px solid var(--cyan); outline-offset:1px; }
 .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
-.player-input{ display:flex; gap:10px; margin-bottom:10px; align-items:center; }
-.player-number{
-  width:34px; height:34px; border-radius:8px;
+/* ===== Player chip input (參賽玩家) ===== */
+.chip-input-wrap{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  padding:10px; margin-bottom:18px;
+  background:#0d1119; border:1px solid var(--border); border-radius:10px;
+  min-height:52px;
+}
+.chip-input-wrap:focus-within{ outline:2px solid var(--cyan); outline-offset:1px; }
+.player-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--panel-2); border:1px solid var(--border); border-radius:999px;
+  padding:5px 6px 5px 10px; font-size:13px; max-width:100%;
+}
+.player-chip.input-error{
+  border-color:var(--violet);
+  box-shadow:0 0 0 1px var(--violet), 0 0 8px rgba(255,31,77,.35);
+}
+.chip-index{
+  font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); flex-shrink:0;
+}
+.chip-name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; cursor:text; }
+.chip-name:hover{ text-decoration:underline dotted; text-underline-offset:2px; }
+.chip-edit-input{
+  background:transparent; border:none; outline:none; color:var(--text); font-size:13px; font-family:inherit;
+}
+.chip-remove{
+  width:18px; height:18px; flex-shrink:0; border:none; border-radius:50%;
+  background:transparent; color:var(--muted); font-size:14px; line-height:1;
   display:flex; align-items:center; justify-content:center;
-  background:var(--panel-2); color:var(--muted); font-family:'Space Mono',monospace; font-size:12px;
-  flex-shrink:0;
+}
+.chip-remove:hover{ background:var(--border); color:var(--orange); }
+.chip-text-input{
+  flex:1 1 160px; min-width:140px; background:transparent; border:none; outline:none;
+  color:var(--text); font-size:14px; padding:6px 4px;
+}
+.chip-text-input::placeholder{ color:var(--muted); }
+.player-count-hint{ font-size:12px; font-weight:400; color:var(--muted); }
+
+/* ===== Collapsed 參賽玩家 summary (after tournament starts) ===== */
+.player-setup-summary{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  cursor:pointer; user-select:none;
+  background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; margin-bottom:18px;
+}
+.player-setup-summary:hover{ border-color:var(--muted); }
+.player-setup-summary .pss-text{ font-size:13px; color:var(--text); }
+.player-setup-summary .pss-text b{ color:var(--cyan-soft); }
+.player-setup-summary .pss-action{
+  font-size:12px; color:var(--muted); white-space:nowrap; flex-shrink:0;
+  display:flex; align-items:center; gap:4px;
 }
 .icon-btn{
   width:38px; height:38px; flex-shrink:0;
@@ -1092,7 +1137,31 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .champ-trophy{ font-size:22px; flex-shrink:0; }
 .champ-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .champ-pending{ color:var(--muted); font-weight:600; font-size:13px; }
+
+/* quick per-cell random-name flicker during 隨機刷新賽程 (~0.5s total) */
+.name-flicker{
+  animation: nameFlickerPulse .14s steps(1) infinite;
+}
+@keyframes nameFlickerPulse{
+  0%,100%{ color:rgb(var(--theme-rgb)); text-shadow:0 0 6px rgba(var(--theme-rgb),.85); }
+  50%{ color:#fff; text-shadow:0 0 10px rgba(255,255,255,.9); }
+}
 .bracket-empty{ text-align:center; padding:50px 20px; color:var(--muted); }
+
+.bracket-match.bye-compact{
+  position:absolute; left:2px; right:2px;
+  display:flex; align-items:center; gap:7px; padding:0 12px;
+  background:transparent; border:1px dashed var(--border); border-radius:8px;
+  box-sizing:border-box; font-size:11.5px; color:var(--muted);
+}
+.bye-compact-dot{ width:6px; height:6px; border-radius:50%; background:var(--border); flex-shrink:0; }
+.bye-compact-name{
+  color:var(--text); font-weight:600; font-size:12.5px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.bye-compact-tag{
+  margin-left:auto; flex-shrink:0; font-style:italic; white-space:nowrap;
+}
 
 .bracket-bronze{
   display:flex; flex-direction:column; gap:8px;
@@ -1404,7 +1473,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     </svg>
     <div class="header-meta">
       <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.7</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.8</span></div>
       <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/5</span></div>
     </div>
   </div>
@@ -1584,14 +1653,24 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         </div>
       </div>
 
-      <div class="field-label">參賽玩家（至少 2 位）</div>
-      <div id="playerInputs"></div>
-      <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-bottom:18px;" onclick="addPlayerRow()">＋ 新增玩家</button>
+      <div id="playerSetupSummary" class="player-setup-summary hidden" onclick="togglePlayerSetupSection()">
+        <span class="pss-text" id="playerSetupSummaryText"></span>
+        <span class="pss-action">✎ 編輯名單</span>
+      </div>
 
-      <div id="bulkAddSection" class="hidden" style="margin-bottom:20px;">
-        <div class="field-label">批量新增名單（單淘汰賽限定・一行一個名字）</div>
-        <textarea id="bulkNamesInput" class="text-input" rows="5" style="resize:vertical; font-family:'Space Mono',monospace;" placeholder="玩家A&#10;玩家B&#10;玩家C&#10;玩家D"></textarea>
-        <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-top:10px;" onclick="applyBulkNames()">套用名單</button>
+      <div id="playerSetupSection">
+        <div class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>參賽玩家（至少 2 位）</span>
+          <span class="player-count-hint" id="playerCountHint"></span>
+        </div>
+        <div id="playerInputs" class="chip-input-wrap"></div>
+        <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-bottom:18px;" onclick="addPlayerRow()">＋ 新增玩家</button>
+
+        <div id="bulkAddSection" class="hidden" style="margin-bottom:20px;">
+          <div class="field-label">批量新增名單（單淘汰賽限定・一行一個名字）</div>
+          <textarea id="bulkNamesInput" class="text-input" rows="5" style="resize:vertical; font-family:'Space Mono',monospace;" placeholder="玩家A&#10;玩家B&#10;玩家C&#10;玩家D"></textarea>
+          <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-top:10px;" onclick="applyBulkNames()">套用名單</button>
+        </div>
       </div>
 
       <div class="flex">
@@ -1814,6 +1893,7 @@ let lastFlash = null; // transient, not persisted: { matchId, side, finish, ts }
 // that tab. See refreshAfterScoreChange() / switchTab().
 let standingsDirty = false;
 let matchesDirty = false;
+let playerSetupExpanded = false; // 開賽後「參賽玩家」預設收合成摘要，展開後可編輯名單重新產生賽程
 
 /* =========================================================
    INIT
@@ -2439,26 +2519,97 @@ function onCloudMatches(list){
    SETUP: PLAYER ROWS
 ========================================================= */
 function createPlayerInputs(n){
+  // n 保留參數相容舊呼叫點，但晶片式清單不需要空白佔位列
   const container = document.getElementById('playerInputs');
   container.innerHTML = '';
-  for(let i=0;i<n;i++) appendPlayerRow(container, '');
+  ensureChipInput(container);
+  renumberPlayerRows();
 }
 
-function appendPlayerRow(container, value){
-  const idx = container.children.length + 1;
-  const row = document.createElement('div');
-  row.className = 'player-input';
-  row.innerHTML = `
-    <div class="player-number">${String(idx).padStart(2,'0')}</div>
-    <input class="text-input player-name-input" placeholder="玩家 ${idx}" value="${escapeAttr(value)}" oninput="this.classList.remove('input-error')">
-    <button class="icon-btn" onclick="removePlayerRow(this)" title="移除">×</button>
+function ensureChipInput(container){
+  if(document.getElementById('playerChipInput')) return;
+  const input = document.createElement('input');
+  input.id = 'playerChipInput';
+  input.className = 'chip-text-input';
+  input.placeholder = '輸入玩家名稱後按 Enter 新增';
+  input.addEventListener('keydown', onChipInputKeydown);
+  container.appendChild(input);
+}
+
+function onChipInputKeydown(e){
+  const input = e.target;
+  if(e.key === 'Enter' || e.key === ','){
+    e.preventDefault();
+    const name = input.value.trim();
+    if(name){
+      addPlayerChip(name);
+      input.value = '';
+    }
+  } else if(e.key === 'Backspace' && input.value === ''){
+    const container = document.getElementById('playerInputs');
+    const chips = container.querySelectorAll('.player-chip');
+    if(chips.length > 0) chips[chips.length-1].remove();
+    renumberPlayerRows();
+  }
+}
+
+function addPlayerChip(name){
+  const container = document.getElementById('playerInputs');
+  ensureChipInput(container);
+  const chip = document.createElement('span');
+  chip.className = 'player-chip';
+  chip.dataset.name = name;
+  const idx = container.querySelectorAll('.player-chip').length + 1;
+  chip.innerHTML = `
+    <span class="chip-index">${String(idx).padStart(2,'0')}</span>
+    <span class="chip-name" ondblclick="editChip(this)" title="雙擊可重新命名">${escapeHtml(name)}</span>
+    <button type="button" class="chip-remove" onclick="removePlayerChip(this)" title="移除">×</button>
   `;
-  container.appendChild(row);
+  const chipInput = document.getElementById('playerChipInput');
+  container.insertBefore(chip, chipInput);
+  renumberPlayerRows();
+}
+
+function editChip(nameSpan){
+  const chip = nameSpan.closest('.player-chip');
+  if(!chip) return;
+  const current = chip.dataset.name || '';
+  const input = document.createElement('input');
+  input.className = 'chip-edit-input';
+  input.value = current;
+  input.style.width = Math.max(40, current.length*8) + 'px';
+  chip.replaceChild(input, nameSpan);
+  input.focus();
+  input.select();
+
+  let committed = false;
+  const commit = () => {
+    if(committed) return;
+    committed = true;
+    const val = input.value.trim();
+    if(!val){ chip.remove(); renumberPlayerRows(); return; }
+    chip.dataset.name = val;
+    chip.classList.remove('input-error');
+    const newSpan = document.createElement('span');
+    newSpan.className = 'chip-name';
+    newSpan.title = '雙擊可重新命名';
+    newSpan.textContent = val;
+    newSpan.ondblclick = () => editChip(newSpan);
+    if(input.parentNode === chip) chip.replaceChild(newSpan, input);
+    renumberPlayerRows();
+  };
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter'){ e.preventDefault(); commit(); }
+    if(e.key === 'Escape'){ e.preventDefault(); input.value = current; commit(); }
+  });
+  input.addEventListener('blur', commit);
 }
 
 function addPlayerRow(){
-  appendPlayerRow(document.getElementById('playerInputs'), '');
-  renumberPlayerRows();
+  // 「＋ 新增玩家」現在只需把焦點移到晶片輸入框，讓使用者直接打字 + Enter
+  const container = document.getElementById('playerInputs');
+  ensureChipInput(container);
+  document.getElementById('playerChipInput').focus();
 }
 
 function onFormatChange(){
@@ -2474,6 +2625,13 @@ function onFormatChange(){
   }
 }
 
+// 相容舊呼叫點（批量套用名單、從 state.players 載入既有名單時使用）
+function appendPlayerRow(container, value){
+  ensureChipInput(container);
+  const name = String(value || '').trim();
+  if(name) addPlayerChip(name);
+}
+
 function applyBulkNames(){
   const raw = document.getElementById('bulkNamesInput').value;
   const names = raw.split('\n').map(s => s.trim()).filter(Boolean);
@@ -2485,25 +2643,26 @@ function applyBulkNames(){
   container.innerHTML = '';
   names.forEach(name => appendPlayerRow(container, name));
   renumberPlayerRows();
+  document.getElementById('bulkNamesInput').value = '';
   showAlert(`已新增 ${names.length} 位玩家，請確認名單後按「開始比賽」。`);
 }
 
-function removePlayerRow(btn){
-  const container = document.getElementById('playerInputs');
-  if(container.children.length <= 2){
-    showAlert('至少需要保留 2 位玩家欄位。');
-    return;
-  }
-  btn.closest('.player-input').remove();
+function removePlayerChip(btn){
+  const chip = btn.closest('.player-chip');
+  if(chip) chip.remove();
   renumberPlayerRows();
 }
 
 function renumberPlayerRows(){
-  const rows = document.querySelectorAll('#playerInputs .player-input');
-  rows.forEach((row, i) => {
-    row.querySelector('.player-number').innerText = String(i+1).padStart(2,'0');
-    row.querySelector('.player-name-input').placeholder = `玩家 ${i+1}`;
+  const chips = document.querySelectorAll('#playerInputs .player-chip');
+  chips.forEach((chip, i) => {
+    const badge = chip.querySelector('.chip-index');
+    if(badge) badge.textContent = String(i+1).padStart(2,'0');
   });
+  const hint = document.getElementById('playerCountHint');
+  if(hint) hint.textContent = chips.length > 0 ? `已新增 ${chips.length} 位` : '';
+  const chipInput = document.getElementById('playerChipInput');
+  if(chipInput) chipInput.placeholder = chips.length > 0 ? '新增玩家…' : '輸入玩家名稱後按 Enter 新增';
 }
 
 /* =========================================================
@@ -2607,13 +2766,17 @@ function forfeitPendingMatchesFor(playerId){
    START TOURNAMENT
 ========================================================= */
 function startTournament(){
-  const rows = Array.from(document.querySelectorAll('#playerInputs .player-input'));
-  const entries = rows.map((row, i) => {
-    const input = row.querySelector('.player-name-input');
-    return { idx: i+1, input, name: input.value.trim() };
-  });
+  // 如果晶片輸入框裡還有沒按 Enter 的文字，開賽前先自動補收進清單
+  const chipInput = document.getElementById('playerChipInput');
+  if(chipInput && chipInput.value.trim()){
+    addPlayerChip(chipInput.value.trim());
+    chipInput.value = '';
+  }
 
-  entries.forEach(e => e.input.classList.remove('input-error'));
+  const chips = Array.from(document.querySelectorAll('#playerInputs .player-chip'));
+  const entries = chips.map((chip, i) => ({ idx: i+1, chip, name: (chip.dataset.name || '').trim() }));
+
+  entries.forEach(e => e.chip.classList.remove('input-error'));
 
   const filled = entries.filter(e => e.name);
   const names = filled.map(e => e.name);
@@ -2628,12 +2791,11 @@ function startTournament(){
   const dupGroups = Object.values(groups).filter(g => g.length > 1);
 
   if(dupGroups.length > 0){
-    dupGroups.forEach(g => g.forEach(e => e.input.classList.add('input-error')));
+    dupGroups.forEach(g => g.forEach(e => e.chip.classList.add('input-error')));
     const lines = dupGroups.map(g =>
       g.map(e => `${String(e.idx).padStart(2,'0')}.${e.name}`).join('、') + ' 重複名稱'
     );
     showAlert(`玩家名稱不可重複：\n${lines.join('\n')}`);
-    dupGroups[0][0].input.focus();
     return;
   }
 
@@ -2655,8 +2817,15 @@ function finalizeStartTournament(names){
   const format = document.getElementById('formatSelect').value;
   const quickMode = format === 'knockout' && document.getElementById('quickModeCheckbox').checked;
 
-  const newMatches = format === 'knockout' ? generateKnockoutBracket(players) : generateRoundRobin(players, format);
-  state.players = players;
+  // Knockout seeding order determines who gets a bye (standardSeedOrder always
+  // hands byes to whichever seed slots land at the "top" of the bracket), so
+  // shuffling the player list here before seeding — same as 隨機刷新賽程's
+  // finalizeScheduleShuffle does — makes "開始比賽"/"重新產生賽程" randomize
+  // byes and pairings too, instead of always reproducing the same bracket for
+  // the same entered order.
+  const orderedPlayers = format === 'knockout' ? shuffleArray(players) : players;
+  const newMatches = format === 'knockout' ? generateKnockoutBracket(orderedPlayers) : generateRoundRobin(players, format);
+  state.players = orderedPlayers;
   state.matches = newMatches;
   state.currentRound = 1;
   state.tournament = {
@@ -2666,6 +2835,7 @@ function finalizeStartTournament(names){
   refereePanels.forEach(p => p.matchId = null);
   savePanels();
   markAllDirty();
+  playerSetupExpanded = false; // 開賽（或重新產生賽程）後，「參賽玩家」自動收合成摘要
 
   (async () => {
     if(window.cloudSync && window.cloudSync.ready && currentEventCode){
@@ -3070,22 +3240,39 @@ function randomizeSchedule(){
 // the reshuffle animation visible to everyone watching, not just whoever
 // pressed the button. Returns false (and starts nothing) if there's
 // nothing on screen to animate, e.g. the bracket tab was never opened yet.
+//
+// Rather than a slow vertical reel, each name cell just rapidly swaps to a
+// different random name every tick (with a quick colour-flash animation so
+// even a repeated pick still reads as "changing"). Runs for a short, snappy
+// burst (~0.5s total, see runScheduleShuffleAnimation) rather than a long
+// spin-down.
+const NAME_FLICKER_MS = 80; // how often each cell's text swaps
+
 function startScheduleSpin(){
   stopScheduleSpin();
   const wrap = document.getElementById('bracketTree');
   const nameEls = wrap ? Array.from(wrap.querySelectorAll('.bslot-name, .champ-name')) : [];
   const pool = state.players.map(p => p.name).filter(Boolean);
   if(pool.length === 0 || nameEls.length === 0) return false;
+  nameEls.forEach(el => el.classList.add('name-flicker'));
   scheduleSpinTimer = setInterval(() => {
     nameEls.forEach(el => {
-      el.textContent = pool[Math.floor(Math.random() * pool.length)];
+      let pick = pool[Math.floor(Math.random() * pool.length)];
+      if(pool.length > 1 && pick === el.textContent){
+        pick = pool[(pool.indexOf(pick) + 1) % pool.length];
+      }
+      el.textContent = pick;
     });
-  }, 70);
+  }, NAME_FLICKER_MS);
   return true;
 }
 
 function stopScheduleSpin(){
   if(scheduleSpinTimer){ clearInterval(scheduleSpinTimer); scheduleSpinTimer = null; }
+  const wrap = document.getElementById('bracketTree');
+  if(wrap){
+    wrap.querySelectorAll('.name-flicker').forEach(el => el.classList.remove('name-flicker'));
+  }
 }
 
 function runScheduleShuffleAnimation(){
@@ -3106,7 +3293,7 @@ function runScheduleShuffleAnimation(){
     window.cloudSync.pushMeta({ shuffleAt: lastLocalShuffleAt }).catch(()=>{});
   }
 
-  const duration = 1500;
+  const duration = 480;
   const started = startScheduleSpin();
   if(!started){
     finalizeScheduleShuffle(btn);
@@ -3395,112 +3582,88 @@ function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
 // Builds the render-time layout for the bracket tree, WITHOUT touching the
 // underlying tournament data (state.matches / bracketMatchesByRound output).
 //
-// A round-1 match where one side is 'BYE' is treated as an automatic-advance
-// event, not a real match: it never gets a visible box, never occupies a
-// vertical slot, and never gets a connector line. The player who received
-// the bye already appears directly in their round-2 match (propagateKnockout
-// Winner filled that in at generation time) — this function just makes sure
-// the *layout* doesn't reserve space or draw lines for the bye match itself.
-//
-// Round 2+ matches are always visible (a match can only be a bye when one of
-// its two slots is the literal 'BYE' placeholder, and those placeholders are
-// only ever seeded into round 1 — see generateKnockoutBracket/standardSeed
-// Order, which guarantees a BYE is never paired against another BYE).
+// A round-1 match where one side is 'BYE' still gets a box — but a thin,
+// single-line "輪空晉級" strip instead of a full 74px match card — so
+// bye-heavy brackets stay compact while every round still shows exactly
+// half as many boxes as the round before it (a clean, fully-symmetric
+// tree, same shape challonge.com uses). BYE only ever appears in round 1
+// (see generateKnockoutBracket/standardSeedOrder), so only round-1 boxes
+// can be the thin variant; every later round is always full-height.
 //
 // Position rule (bottom-up):
-//   - Visible round-1 matches get sequential, evenly-spaced Y centers.
-//   - A round r>1 match looks at its round r-1 feeder match(es) (found via
-//     nextMatchId, not by array index, since hidden byes break index-based
-//     pairing):
-//       - both feeders visible  -> center = average of their Y centers
-//       - only one feeder visible (the other was a bye) -> center = that
-//         one feeder's Y center directly (no fake midpoint)
-// Returns { visibleByRound, pos, H } where pos maps matchId -> centerY,
-// and only visible matches have an entry.
+//   - Round-1 boxes are stacked top-to-bottom with a small fixed gap
+//     between them, each reserving only its own height (BYE_H for a bye,
+//     BOX_H for a real match) — not a uniform slot — so byes don't waste
+//     vertical space.
+//   - Every round r>1 match centers on the average Y of its two round r-1
+//     feeders (found via nextMatchId, not array index, to stay correct
+//     regardless of sort order).
+// Returns { visibleByRound, pos, H, boxHeight } where pos maps matchId ->
+// centerY, and boxHeight maps matchId -> its rendered height in px.
+// (visibleByRound keeps its old name for compatibility with renderBracket;
+// nothing is filtered out — every match gets an entry.)
+const BRACKET_BOX_H = 74;   // px height of a normal match card
+const BRACKET_BYE_H = 30;   // px height of a compact "輪空晉級" strip
+const BRACKET_ROW_GAP = 14; // px gap between stacked round-1 boxes
+
 function computeBracketLayout(rounds, byRound){
-  const UNIT = 88; // px height reserved per visible round-1 leaf slot, and the
-                    // minimum vertical gap enforced between ANY two sibling
-                    // boxes in a round (box height is 74px, so this always
-                    // leaves a visible gap between neighbors).
-  const HALF = 37;  // half of .bracket-match height (74px) — used for bounds padding
   const visibleByRound = {};
-  rounds.forEach(r => {
-    visibleByRound[r] = byRound[r].filter(m => !m.isBye);
-  });
+  rounds.forEach(r => { visibleByRound[r] = byRound[r]; });
 
-  const leafCount = Math.max(1, visibleByRound[rounds[0]].length);
-  let H = leafCount * UNIT;
   const pos = {};
+  const boxHeight = {};
 
-  visibleByRound[rounds[0]].forEach((m, i) => {
-    pos[m.id] = (i + 0.5) * UNIT;
+  const round1 = visibleByRound[rounds[0]];
+  let cursor = 0;
+  round1.forEach(m => {
+    const h = m.isBye ? BRACKET_BYE_H : BRACKET_BOX_H;
+    boxHeight[m.id] = h;
+    pos[m.id] = cursor + h / 2;
+    cursor += h + BRACKET_ROW_GAP;
   });
+  let H = Math.max(BRACKET_BOX_H, cursor - BRACKET_ROW_GAP);
 
   for(let ri = 1; ri < rounds.length; ri++){
     const r = rounds[ri];
-    const prevMatches = byRound[rounds[ri-1]]; // includes byes, needed to find feeders
+    const prevMatches = byRound[rounds[ri-1]];
     const list = visibleByRound[r];
 
-    // Pass 1: derive each match's "ideal" Y from its real (non-bye) round
-    // r-1 feeder(s). A match whose BOTH feeders were byes has no tree-
-    // derived signal at all and is left as null for now.
-    const raw = list.map(m => {
+    list.forEach(m => {
+      boxHeight[m.id] = BRACKET_BOX_H; // byes never occur past round 1
       const feederYs = prevMatches
         .filter(f => f.nextMatchId === m.id)
         .map(f => pos[f.id])
         .filter(y => y !== undefined);
-      if(feederYs.length === 2) return (feederYs[0] + feederYs[1]) / 2;
-      if(feederYs.length === 1) return feederYs[0];
-      return null;
+      pos[m.id] = feederYs.length
+        ? feederYs.reduce((a,b) => a+b, 0) / feederYs.length
+        : (H / (list.length + 1)) * (list.indexOf(m) + 1); // no feeders found — even fallback
     });
-
-    // Pass 2: fill any null slots by interpolating between this round's
-    // nearest already-known neighbors, in left-to-right seeding order, so
-    // a "both feeders were byes" match lands roughly where it belongs
-    // relative to its siblings instead of at a single fixed fallback point
-    // (which is what previously made unrelated matches collide exactly on
-    // top of one another — the reported overlapping-tree bug).
-    for(let i = 0; i < raw.length; i++){
-      if(raw[i] !== null) continue;
-      let li = i - 1; while(li >= 0 && raw[li] === null) li--;
-      let ni = i + 1; while(ni < raw.length && raw[ni] === null) ni++;
-      if(li >= 0 && ni < raw.length) raw[i] = raw[li] + (raw[ni] - raw[li]) * ((i - li) / (ni - li));
-      else if(li >= 0) raw[i] = raw[li] + UNIT * (i - li);
-      else if(ni < raw.length) raw[i] = raw[ni] - UNIT * (ni - i);
-      else raw[i] = (i + 0.5) * UNIT; // whole round unresolved — even last resort
-    }
-
-    // Pass 3: guarantee a minimum gap of one UNIT between every consecutive
-    // pair in this round. Interpolating a match in between two feeder-
-    // derived matches that already sit close together (common when byes
-    // bunch several matches near each other) can otherwise place two boxes
-    // nearer than their own 74px height apart, which is what caused the
-    // reported overlap even after pass 2. This sweep only ever pushes a
-    // box further from its predecessor, never closer, so it removes
-    // overlap without reintroducing it.
-    for(let i = 1; i < raw.length; i++){
-      if(raw[i] < raw[i-1] + UNIT) raw[i] = raw[i-1] + UNIT;
-    }
-
-    list.forEach((m, i) => { pos[m.id] = raw[i]; });
   }
 
-  // The passes above can push positions outside the [0, H] range that was
-  // sized from round 1 alone. Shift everything down if anything went
-  // negative, then grow H if anything now runs past the bottom, so every
-  // box stays fully inside its column instead of being clipped.
-  const allY = Object.values(pos);
-  if(allY.length){
-    const minY = Math.min(...allY);
-    if(minY < HALF){
-      const shift = HALF - minY;
+  // Guard against float/edge-case drift pushing anything outside [0, H].
+  const allEntries = Object.keys(pos).map(id => ({ id, y: pos[id], half: boxHeight[id] / 2 }));
+  if(allEntries.length){
+    const minTop = Math.min(...allEntries.map(e => e.y - e.half));
+    if(minTop < 0){
+      const shift = -minTop;
       Object.keys(pos).forEach(id => { pos[id] += shift; });
     }
-    const maxY = Math.max(...Object.values(pos));
-    if(maxY + HALF > H) H = maxY + HALF;
+    const maxBottom = Math.max(...allEntries.map(e => (pos[e.id] !== undefined ? pos[e.id] : e.y) + e.half));
+    if(maxBottom > H) H = maxBottom;
   }
 
-  return { visibleByRound, pos, H };
+  return { visibleByRound, pos, H, boxHeight };
+}
+
+function bracketByeBoxHtml(m, top){
+  const winnerId = m.winner || (m.playerA === 'BYE' ? m.playerB : m.playerA);
+  const name = escapeHtml(nameOf(winnerId));
+  return `
+    <div class="bracket-match bye-compact" style="top:${top}px; height:${BRACKET_BYE_H}px;">
+      <span class="bye-compact-dot"></span>
+      <span class="bye-compact-name">${name}</span>
+      <span class="bye-compact-tag">輪空晉級</span>
+    </div>`;
 }
 
 function renderBracket(){
@@ -3513,7 +3676,7 @@ function renderBracket(){
   }
 
   const { rounds, byRound } = bracketMatchesByRound();
-  const { visibleByRound, pos, H } = computeBracketLayout(rounds, byRound);
+  const { visibleByRound, pos, H, boxHeight } = computeBracketLayout(rounds, byRound);
   const GAP = 42;       // px width of connector gap between columns
   const COLW = 190;     // px width of each round column
   const HALF = 37;      // half of .bracket-match height (74px)
@@ -3536,7 +3699,7 @@ function renderBracket(){
   let html = `<div class="bracket-inner">`;
 
   rounds.forEach((r, ridx) => {
-    const matches = visibleByRound[r]; // BYE matches are excluded — no box, no slot
+    const matches = visibleByRound[r]; // every match gets a box — byes render as a thin compact strip
     const isFinalRound = ridx === rounds.length - 1;
 
     html += `<div class="bracket-col" style="width:${COLW}px;">
@@ -3544,7 +3707,11 @@ function renderBracket(){
       <div class="bracket-round-body" style="height:${H}px;">`;
     matches.forEach(m => {
       const centerY = pos[m.id];
-      html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinalRound);
+      if(m.isBye){
+        html += bracketByeBoxHtml(m, centerY - BRACKET_BYE_H / 2);
+      } else {
+        html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinalRound);
+      }
     });
     html += `</div>`;
 
@@ -3562,14 +3729,13 @@ function renderBracket(){
 
     if(ridx < rounds.length - 1){
       // Connectors are derived from the actual match graph (nextMatchId),
-      // not array position — a hidden BYE match breaks simple index-based
-      // pairing. Each next-round match draws one line per REAL feeder match
-      // (0 lines for a feeder that was a bye — that player just appears
-      // directly in the next round's box with no incoming line).
+      // not array position, so they stay correct regardless of sort order.
+      // BYE matches render a (thin) box too, so they also get a connector
+      // line into the next round, same as a normal auto-advance.
       const nextMatches = visibleByRound[rounds[ridx+1]];
       let paths = '';
       nextMatches.forEach(nm => {
-        const feeders = byRound[r].filter(f => f.nextMatchId === nm.id && !f.isBye);
+        const feeders = byRound[r].filter(f => f.nextMatchId === nm.id);
         feeders.forEach(f => {
           const yFrom = pos[f.id];
           const yTo = pos[nm.id];
@@ -4138,23 +4304,63 @@ function loadSetupInputs(){
   document.getElementById('quickModeCheckbox').checked = !!state.tournament.quickMode;
   onFormatChange();
 
-  if(state.players.length > 0){
+  const isRunning = state.tournament.status === 'running';
+  const showDetail = !isRunning || playerSetupExpanded;
+
+  if(showDetail && state.players.length > 0){
     createPlayerInputs(0);
     const container = document.getElementById('playerInputs');
     state.players.forEach(p => appendPlayerRow(container, p.name));
+  } else if(showDetail && document.getElementById('playerInputs').children.length === 0){
+    createPlayerInputs(0);
   }
+  updatePlayerSetupVisibility();
 
   renderRoster();
 
   const note = document.getElementById('setupNote');
   const startBtn = document.getElementById('startBtn');
-  if(state.tournament.status === 'running'){
+  if(isRunning){
     note.innerText = '賽事進行中：重新按下「開始比賽」將會清除目前所有對戰紀錄並重新產生賽程。';
     startBtn.innerText = '重新產生賽程';
   } else {
     note.innerText = '';
     startBtn.innerText = '開始比賽';
   }
+}
+
+/* =========================================================
+   PLAYER SETUP: 收合摘要 <-> 展開編輯
+========================================================= */
+function updatePlayerSetupVisibility(){
+  const section = document.getElementById('playerSetupSection');
+  const summary = document.getElementById('playerSetupSummary');
+  if(!section || !summary) return;
+  const collapse = state.tournament.status === 'running' && !playerSetupExpanded;
+  section.classList.toggle('hidden', collapse);
+  summary.classList.toggle('hidden', !collapse);
+  if(collapse) updatePlayerSetupSummaryText();
+}
+
+function updatePlayerSetupSummaryText(){
+  const el = document.getElementById('playerSetupSummaryText');
+  if(!el) return;
+  const total = state.players.length;
+  const withdrawnCount = state.players.filter(p => p.withdrawn).length;
+  el.innerHTML = withdrawnCount > 0
+    ? `已鎖定 <b>${total}</b> 位選手・${withdrawnCount} 位棄權（管理請至下方「選手名單管理」）`
+    : `已鎖定 <b>${total}</b> 位選手（管理請至下方「選手名單管理」）`;
+}
+
+function togglePlayerSetupSection(){
+  playerSetupExpanded = !playerSetupExpanded;
+  if(playerSetupExpanded){
+    // 展開時把目前正式名單重新填入晶片清單，方便直接編輯後按「重新產生賽程」
+    createPlayerInputs(0);
+    const container = document.getElementById('playerInputs');
+    state.players.forEach(p => appendPlayerRow(container, p.name));
+  }
+  updatePlayerSetupVisibility();
 }
 
 /* =========================================================
@@ -4173,6 +4379,7 @@ function resetTournament(){
     };
     refereePanels = [{ id: genPanelId(), matchId:null, label:'' }];
     savePanels();
+    playerSetupExpanded = false;
     createPlayerInputs(2);
     renderAll();
     if(currentEventCode) saveState();
