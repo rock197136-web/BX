@@ -188,7 +188,7 @@ button{ cursor:pointer; }
   font-size:9px; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; white-space:nowrap;
 }
 .header-meta .meta-value{
-  font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--silver);
+  font-size:12px; font-weight:600; letter-spacing:.02em; color:#ffffff;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .header-meta .meta-value.accent{ color:var(--hdr-blue-soft); }
@@ -1231,7 +1231,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <div class="header-rule"><span class="rule-sweep"></span></div>
     <div class="header-meta">
       <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.5</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.6</span></div>
       <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/5</span></div>
     </div>
   </div>
@@ -3132,32 +3132,86 @@ function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
 // Returns { visibleByRound, pos, H } where pos maps matchId -> centerY,
 // and only visible matches have an entry.
 function computeBracketLayout(rounds, byRound){
-  const UNIT = 88; // px height reserved per visible round-1 leaf slot
+  const UNIT = 88; // px height reserved per visible round-1 leaf slot, and the
+                    // minimum vertical gap enforced between ANY two sibling
+                    // boxes in a round (box height is 74px, so this always
+                    // leaves a visible gap between neighbors).
+  const HALF = 37;  // half of .bracket-match height (74px) — used for bounds padding
   const visibleByRound = {};
   rounds.forEach(r => {
     visibleByRound[r] = byRound[r].filter(m => !m.isBye);
   });
 
   const leafCount = Math.max(1, visibleByRound[rounds[0]].length);
-  const H = leafCount * UNIT;
+  let H = leafCount * UNIT;
   const pos = {};
 
   visibleByRound[rounds[0]].forEach((m, i) => {
-    pos[m.id] = (i + 0.5) * (H / leafCount);
+    pos[m.id] = (i + 0.5) * UNIT;
   });
 
   for(let ri = 1; ri < rounds.length; ri++){
     const r = rounds[ri];
     const prevMatches = byRound[rounds[ri-1]]; // includes byes, needed to find feeders
-    visibleByRound[r].forEach(m => {
+    const list = visibleByRound[r];
+
+    // Pass 1: derive each match's "ideal" Y from its real (non-bye) round
+    // r-1 feeder(s). A match whose BOTH feeders were byes has no tree-
+    // derived signal at all and is left as null for now.
+    const raw = list.map(m => {
       const feederYs = prevMatches
         .filter(f => f.nextMatchId === m.id)
         .map(f => pos[f.id])
         .filter(y => y !== undefined);
-      if(feederYs.length === 2) pos[m.id] = (feederYs[0] + feederYs[1]) / 2;
-      else if(feederYs.length === 1) pos[m.id] = feederYs[0];
-      else pos[m.id] = H / 2; // shouldn't happen, but keeps layout safe
+      if(feederYs.length === 2) return (feederYs[0] + feederYs[1]) / 2;
+      if(feederYs.length === 1) return feederYs[0];
+      return null;
     });
+
+    // Pass 2: fill any null slots by interpolating between this round's
+    // nearest already-known neighbors, in left-to-right seeding order, so
+    // a "both feeders were byes" match lands roughly where it belongs
+    // relative to its siblings instead of at a single fixed fallback point
+    // (which is what previously made unrelated matches collide exactly on
+    // top of one another — the reported overlapping-tree bug).
+    for(let i = 0; i < raw.length; i++){
+      if(raw[i] !== null) continue;
+      let li = i - 1; while(li >= 0 && raw[li] === null) li--;
+      let ni = i + 1; while(ni < raw.length && raw[ni] === null) ni++;
+      if(li >= 0 && ni < raw.length) raw[i] = raw[li] + (raw[ni] - raw[li]) * ((i - li) / (ni - li));
+      else if(li >= 0) raw[i] = raw[li] + UNIT * (i - li);
+      else if(ni < raw.length) raw[i] = raw[ni] - UNIT * (ni - i);
+      else raw[i] = (i + 0.5) * UNIT; // whole round unresolved — even last resort
+    }
+
+    // Pass 3: guarantee a minimum gap of one UNIT between every consecutive
+    // pair in this round. Interpolating a match in between two feeder-
+    // derived matches that already sit close together (common when byes
+    // bunch several matches near each other) can otherwise place two boxes
+    // nearer than their own 74px height apart, which is what caused the
+    // reported overlap even after pass 2. This sweep only ever pushes a
+    // box further from its predecessor, never closer, so it removes
+    // overlap without reintroducing it.
+    for(let i = 1; i < raw.length; i++){
+      if(raw[i] < raw[i-1] + UNIT) raw[i] = raw[i-1] + UNIT;
+    }
+
+    list.forEach((m, i) => { pos[m.id] = raw[i]; });
+  }
+
+  // The passes above can push positions outside the [0, H] range that was
+  // sized from round 1 alone. Shift everything down if anything went
+  // negative, then grow H if anything now runs past the bottom, so every
+  // box stays fully inside its column instead of being clipped.
+  const allY = Object.values(pos);
+  if(allY.length){
+    const minY = Math.min(...allY);
+    if(minY < HALF){
+      const shift = HALF - minY;
+      Object.keys(pos).forEach(id => { pos[id] += shift; });
+    }
+    const maxY = Math.max(...Object.values(pos));
+    if(maxY + HALF > H) H = maxY + HALF;
   }
 
   return { visibleByRound, pos, H };
