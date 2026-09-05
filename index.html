@@ -1919,6 +1919,19 @@ let currentRole = 'referee';   // 'referee' (full access) | 'viewer' (read-only)
 let currentViewerCode = null;  // the read-only code paired with this event — safe to display to anyone
 let applyingRemote = false;
 
+// ---- Slot-machine "隨機刷新賽程" sync state -----------------------------
+// The reshuffle animation used to only ever play on whichever device
+// clicked the button — every other connected referee/viewer just saw the
+// bracket jump straight to the new draw with no animation. `shuffleAt` is
+// broadcast as a plain meta field the moment the animation starts (well
+// before the new matches themselves are pushed), so every other device can
+// kick off the same visual spin at roughly the same time and only stop it
+// once the real new bracket actually arrives.
+let scheduleSpinTimer = null;   // interval id for the currently-running spin (local or remote-triggered)
+let lastLocalShuffleAt = null;  // stamp of a shuffle *this* device just initiated — used to ignore its own echo
+let lastAppliedShuffleAt = null;// last shuffleAt value already reacted to, so unrelated meta pushes don't re-trigger it
+let metaInitialized = false;    // true once this device has processed its first meta snapshot (its baseline)
+
 function initCloud(){
   const ready = () => {
     updateCloudStatusUI();
@@ -2137,6 +2150,21 @@ function leaveCloudEvent(){
 
 function onCloudMeta(data){
   applyingRemote = true;
+
+  // Detect a reshuffle broadcast from ANY device (see "Slot-machine sync
+  // state" above). Compare against lastAppliedShuffleAt so an unrelated
+  // meta push (which still carries the same, already-seen shuffleAt field
+  // via Firestore's merge) never re-triggers the spin. The very first
+  // snapshot this device ever receives (on page load / join) just adopts
+  // whatever shuffleAt is already on record as the baseline — it's history,
+  // not a live event, so it must not play the animation.
+  const shuffleIsFresh = metaInitialized
+    && data.shuffleAt
+    && data.shuffleAt !== lastAppliedShuffleAt
+    && data.shuffleAt !== lastLocalShuffleAt; // ignore the echo of our own broadcast — that device is already spinning
+  metaInitialized = true;
+  if(data.shuffleAt) lastAppliedShuffleAt = data.shuffleAt;
+
   state.tournament.name = data.name ?? state.tournament.name;
   state.tournament.pointsToWin = data.pointsToWin ?? state.tournament.pointsToWin;
   state.tournament.format = data.format ?? state.tournament.format;
@@ -2162,6 +2190,16 @@ function onCloudMeta(data){
   renderAll();
   updateCloudStatusUI();
   applyingRemote = false;
+
+  // Start the spin only AFTER renderAll() has (re)built the bracket DOM —
+  // starting it earlier would grab name elements that renderAll() then
+  // immediately throws away, leaving nothing visibly spinning. A generous
+  // fallback timeout clears it even if the real reshuffled matches never
+  // arrive (e.g. the connection drops), so the tree can't spin forever.
+  if(shuffleIsFresh){
+    startScheduleSpin();
+    setTimeout(stopScheduleSpin, 4000);
+  }
 }
 
 // Fixed-field signature (not JSON.stringify) so key-order differences between
@@ -2199,7 +2237,15 @@ function onCloudMatches(list){
   state.matches = incoming;
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 
-  if(structureChanged || changedIds.length > 1) renderAll();
+  // The real reshuffled bracket has arrived — stop any slot-machine spin
+  // this device kicked off in response to the shuffleAt broadcast (or its
+  // own local one) before rendering the actual new draw over it. A reshuffle
+  // always touches every match at once, so it always lands in the
+  // structureChanged/multi-match branch below, never the single-match one.
+  const isFullRebuild = structureChanged || changedIds.length > 1;
+  if(isFullRebuild) stopScheduleSpin();
+
+  if(isFullRebuild) renderAll();
   else if(changedIds.length === 1) refreshAfterScoreChange(changedIds[0]);
   applyingRemote = false;
 }
@@ -2800,36 +2846,59 @@ function randomizeSchedule(){
   });
 }
 
-function runScheduleShuffleAnimation(){
-  const btn = document.getElementById('shuffleScheduleBtn');
+// Starts the slot-machine name-spin over whatever bracket boxes are
+// currently rendered. Shared by the device that clicks "隨機刷新賽程"
+// AND by every other connected referee/viewer device, which triggers this
+// in response to the shuffleAt broadcast in onCloudMeta — that's what makes
+// the reshuffle animation visible to everyone watching, not just whoever
+// pressed the button. Returns false (and starts nothing) if there's
+// nothing on screen to animate, e.g. the bracket tab was never opened yet.
+function startScheduleSpin(){
+  stopScheduleSpin();
   const wrap = document.getElementById('bracketTree');
   const nameEls = wrap ? Array.from(wrap.querySelectorAll('.bslot-name, .champ-name')) : [];
   const pool = state.players.map(p => p.name).filter(Boolean);
+  if(pool.length === 0 || nameEls.length === 0) return false;
+  scheduleSpinTimer = setInterval(() => {
+    nameEls.forEach(el => {
+      el.textContent = pool[Math.floor(Math.random() * pool.length)];
+    });
+  }, 70);
+  return true;
+}
 
+function stopScheduleSpin(){
+  if(scheduleSpinTimer){ clearInterval(scheduleSpinTimer); scheduleSpinTimer = null; }
+}
+
+function runScheduleShuffleAnimation(){
+  const btn = document.getElementById('shuffleScheduleBtn');
   if(btn){
     btn.disabled = true;
     btn.dataset.originalText = btn.innerHTML;
     btn.innerHTML = '🎰 抽籤中…';
   }
 
-  if(pool.length === 0 || nameEls.length === 0){
-    finalizeScheduleShuffle(btn);
-    return;
+  // Broadcast BEFORE spinning locally (not after finalizing) so every other
+  // connected device can start its own spin at roughly the same moment —
+  // finalizeScheduleShuffle() (which pushes the actual new matches) only
+  // runs once this local animation finishes, so remote devices end up
+  // spinning for about the same 1.5s window before the real bracket lands.
+  lastLocalShuffleAt = Date.now();
+  if(window.cloudSync && window.cloudSync.ready && currentEventCode){
+    window.cloudSync.pushMeta({ shuffleAt: lastLocalShuffleAt }).catch(()=>{});
   }
 
   const duration = 1500;
-  const tickMs = 70;
-  let elapsed = 0;
-  const spinTimer = setInterval(() => {
-    nameEls.forEach(el => {
-      el.textContent = pool[Math.floor(Math.random() * pool.length)];
-    });
-    elapsed += tickMs;
-    if(elapsed >= duration){
-      clearInterval(spinTimer);
-      finalizeScheduleShuffle(btn);
-    }
-  }, tickMs);
+  const started = startScheduleSpin();
+  if(!started){
+    finalizeScheduleShuffle(btn);
+    return;
+  }
+  setTimeout(() => {
+    stopScheduleSpin();
+    finalizeScheduleShuffle(btn);
+  }, duration);
 }
 
 function finalizeScheduleShuffle(btn){
