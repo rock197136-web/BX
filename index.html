@@ -188,7 +188,7 @@ button{ cursor:pointer; }
   font-size:9px; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; white-space:nowrap;
 }
 .header-meta .meta-value{
-  font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--silver);
+  font-size:12px; font-weight:600; letter-spacing:.02em; color:#ffffff;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .header-meta .meta-value.accent{ color:var(--hdr-blue-soft); }
@@ -1231,7 +1231,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <div class="header-rule"><span class="rule-sweep"></span></div>
     <div class="header-meta">
       <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.5</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.6</span></div>
       <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/5</span></div>
     </div>
   </div>
@@ -3106,6 +3106,63 @@ function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
     </div>`;
 }
 
+// Builds the render-time layout for the bracket tree, WITHOUT touching the
+// underlying tournament data (state.matches / bracketMatchesByRound output).
+//
+// A round-1 match where one side is 'BYE' is treated as an automatic-advance
+// event, not a real match: it never gets a visible box, never occupies a
+// vertical slot, and never gets a connector line. The player who received
+// the bye already appears directly in their round-2 match (propagateKnockout
+// Winner filled that in at generation time) — this function just makes sure
+// the *layout* doesn't reserve space or draw lines for the bye match itself.
+//
+// Round 2+ matches are always visible (a match can only be a bye when one of
+// its two slots is the literal 'BYE' placeholder, and those placeholders are
+// only ever seeded into round 1 — see generateKnockoutBracket/standardSeed
+// Order, which guarantees a BYE is never paired against another BYE).
+//
+// Position rule (bottom-up):
+//   - Visible round-1 matches get sequential, evenly-spaced Y centers.
+//   - A round r>1 match looks at its round r-1 feeder match(es) (found via
+//     nextMatchId, not by array index, since hidden byes break index-based
+//     pairing):
+//       - both feeders visible  -> center = average of their Y centers
+//       - only one feeder visible (the other was a bye) -> center = that
+//         one feeder's Y center directly (no fake midpoint)
+// Returns { visibleByRound, pos, H } where pos maps matchId -> centerY,
+// and only visible matches have an entry.
+function computeBracketLayout(rounds, byRound){
+  const UNIT = 88; // px height reserved per visible round-1 leaf slot
+  const visibleByRound = {};
+  rounds.forEach(r => {
+    visibleByRound[r] = byRound[r].filter(m => !m.isBye);
+  });
+
+  const leafCount = Math.max(1, visibleByRound[rounds[0]].length);
+  const H = leafCount * UNIT;
+  const pos = {};
+
+  visibleByRound[rounds[0]].forEach((m, i) => {
+    pos[m.id] = (i + 0.5) * (H / leafCount);
+  });
+
+  for(let ri = 1; ri < rounds.length; ri++){
+    const r = rounds[ri];
+    const prevMatches = byRound[rounds[ri-1]]; // includes byes, needed to find feeders
+    visibleByRound[r].forEach(m => {
+      const feederYs = prevMatches
+        .filter(f => f.nextMatchId === m.id)
+        .map(f => pos[f.id])
+        .filter(y => y !== undefined);
+      if(feederYs.length === 2) pos[m.id] = (feederYs[0] + feederYs[1]) / 2;
+      else if(feederYs.length === 1) pos[m.id] = feederYs[0];
+      else pos[m.id] = H / 2; // shouldn't happen, but keeps layout safe
+    });
+  }
+
+  return { visibleByRound, pos, H };
+}
+
 function renderBracket(){
   const wrap = document.getElementById('bracketTree');
   const watermarkEl = document.getElementById('bracketWatermark');
@@ -3116,9 +3173,7 @@ function renderBracket(){
   }
 
   const { rounds, byRound } = bracketMatchesByRound();
-  const round1Count = byRound[rounds[0]].length;
-  const UNIT = 88;      // px height reserved per round-1 leaf slot
-  const H = round1Count * UNIT;
+  const { visibleByRound, pos, H } = computeBracketLayout(rounds, byRound);
   const GAP = 42;       // px width of connector gap between columns
   const COLW = 190;     // px width of each round column
   const HALF = 37;      // half of .bracket-match height (74px)
@@ -3141,15 +3196,14 @@ function renderBracket(){
   let html = `<div class="bracket-inner">`;
 
   rounds.forEach((r, ridx) => {
-    const matches = byRound[r];
-    const n = matches.length;
+    const matches = visibleByRound[r]; // BYE matches are excluded — no box, no slot
     const isFinalRound = ridx === rounds.length - 1;
 
     html += `<div class="bracket-col" style="width:${COLW}px;">
       <div class="bracket-round-label">${bracketRoundLabel(r, rounds.length)}</div>
       <div class="bracket-round-body" style="height:${H}px;">`;
-    matches.forEach((m, i) => {
-      const centerY = (i + 0.5) * (H / n);
+    matches.forEach(m => {
+      const centerY = pos[m.id];
       html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinalRound);
     });
     html += `</div>`;
@@ -3167,22 +3221,23 @@ function renderBracket(){
     html += `</div>`;
 
     if(ridx < rounds.length - 1){
-      const nextMatches = byRound[rounds[ridx+1]];
+      // Connectors are derived from the actual match graph (nextMatchId),
+      // not array position — a hidden BYE match breaks simple index-based
+      // pairing. Each next-round match draws one line per REAL feeder match
+      // (0 lines for a feeder that was a bye — that player just appears
+      // directly in the next round's box with no incoming line).
+      const nextMatches = visibleByRound[rounds[ridx+1]];
       let paths = '';
-      nextMatches.forEach((nm, j) => {
-        const a = matches[j*2], b = matches[j*2+1];
-        if(!a || !b) return;
-        const topDone = a.status === 'completed';
-        const botDone = b.status === 'completed';
-        const yA = (j*2 + 0.5) * (H / n);
-        const yB = (j*2 + 1 + 0.5) * (H / n);
-        const yMid = (j + 0.5) * (H / nextMatches.length);
-        // Square elbow connector: flat out of the box, a right-angle bend,
-        // then flat into the next one.
-        paths += `
-          <path class="conn-path ${topDone?'active':''}" d="M0,${yA} H${GAP/2} V${yMid} H${GAP}"></path>
-          <path class="conn-path ${botDone?'active':''}" d="M0,${yB} H${GAP/2} V${yMid} H${GAP}"></path>
-        `;
+      nextMatches.forEach(nm => {
+        const feeders = byRound[r].filter(f => f.nextMatchId === nm.id && !f.isBye);
+        feeders.forEach(f => {
+          const yFrom = pos[f.id];
+          const yTo = pos[nm.id];
+          const done = f.status === 'completed';
+          // Square elbow connector: flat out of the box, a right-angle bend,
+          // then flat into the next one.
+          paths += `<path class="conn-path ${done?'active':''}" d="M0,${yFrom} H${GAP/2} V${yTo} H${GAP}"></path>`;
+        });
       });
       html += `<div class="bracket-conn-col" style="width:${GAP}px;">
         <div class="bracket-round-label" style="visibility:hidden;">·</div>
