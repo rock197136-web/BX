@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>BEYBLADE X 對戰系統</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -1473,8 +1476,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     </svg>
     <div class="header-meta">
       <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.8</span></div>
-      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/5</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V2.9</span></div>
+      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/6</span></div>
     </div>
   </div>
 
@@ -2662,7 +2665,7 @@ function renumberPlayerRows(){
   const hint = document.getElementById('playerCountHint');
   if(hint) hint.textContent = chips.length > 0 ? `已新增 ${chips.length} 位` : '';
   const chipInput = document.getElementById('playerChipInput');
-  if(chipInput) chipInput.placeholder = chips.length > 0 ? '新增玩家…' : '輸入玩家名稱後按 Enter 新增';
+  if(chipInput) chipInput.placeholder = chips.length > 0 ? '新增玩家…（輸入名稱按下 ↵）' : '輸入玩家名稱後按 Enter 新增';
 }
 
 /* =========================================================
@@ -2766,36 +2769,47 @@ function forfeitPendingMatchesFor(playerId){
    START TOURNAMENT
 ========================================================= */
 function startTournament(){
-  // 如果晶片輸入框裡還有沒按 Enter 的文字，開賽前先自動補收進清單
-  const chipInput = document.getElementById('playerChipInput');
-  if(chipInput && chipInput.value.trim()){
-    addPlayerChip(chipInput.value.trim());
-    chipInput.value = '';
+  const isRunning = state.tournament.status === 'running';
+  // 玩家名單維持收合狀態時，直接沿用目前已登記的正式名單即可重新產生賽程，
+  // 不需要先展開名單、把晶片清單重新建立出來才能刷新。展開中或賽事尚未開始
+  // （表示畫面上本來就是可編輯的晶片清單）時，才照原本方式讀取輸入框內容。
+  const usingExistingRoster = isRunning && !playerSetupExpanded;
+
+  let names;
+  if(usingExistingRoster){
+    names = state.players.map(p => p.name);
+  } else {
+    // 如果晶片輸入框裡還有沒按 Enter 的文字，開賽前先自動補收進清單
+    const chipInput = document.getElementById('playerChipInput');
+    if(chipInput && chipInput.value.trim()){
+      addPlayerChip(chipInput.value.trim());
+      chipInput.value = '';
+    }
+
+    const chips = Array.from(document.querySelectorAll('#playerInputs .player-chip'));
+    const entries = chips.map((chip, i) => ({ idx: i+1, chip, name: (chip.dataset.name || '').trim() }));
+
+    entries.forEach(e => e.chip.classList.remove('input-error'));
+
+    const filled = entries.filter(e => e.name);
+    names = filled.map(e => e.name);
+
+    const groups = {};
+    filled.forEach(e => { (groups[e.name] = groups[e.name] || []).push(e); });
+    const dupGroups = Object.values(groups).filter(g => g.length > 1);
+
+    if(dupGroups.length > 0){
+      dupGroups.forEach(g => g.forEach(e => e.chip.classList.add('input-error')));
+      const lines = dupGroups.map(g =>
+        g.map(e => `${String(e.idx).padStart(2,'0')}.${e.name}`).join('、') + ' 重複名稱'
+      );
+      showAlert(`玩家名稱不可重複：\n${lines.join('\n')}`);
+      return;
+    }
   }
-
-  const chips = Array.from(document.querySelectorAll('#playerInputs .player-chip'));
-  const entries = chips.map((chip, i) => ({ idx: i+1, chip, name: (chip.dataset.name || '').trim() }));
-
-  entries.forEach(e => e.chip.classList.remove('input-error'));
-
-  const filled = entries.filter(e => e.name);
-  const names = filled.map(e => e.name);
 
   if(names.length < 2){
     showAlert('至少需要 2 位玩家才能開始比賽。');
-    return;
-  }
-
-  const groups = {};
-  filled.forEach(e => { (groups[e.name] = groups[e.name] || []).push(e); });
-  const dupGroups = Object.values(groups).filter(g => g.length > 1);
-
-  if(dupGroups.length > 0){
-    dupGroups.forEach(g => g.forEach(e => e.chip.classList.add('input-error')));
-    const lines = dupGroups.map(g =>
-      g.map(e => `${String(e.idx).padStart(2,'0')}.${e.name}`).join('、') + ' 重複名稱'
-    );
-    showAlert(`玩家名稱不可重複：\n${lines.join('\n')}`);
     return;
   }
 
@@ -2817,15 +2831,12 @@ function finalizeStartTournament(names){
   const format = document.getElementById('formatSelect').value;
   const quickMode = format === 'knockout' && document.getElementById('quickModeCheckbox').checked;
 
-  // Knockout seeding order determines who gets a bye (standardSeedOrder always
-  // hands byes to whichever seed slots land at the "top" of the bracket), so
-  // shuffling the player list here before seeding — same as 隨機刷新賽程's
-  // finalizeScheduleShuffle does — makes "開始比賽"/"重新產生賽程" randomize
-  // byes and pairings too, instead of always reproducing the same bracket for
-  // the same entered order.
-  const orderedPlayers = format === 'knockout' ? shuffleArray(players) : players;
-  const newMatches = format === 'knockout' ? generateKnockoutBracket(orderedPlayers) : generateRoundRobin(players, format);
-  state.players = orderedPlayers;
+  // generateKnockoutBracket() now does its own full random draw internally
+  // (both matchups AND which match slot any bye lands in), so the roster
+  // itself can stay in the order it was entered — no need to shuffle it
+  // here just to get a random bracket.
+  const newMatches = format === 'knockout' ? generateKnockoutBracket(players) : generateRoundRobin(players, format);
+  state.players = players;
   state.matches = newMatches;
   state.currentRound = 1;
   state.tournament = {
@@ -2943,12 +2954,35 @@ function generateKnockoutBracket(players){
   const n = players.length;
   const bracketSize = Math.pow(2, Math.ceil(Math.log2(n)));
   const byeCount = bracketSize - n;
+  const matchCount1 = bracketSize / 2;
 
-  const seeds = [...players];
-  for(let i=0; i<byeCount; i++) seeds.push({ id:'BYE', name:'輪空' });
+  // Fully random draw: not just "which player plays whom" but also "which
+  // bracket box any bye lands in". A fixed seeding template (e.g. always
+  // pairing seed 1 with the lowest seed) would keep putting byes in the
+  // same handful of match slots every single time, even though the players
+  // occupying those slots change — so 隨機刷新賽程 could look identical in
+  // shape every refresh. Instead: pick byeCount DISTINCT round-1 matches at
+  // random to receive a bye (guaranteed distinct, so two byes never collide
+  // in the same match — byeCount is always < matchCount1), randomize which
+  // side (A/B) the bye sits on, then shuffle every real player into all the
+  // remaining slots.
+  const matchIdxs = shuffleArray(Array.from({ length: matchCount1 }, (_, i) => i));
+  const byeMatchIdxs = new Set(matchIdxs.slice(0, byeCount));
 
-  const order = standardSeedOrder(bracketSize);
-  const ordered = order.map(idx => seeds[idx]);
+  const shuffledPlayers = shuffleArray(players);
+  let cursor = 0;
+  const ordered = new Array(bracketSize);
+  for(let i = 0; i < matchCount1; i++){
+    if(byeMatchIdxs.has(i)){
+      const real = shuffledPlayers[cursor++];
+      const bye = { id: 'BYE', name: '輪空' };
+      if(Math.random() < 0.5){ ordered[i*2] = real; ordered[i*2+1] = bye; }
+      else { ordered[i*2] = bye; ordered[i*2+1] = real; }
+    } else {
+      ordered[i*2] = shuffledPlayers[cursor++];
+      ordered[i*2+1] = shuffledPlayers[cursor++];
+    }
+  }
 
   const numRounds = Math.log2(bracketSize);
   const rounds = [];
@@ -3306,9 +3340,10 @@ function runScheduleShuffleAnimation(){
 }
 
 function finalizeScheduleShuffle(btn){
-  const shuffledPlayers = shuffleArray(state.players);
-  const newMatches = generateKnockoutBracket(shuffledPlayers);
-  state.players = shuffledPlayers;
+  // generateKnockoutBracket() does its own full random draw internally
+  // (matchups AND which slot any bye lands in), so state.players can stay
+  // in its existing order — the roster itself.
+  const newMatches = generateKnockoutBracket(state.players);
   state.matches = newMatches;
   state.currentRound = 1;
   state.tournament.status = 'running';
@@ -3534,7 +3569,7 @@ function bracketRoundLabel(r, totalRounds){
   return `第 ${r} 輪`;
 }
 
-function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
+function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal){
   const aWd = isWithdrawn(m.playerA);
   const bWd = isWithdrawn(m.playerB);
   const aName = escapeHtml(nameOf(m.playerA)) + (aWd ? '（棄權）' : '');
@@ -3549,7 +3584,7 @@ function bracketMatchBoxHtml(m, top, liveIds, nextId, isFinal){
 
   const status = m.status === 'completed' ? null
     : (liveIds && liveIds.has(m.id)) ? 'live'
-    : (nextId && m.id === nextId) ? 'next'
+    : (nextIds && nextIds.has(m.id)) ? 'next'
     : null;
   const statusClass = status === 'live' ? 'is-live' : status === 'next' ? 'is-next' : '';
   const statusBadge = status === 'live'
@@ -3671,7 +3706,7 @@ function renderBracket(){
   const watermarkEl = document.getElementById('bracketWatermark');
   if(watermarkEl) watermarkEl.textContent = (state.tournament && state.tournament.name) || '';
   if(state.matches.length === 0){
-    wrap.innerHTML = `<div class="bracket-empty">尚未產生對戰紀錄，請先於「賽事設定」開始比賽。</div>`;
+    wrap.innerHTML = `<div class="bracket-empty">尚未產生賽事，請於先於「賽事設定」建立賽事。</div>`;
     return;
   }
 
@@ -3681,8 +3716,7 @@ function renderBracket(){
   const COLW = 190;     // px width of each round column
   const HALF = 37;      // half of .bracket-match height (74px)
 
-  // Matches currently loaded into a referee panel (being judged right now),
-  // and the very next match that would be picked up once a panel frees up.
+  // Matches currently loaded into a referee panel (being judged right now).
   const liveIds = new Set(
     refereePanels
       .filter(p => p.matchId)
@@ -3692,8 +3726,28 @@ function renderBracket(){
         return mm && mm.status !== 'completed' && mm.playerA && mm.playerB && !mm.isBye;
       })
   );
-  const nextMatch = nextPlayableMatch(Array.from(liveIds));
-  const nextId = nextMatch ? nextMatch.id : null;
+  // One "即將上場" candidate per IDLE referee table (a panel with no live
+  // match right now — e.g. it just finished and is waiting to pick up the
+  // next one), so with multiple tables the bracket can highlight several
+  // upcoming matches at once instead of always just a single one. Each idle
+  // table gets a DIFFERENT match (same claim-in-order logic used for the
+  // referee tab's own "下一場" preview), so two idle tables never both
+  // highlight the same box. With no referee panels at all (e.g. viewing as
+  // a spectator before any table is set up), fall back to highlighting just
+  // the single next match, same as before.
+  const idleSlots = refereePanels.length > 0
+    ? Math.max(0, refereePanels.length - liveIds.size)
+    : 1;
+  const nextIds = new Set();
+  {
+    const claimed = new Set(liveIds);
+    for(let i = 0; i < idleSlots; i++){
+      const nm = nextPlayableMatch(Array.from(claimed));
+      if(!nm) break;
+      nextIds.add(nm.id);
+      claimed.add(nm.id);
+    }
+  }
   const bronzeMatch = state.matches.find(m => m.thirdPlace);
 
   let html = `<div class="bracket-inner">`;
@@ -3710,7 +3764,7 @@ function renderBracket(){
       if(m.isBye){
         html += bracketByeBoxHtml(m, centerY - BRACKET_BYE_H / 2);
       } else {
-        html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextId, isFinalRound);
+        html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound);
       }
     });
     html += `</div>`;
@@ -3722,7 +3776,7 @@ function renderBracket(){
       html += `
         <div class="bracket-bronze">
           <div class="bracket-round-label">🥉 季軍戰</div>
-          <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextId)}</div>
+          <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextIds)}</div>
         </div>`;
     }
     html += `</div>`;
@@ -3790,14 +3844,20 @@ function randomizeSparklePosition(el){
 function renderMatches(){
   const matchList = document.getElementById('matchList');
 
-  if(state.matches.length === 0){
+  // Bye "matches" are an automatic advance, not a real match played between
+  // two people — they don't belong in 對戰紀錄 at all (no one actually
+  // played), so they're excluded here entirely and don't consume a match
+  // number either (numbering stays consecutive across only real matches).
+  const realMatches = state.matches.filter(m => !m.isBye);
+
+  if(realMatches.length === 0){
     matchList.innerHTML = `<div class="referee-empty">尚未產生對戰紀錄，請先於「賽事設定」開始比賽。</div>`;
     return;
   }
 
   let html = '';
 
-  html += state.matches.map((m, idx) => {
+  html += realMatches.map((m, idx) => {
     const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
     const completed = m.status === 'completed';
     const chip = (l) => {
@@ -3947,7 +4007,7 @@ function renderReferee(){
   if(!wrap) return;
 
   if(state.matches.length === 0){
-    wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未開始賽事</div>請先於「賽事設定」建立對戰紀錄。</div></div>`;
+    wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事，</div>請於先於「賽事設定」建立賽事。</div></div>`;
     return;
   }
   if(refereePanels.length === 0) refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
@@ -4049,14 +4109,41 @@ function nextPlayableMatch(excludeIds){
 
 // Read-only preview of what advanceReferee() would load next for this panel,
 // used to show "下一場" under a just-decided winner without mutating state.
+//
+// Computed for ALL waiting panels together (not just this one) so that when
+// two tables finish at the same time, they don't both preview the exact
+// same upcoming match — each waiting panel claims a different pending
+// match, in panel order, and only falls back to repeating a match if there
+// simply aren't enough distinct pending matches left for every waiting table.
+function computeNextMatchAssignments(){
+  const assignments = {};
+  // Matches currently loaded on a panel that hasn't finished yet are "in use"
+  // and must never be handed to another panel as its next match.
+  const inUse = new Set(
+    refereePanels
+      .filter(p => state.matches.find(x => x.id === p.matchId)?.status !== 'completed')
+      .map(p => p.matchId)
+  );
+
+  const waiting = refereePanels.filter(p =>
+    state.matches.find(x => x.id === p.matchId)?.status === 'completed');
+
+  const claimed = new Set(inUse);
+  waiting.forEach(panel => {
+    const currentRound = state.matches.find(x => x.id === panel.matchId)?.round;
+    const sameRoundNext = state.matches.find(m =>
+      m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !claimed.has(m.id));
+    const next = sameRoundNext || state.matches.find(m =>
+      m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !claimed.has(m.id));
+    assignments[panel.id] = next || null;
+    if(next) claimed.add(next.id);
+  });
+
+  return assignments;
+}
+
 function computeNextMatchForPanel(panelId){
-  const panel = refereePanels.find(p => p.id === panelId);
-  if(!panel) return null;
-  const currentRound = state.matches.find(x => x.id === panel.matchId)?.round;
-  const takenByOthers = refereePanels.filter(p => p.id !== panelId).map(p => p.matchId);
-  const sameRoundNext = state.matches.find(m =>
-    m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !takenByOthers.includes(m.id));
-  return sameRoundNext || nextPlayableMatch(takenByOthers) || nextPlayableMatch([]);
+  return computeNextMatchAssignments()[panelId] || null;
 }
 
 function renderRefereeMatch(match, panelId){
@@ -4261,11 +4348,7 @@ function buildBattery(points, target){
 function advanceReferee(panelId){
   const panel = refereePanels.find(p => p.id === panelId);
   if(!panel) return;
-  const currentRound = state.matches.find(x => x.id === panel.matchId)?.round;
-  const takenByOthers = refereePanels.filter(p => p.id !== panelId).map(p => p.matchId);
-  const sameRoundNext = state.matches.find(m =>
-    m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !takenByOthers.includes(m.id));
-  const next = sameRoundNext || nextPlayableMatch(takenByOthers) || nextPlayableMatch([]);
+  const next = computeNextMatchForPanel(panelId);
   panel.matchId = next ? next.id : panel.matchId;
   savePanels();
   renderReferee();
@@ -4348,8 +4431,8 @@ function updatePlayerSetupSummaryText(){
   const total = state.players.length;
   const withdrawnCount = state.players.filter(p => p.withdrawn).length;
   el.innerHTML = withdrawnCount > 0
-    ? `已鎖定 <b>${total}</b> 位選手・${withdrawnCount} 位棄權（管理請至下方「選手名單管理」）`
-    : `已鎖定 <b>${total}</b> 位選手（管理請至下方「選手名單管理」）`;
+    ? `已登記 <b>${total}</b> 位選手・${withdrawnCount} 位棄權（管理請至下方「選手名單管理」）`
+    : `已登記 <b>${total}</b> 位選手（管理請至下方「選手名單管理」）`;
 }
 
 function togglePlayerSetupSection(){
