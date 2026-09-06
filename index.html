@@ -899,6 +899,125 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .cloud-share-btn.copied{ color:var(--cyan); border-color:var(--cyan); background:rgba(57,255,20,.12); }
 .cloud-qr-btn{ margin-top:6px; }
 
+/* =========================================================
+   AWARD REPORT (賽後頒獎戰報) — standalone "poster" design,
+   scoped entirely under .award-* so it never collides with
+   the app's own .podium-name / .champ-name / .sys-tag / .trophy
+   classes used elsewhere. Built as a fixed 1080x1920 canvas
+   (phone-screen portrait ratio) that gets CSS-scaled down for
+   on-screen preview; html2canvas grabs it at native resolution
+   (transform reset to none) for export.
+========================================================= */
+.award-modal-box{ max-width:480px; }
+.award-stage-wrap{ width:100%; display:flex; justify-content:center; overflow:hidden; }
+.award-stage{ width:1080px; height:1920px; transform-origin:top center; }
+.award-poster{
+  position:relative; width:1080px; height:1920px; overflow:hidden;
+  background:
+    radial-gradient(900px 600px at 50% -8%, rgba(255,201,138,.14), transparent 60%),
+    radial-gradient(700px 500px at 100% 110%, rgba(0,195,255,.08), transparent 60%),
+    radial-gradient(700px 500px at 0% 110%, rgba(255,71,38,.07), transparent 60%),
+    linear-gradient(180deg,#0c0c0e 0%, #050505 60%, #030303 100%);
+  color:#f2f2f2; display:flex; flex-direction:column;
+  font-family:'Noto Sans TC',sans-serif;
+}
+.award-poster::before{
+  content:""; position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(ellipse 100% 70% at 50% 20%, rgba(0,0,0,.9), transparent 75%);
+  mask-image:radial-gradient(ellipse 100% 70% at 50% 20%, rgba(0,0,0,.9), transparent 75%);
+  pointer-events:none;
+}
+.award-poster::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,.05) 48%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.05) 52%, transparent 60%);
+  pointer-events:none;
+}
+.award-corner{ position:absolute; width:40px; height:40px; pointer-events:none; z-index:2; }
+.award-corner span{ position:absolute; background:rgba(255,201,138,.55); border-radius:1px; }
+.award-corner.tl{ top:40px; left:40px; }
+.award-corner.tr{ top:40px; right:40px; transform:scaleX(-1); }
+.award-corner span:nth-child(1){ width:6px; height:6px; top:0; left:2px; opacity:.4; }
+.award-corner span:nth-child(2){ width:34px; height:2px; top:14px; left:0; opacity:.55; }
+.award-corner span:nth-child(3){ width:2px; height:34px; top:0; left:14px; opacity:.55; }
+.award-corner span:nth-child(4){ width:7px; height:7px; top:24px; left:24px; opacity:.9; background:#ffd27a; box-shadow:0 0 10px rgba(255,201,138,.8); border-radius:50%; }
+.award-band{ position:relative; z-index:1; padding:88px 60px 0; text-align:center; flex:0 0 auto; }
+.award-sys-tag{
+  font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:500; letter-spacing:.35em;
+  color:#ffc98a; text-transform:uppercase; display:inline-flex; align-items:center; gap:10px;
+}
+.award-sys-tag .award-dot{ width:8px; height:8px; border-radius:50%; background:#ff9d42; box-shadow:0 0 10px rgba(255,157,66,.8); }
+.award-wordmark{
+  margin-top:14px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:34px; letter-spacing:2px;
+  background:linear-gradient(90deg,#fff 0%, #ff9d42 45%, #ff4726 88%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.award-hr-thin{ margin:36px auto 0; width:520px; height:1px; background:linear-gradient(90deg, transparent, rgba(255,201,138,.55), transparent); }
+.award-champ-block{ position:relative; z-index:1; flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:20px 50px; min-height:0; }
+.award-trophy{ width:230px; height:230px; filter:drop-shadow(0 0 40px rgba(255,201,120,.5)) drop-shadow(0 14px 20px rgba(0,0,0,.65)); }
+.award-trophy svg{ width:100%; height:100%; display:block; }
+.award-champ-name{
+  margin-top:10px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:96px; line-height:1.02;
+  text-align:center; max-width:960px; overflow-wrap:break-word;
+  background:linear-gradient(180deg,#fff6df 0%, #ffd875 22%, #e8a93e 48%, #fff2c9 62%, #c98a2e 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 4px 0 rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,200,90,.25));
+}
+.award-champ-label{
+  margin-top:18px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:34px; letter-spacing:.6em;
+  color:#fff; text-shadow:0 0 18px rgba(255,215,140,.6);
+}
+.award-champ-label::before, .award-champ-label::after{ content:"◆ "; color:#ffb347; letter-spacing:normal; }
+.award-champ-label::after{ content:" ◆"; }
+.award-podium-row{ position:relative; z-index:1; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:28px; padding:0 60px; }
+.award-podium-card{
+  flex:1; max-width:420px; border-radius:22px; padding:34px 22px 30px; text-align:center;
+  position:relative; overflow:hidden;
+  background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.12);
+}
+.award-podium-card.silver{ border-color:rgba(201,208,220,.5); --award-medal-color:#c9d0dc; }
+.award-podium-card.bronze{ border-color:rgba(211,138,82,.55); --award-medal-color:#d38a52; }
+.award-podium-card::before{
+  content:""; position:absolute; inset:0; opacity:.16; pointer-events:none;
+  background:radial-gradient(circle at 50% 0%, var(--award-medal-color), transparent 70%);
+}
+.award-medal{ width:136px; height:150px; margin:0 auto 14px; filter:drop-shadow(0 8px 14px rgba(0,0,0,.5)); }
+.award-medal svg{ width:100%; height:100%; display:block; }
+.award-podium-rank{
+  font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; letter-spacing:.2em;
+  color:var(--award-medal-color); text-transform:uppercase; margin-bottom:8px;
+}
+.award-podium-name{ font-family:'Rajdhani',sans-serif; font-weight:800; font-size:44px; line-height:1.1; color:#f4f4f4; overflow-wrap:break-word; }
+.award-stats-strip{ position:relative; z-index:1; flex:0 0 auto; display:flex; justify-content:center; gap:80px; margin:60px 0 0; padding:0 60px; }
+.award-stat-cell{ text-align:center; }
+.award-stat-num{ font-family:'Space Mono',monospace; font-weight:700; font-size:50px; color:#fff; }
+.award-stat-cap{ margin-top:6px; font-family:'Space Grotesk',sans-serif; font-size:17px; letter-spacing:.3em; color:#8a8a8a; text-transform:uppercase; }
+
+/* Footer is the event's "signature" — the tournament name is the biggest
+   text on this whole card after the champion's name, since that's what
+   the poster gets shared for: which event this result belongs to. */
+.award-footer{ position:relative; z-index:1; flex:0 0 auto; margin-top:auto; padding:56px 60px 64px; text-align:center; }
+.award-footer-divider{
+  width:100%; height:1px;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 14px, transparent 14px 22px);
+  margin-bottom:38px; opacity:.5;
+}
+.award-tname{
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:56px; line-height:1.15; letter-spacing:.04em;
+  text-transform:uppercase; overflow-wrap:break-word;
+  background:linear-gradient(90deg,#fff 0%, #ffc98a 50%, #ff9d5c 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.award-tdate{ margin-top:16px; font-family:'IBM Plex Mono',monospace; font-size:20px; letter-spacing:.25em; color:#8a8a8a; }
+.award-brand{ margin-top:28px; font-family:'Space Grotesk',sans-serif; font-size:13px; letter-spacing:.35em; color:#4a4a4a; text-transform:uppercase; }
+@media (max-width:600px){
+  .award-modal-box{ max-width:94vw; padding:18px; }
+}
+
 .qr-modal-box{ text-align:center; }
 .qr-code-wrap{
   background:#fff; border-radius:12px; padding:14px; display:inline-flex;
@@ -1514,6 +1633,9 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <div class="progress"><div class="progress-bar" id="statProgressBar" style="width:0%"></div></div>
 
     <div id="podiumContainer" class="hidden"></div>
+    <div id="awardButtonWrap" class="hidden" style="display:flex; justify-content:flex-end; margin:-6px 0 18px;">
+      <button class="btn btn-dark btn-sm" onclick="openAwardReport()">🏆 分享賽事戰報</button>
+    </div>
 
     <!-- Knockout bracket tree view -->
     <div class="card hidden" id="bracketSection" style="margin-top:18px;">
@@ -1778,6 +1900,155 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   </div>
 </div>
 
+<div class="modal" id="awardModal">
+  <div class="modal-box award-modal-box">
+    <div class="modal-title">🏆 分享賽事戰報</div>
+
+    <div class="award-stage-wrap" id="awardStageWrap">
+      <div class="award-stage" id="awardStage">
+        <div class="award-poster" id="awardPosterNode">
+          <div class="award-corner tl"><span></span><span></span><span></span><span></span></div>
+          <div class="award-corner tr"><span></span><span></span><span></span><span></span></div>
+
+          <div class="award-band">
+            <div class="award-sys-tag"><span class="award-dot"></span>TOURNAMENT RESULTS</div>
+            <div class="award-wordmark">BEYBLADE X TOURNAMENT</div>
+            <div class="award-hr-thin"></div>
+          </div>
+
+          <div class="award-champ-block">
+            <div class="award-trophy">
+              <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="awardGoldMetal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#fff6df"/>
+                    <stop offset="18%" stop-color="#ffe39a"/>
+                    <stop offset="38%" stop-color="#e2a53c"/>
+                    <stop offset="52%" stop-color="#fff3cc"/>
+                    <stop offset="70%" stop-color="#c98a2e"/>
+                    <stop offset="100%" stop-color="#7a4f18"/>
+                  </linearGradient>
+                  <linearGradient id="awardGoldRim" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffe9ad"/>
+                    <stop offset="100%" stop-color="#8a5a1e"/>
+                  </linearGradient>
+                  <radialGradient id="awardHexGlow" cx="50%" cy="35%" r="70%">
+                    <stop offset="0%" stop-color="rgba(255,201,120,.35)"/>
+                    <stop offset="100%" stop-color="rgba(255,201,120,0)"/>
+                  </radialGradient>
+                </defs>
+                <polygon points="120,8 216,62 216,178 120,232 24,178 24,62" fill="#111318" stroke="url(#awardGoldRim)" stroke-width="3"/>
+                <polygon points="120,8 216,62 216,178 120,232 24,178 24,62" fill="url(#awardHexGlow)"/>
+                <polygon points="120,22 204,68 204,172 120,218 36,172 36,68" fill="none" stroke="rgba(255,201,120,.35)" stroke-width="1"/>
+                <ellipse cx="120" cy="60" rx="46" ry="10" fill="none" stroke="url(#awardGoldRim)" stroke-width="2.5" opacity="0.85"/>
+                <path d="M78,86 Q52,86 52,110 Q52,132 80,136" fill="none" stroke="url(#awardGoldMetal)" stroke-width="7" stroke-linecap="round"/>
+                <path d="M162,86 Q188,86 188,110 Q188,132 160,136" fill="none" stroke="url(#awardGoldMetal)" stroke-width="7" stroke-linecap="round"/>
+                <path d="M82,80 L158,80 L152,132 Q120,152 88,132 Z" fill="url(#awardGoldMetal)" stroke="#3a2306" stroke-width="2"/>
+                <rect x="80" y="76" width="80" height="10" rx="4" fill="url(#awardGoldMetal)" stroke="#3a2306" stroke-width="2"/>
+                <path d="M110,150 L130,150 L134,172 L106,172 Z" fill="url(#awardGoldMetal)" stroke="#3a2306" stroke-width="2"/>
+                <rect x="92" y="172" width="56" height="14" rx="3" fill="url(#awardGoldMetal)" stroke="#3a2306" stroke-width="2"/>
+                <circle cx="120" cy="8" r="3" fill="#ffd27a"/>
+                <circle cx="216" cy="62" r="2.5" fill="#ffd27a" opacity=".7"/>
+                <circle cx="216" cy="178" r="2.5" fill="#ffd27a" opacity=".7"/>
+                <circle cx="120" cy="232" r="3" fill="#ffd27a"/>
+                <circle cx="24" cy="178" r="2.5" fill="#ffd27a" opacity=".7"/>
+                <circle cx="24" cy="62" r="2.5" fill="#ffd27a" opacity=".7"/>
+              </svg>
+            </div>
+            <div class="award-champ-name" id="awardChampName">－</div>
+            <div class="award-champ-label">CHAMPION</div>
+          </div>
+
+          <div class="award-podium-row">
+            <div class="award-podium-card silver" id="awardSilverCard">
+              <div class="award-medal">
+                <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="awardSilverMetal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#f8fafc"/>
+                      <stop offset="20%" stop-color="#d7dee6"/>
+                      <stop offset="45%" stop-color="#9aa4b0"/>
+                      <stop offset="58%" stop-color="#eef1f4"/>
+                      <stop offset="80%" stop-color="#8b93a0"/>
+                      <stop offset="100%" stop-color="#5b6270"/>
+                    </linearGradient>
+                    <linearGradient id="awardSilverRim" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#ffffff"/>
+                      <stop offset="100%" stop-color="#6b7280"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M80,86 L64,206 L100,186 L86,86 Z" fill="#a6adb8" opacity=".85"/>
+                  <path d="M120,86 L136,206 L100,186 L114,86 Z" fill="#c9d0dc" opacity=".85"/>
+                  <polygon points="100,10 176,56 176,140 100,186 24,140 24,56" fill="#111318" stroke="url(#awardSilverRim)" stroke-width="3"/>
+                  <polygon points="100,22 164,60 164,136 100,174 36,136 36,60" fill="none" stroke="rgba(201,208,220,.4)" stroke-width="1"/>
+                  <text x="100" y="120" text-anchor="middle" font-family="Rajdhani, sans-serif" font-weight="900" font-size="84" fill="url(#awardSilverMetal)" stroke="#2b2f36" stroke-width="1.5">2</text>
+                  <circle cx="100" cy="10" r="3" fill="#e6eaef"/>
+                  <circle cx="100" cy="186" r="3" fill="#e6eaef"/>
+                </svg>
+              </div>
+              <div class="award-podium-rank">2ND PLACE</div>
+              <div class="award-podium-name" id="awardSilverName">－</div>
+            </div>
+            <div class="award-podium-card bronze" id="awardBronzeCard">
+              <div class="award-medal">
+                <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="awardBronzeMetal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#f6dcc0"/>
+                      <stop offset="20%" stop-color="#e3a877"/>
+                      <stop offset="45%" stop-color="#a5643a"/>
+                      <stop offset="58%" stop-color="#f0c8a3"/>
+                      <stop offset="80%" stop-color="#93552c"/>
+                      <stop offset="100%" stop-color="#5e341a"/>
+                    </linearGradient>
+                    <linearGradient id="awardBronzeRim" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#f8dcc0"/>
+                      <stop offset="100%" stop-color="#7a4a25"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M80,86 L64,206 L100,186 L86,86 Z" fill="#8a5230" opacity=".85"/>
+                  <path d="M120,86 L136,206 L100,186 L114,86 Z" fill="#d38a52" opacity=".85"/>
+                  <polygon points="100,10 176,56 176,140 100,186 24,140 24,56" fill="#111318" stroke="url(#awardBronzeRim)" stroke-width="3"/>
+                  <polygon points="100,22 164,60 164,136 100,174 36,136 36,60" fill="none" stroke="rgba(211,138,82,.4)" stroke-width="1"/>
+                  <text x="100" y="120" text-anchor="middle" font-family="Rajdhani, sans-serif" font-weight="900" font-size="84" fill="url(#awardBronzeMetal)" stroke="#3a2110" stroke-width="1.5">3</text>
+                  <circle cx="100" cy="10" r="3" fill="#f0c39a"/>
+                  <circle cx="100" cy="186" r="3" fill="#f0c39a"/>
+                </svg>
+              </div>
+              <div class="award-podium-rank">3RD PLACE</div>
+              <div class="award-podium-name" id="awardBronzeName">－</div>
+            </div>
+          </div>
+
+          <div class="award-stats-strip">
+            <div class="award-stat-cell">
+              <div class="award-stat-num" id="awardPlayerCount">0</div>
+              <div class="award-stat-cap">PLAYERS</div>
+            </div>
+            <div class="award-stat-cell">
+              <div class="award-stat-num" id="awardMatchCount">0</div>
+              <div class="award-stat-cap">MATCHES</div>
+            </div>
+          </div>
+
+          <div class="award-footer">
+            <div class="award-footer-divider"></div>
+            <div class="award-tname" id="awardTournamentName">TOURNAMENT NAME</div>
+            <div class="award-tdate" id="awardDate">2026.09.07</div>
+            <div class="award-brand">BEYBLADE X 對戰系統</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="btn btn-primary btn-block" id="awardDownloadBtn" onclick="downloadAwardImage()">📥 下載圖片</button>
+      <button class="btn btn-ghost btn-block" onclick="hideAwardModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 /* =========================================================
    CONSTANTS
@@ -2143,6 +2414,120 @@ function showQRCode(code){
 
 function hideQRModal(){
   document.getElementById('qrModal').classList.remove('show');
+}
+
+/* =========================================================
+   AWARD REPORT (賽後頒獎戰報)
+   Reuses the same champion/runner-up/3rd logic already used by
+   renderBracketPodium() (knockout) and renderStandings() (round-
+   robin/double), just returning data instead of rendering, so it
+   never drifts out of sync with what's shown on the 即時戰況 tab.
+========================================================= */
+function getAwardPodiumData(){
+  const playerCount = state.players.filter(p => !p.withdrawn).length;
+  const completedMatches = state.matches.filter(m => m.status === 'completed').length;
+  const base = { playerCount, completedMatches, tournamentName: state.tournament.name || '未命名賽事' };
+
+  if(state.tournament.format === 'knockout'){
+    if(state.matches.length === 0) return { ready:false };
+    const finalRound = Math.max(...state.matches.filter(m=>!m.thirdPlace).map(m=>m.round));
+    const finalMatch = state.matches.find(m=>m.round===finalRound && !m.thirdPlace);
+    if(!finalMatch || finalMatch.status !== 'completed') return { ready:false };
+    const champId = finalMatch.winner;
+    const runnerUpId = champId === finalMatch.playerA ? finalMatch.playerB : finalMatch.playerA;
+    const bronzeMatch = state.matches.find(m => m.thirdPlace);
+    const thirdId = (bronzeMatch && bronzeMatch.status === 'completed') ? bronzeMatch.winner : null;
+    return Object.assign(base, {
+      ready:true,
+      champion: nameOf(champId),
+      silver: nameOf(runnerUpId),
+      bronze: thirdId ? nameOf(thirdId) : null
+    });
+  }
+
+  const standings = calculateStandings();
+  const isComplete = state.matches.length > 0 && state.matches.every(m => m.status === 'completed');
+  if(!isComplete || standings.length === 0) return { ready:false };
+  return Object.assign(base, {
+    ready:true,
+    champion: standings[0] ? standings[0].name : null,
+    silver: standings[1] ? standings[1].name : null,
+    bronze: standings[2] ? standings[2].name : null
+  });
+}
+
+function openAwardReport(){
+  const data = getAwardPodiumData();
+  if(!data.ready || !data.champion){
+    showToast('賽事尚未產生冠軍，還無法產生頒獎戰報');
+    return;
+  }
+
+  document.getElementById('awardChampName').textContent = data.champion;
+  document.getElementById('awardSilverName').textContent = data.silver || '－';
+  document.getElementById('awardBronzeName').textContent = data.bronze || '－';
+  document.getElementById('awardSilverCard').style.display = data.silver ? '' : 'none';
+  document.getElementById('awardBronzeCard').style.display = data.bronze ? '' : 'none';
+  document.getElementById('awardPlayerCount').textContent = data.playerCount;
+  document.getElementById('awardMatchCount').textContent = data.completedMatches;
+  document.getElementById('awardTournamentName').textContent = data.tournamentName;
+
+  const d = new Date();
+  document.getElementById('awardDate').textContent =
+    `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+
+  document.getElementById('awardModal').classList.add('show');
+  fitAwardStage();
+}
+
+function hideAwardModal(){
+  document.getElementById('awardModal').classList.remove('show');
+}
+
+// Scales the fixed 1080x1620 poster down to fit the modal on screen.
+// downloadAwardImage() temporarily resets this to capture full-res.
+function fitAwardStage(){
+  const stage = document.getElementById('awardStage');
+  const wrap = document.getElementById('awardStageWrap');
+  if(!stage || !wrap) return;
+  const maxW = Math.min(wrap.clientWidth || 420, 420);
+  const scale = maxW / 1080;
+  stage.style.transform = `scale(${scale})`;
+  wrap.style.height = (1920 * scale) + 'px';
+}
+window.addEventListener('resize', () => {
+  if(document.getElementById('awardModal').classList.contains('show')) fitAwardStage();
+});
+
+async function downloadAwardImage(){
+  const stage = document.getElementById('awardStage');
+  const btn = document.getElementById('awardDownloadBtn');
+  if(!stage) return;
+  if(typeof html2canvas === 'undefined'){
+    showToast('圖片產生元件載入失敗，請檢查網路連線後重試');
+    return;
+  }
+
+  const originalTransform = stage.style.transform;
+  stage.style.transform = 'none'; // capture at full 1080x1620 resolution, not the scaled-down preview
+  const originalText = btn ? btn.innerText : '';
+  if(btn){ btn.disabled = true; btn.innerText = '產生圖片中…'; }
+
+  try{
+    const canvas = await html2canvas(stage, { backgroundColor:null, scale:2, useCORS:true });
+    const safeName = (document.getElementById('awardTournamentName').textContent || 'beyblade-x')
+      .replace(/[\\/:*?"<>|]/g, '_').trim() || 'beyblade-x';
+    const link = document.createElement('a');
+    link.download = `${safeName}_頒獎戰報.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }catch(e){
+    console.error('產生頒獎戰報圖片失敗', e);
+    showToast('產生圖片失敗，請重試一次');
+  }finally{
+    stage.style.transform = originalTransform;
+    if(btn){ btn.disabled = false; btn.innerText = originalText || '📥 下載圖片'; }
+  }
 }
 
 async function copyShareLink(code, btnEl){
@@ -4376,6 +4761,11 @@ function renderStats(){
   const total = state.matches.length;
   const completed = state.matches.filter(m=>m.status==='completed').length;
   const progress = total>0 ? Math.round(completed/total*100) : 0;
+
+  // "分享賽事戰報" only makes sense once the tournament is fully wrapped up
+  // (100% complete) — otherwise the champion/runner-up/3rd aren't final yet.
+  const awardBtnWrap = document.getElementById('awardButtonWrap');
+  if(awardBtnWrap) awardBtnWrap.classList.toggle('hidden', !(total > 0 && completed === total));
 
   document.getElementById('statPlayers').innerText = state.players.length;
   document.getElementById('statTotal').innerText = total;
