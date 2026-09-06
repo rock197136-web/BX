@@ -2228,8 +2228,15 @@ function initCloud(){
     const savedViewerCode = localStorage.getItem(EVENT_VIEWER_KEY) || null;
     if(savedCode){
       joinCloudEvent(savedCode, savedRole, savedViewerCode);
+    } else if(state.tournament.status === 'running' || playerSetupExpanded){
+      // 使用者已經在填名單、或賽事已經開始（例如手速快，在 Firebase 初始化
+      // 完成、觸發這段 ready() 之前就已經按下「開始比賽」），此時不該再搶
+      // 焦點蓋版跳出連線視窗——那會讓剛產生的對戰樹狀圖被彈窗蓋住，看起來
+      // 像「沒有第一時間產生」。改成只更新狀態列的雲端小圖示，讓使用者需要
+      // 連線時可以自己從畫面上的按鈕點開，不主動搶畫面。
+      updateCloudStatusUI();
     } else {
-      // 尚未連線過任何賽事 → 一進站就強制跳出連線視窗，
+      // 尚未連線過任何賽事、也還沒開始比賽 → 一進站就強制跳出連線視窗，
       // 使用者可選擇建立/加入賽事，或按「關閉」改為本機運行（無連線功能）。
       openCloudModal();
     }
