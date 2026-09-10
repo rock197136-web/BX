@@ -88,58 +88,91 @@ button{ cursor:pointer; }
 
 .container{ max-width:1160px; margin:auto; padding:0 20px 60px; }
 
-/* ===== Header: flat circuit layout, original purple-black palette ===== */
+/* ===== Header: tournament identity card ===== */
 .header{
-  background:linear-gradient(160deg,#170f22 0%,#0c0810 100%);
-  border-bottom:1px solid var(--border);
-  padding:26px 24px 22px;position:relative;overflow:hidden;
+  position:relative; overflow:hidden; padding:18px 24px 14px;
+  border-bottom:1px solid rgba(255,107,55,.25);
+  background:radial-gradient(circle at 50% 44%,rgba(255,106,45,.075),transparent 42%),linear-gradient(160deg,#160f20 0%,#09070d 72%,#10080c 100%);
 }
 .header::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0px,rgba(255,255,255,.018) 1px,transparent 1px,transparent 3px),linear-gradient(rgba(190,110,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(190,110,255,.05) 1px,transparent 1px);
-  background-size:auto,24px 24px,24px 24px;
-  -webkit-mask-image:linear-gradient(160deg,rgba(0,0,0,.85),transparent 62%);
-  mask-image:linear-gradient(160deg,rgba(0,0,0,.85),transparent 62%);
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(rgba(190,110,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(190,110,255,.04) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px);
+  background-size:26px 26px,26px 26px,auto;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.3));
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.3));
 }
 .header::after{
-  content:"";position:absolute;inset:8px 12px;pointer-events:none;opacity:.65;
-  background:linear-gradient(var(--hdr-blue),var(--hdr-blue)) left top/32px 1px no-repeat,linear-gradient(var(--hdr-blue),var(--hdr-blue)) left top/1px 10px no-repeat,linear-gradient(var(--hdr-red),var(--hdr-red)) right bottom/32px 1px no-repeat,linear-gradient(var(--hdr-red),var(--hdr-red)) right bottom/1px 10px no-repeat;
+  content:""; position:absolute; inset:8px 12px; pointer-events:none; opacity:.7;
+  background:linear-gradient(var(--hdr-blue),var(--hdr-blue)) left top/32px 1px no-repeat,linear-gradient(var(--hdr-blue),var(--hdr-blue)) left top/1px 11px no-repeat,linear-gradient(var(--hdr-red),var(--hdr-red)) right bottom/32px 1px no-repeat,linear-gradient(var(--hdr-red),var(--hdr-red)) right bottom/1px 11px no-repeat;
 }
-.header-inner{max-width:1160px;margin:auto;position:relative;z-index:1;}
-.header .header-row1{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;}
-.header .sys-tag{display:inline-flex;align-items:center;gap:9px;font-family:'Space Grotesk','Rajdhani',sans-serif;font-weight:500;font-size:12px;letter-spacing:.13em;line-height:1.5;color:var(--hdr-blue-soft);text-transform:uppercase;white-space:nowrap;flex-shrink:0;padding-bottom:5px;}
-.header .sys-dot{width:6px;height:6px;flex-shrink:0;background:var(--hdr-blue);}
-.header .logo{margin:0;font-family:'Rajdhani',sans-serif;font-weight:900;font-style:italic;letter-spacing:.4px;line-height:1.1;white-space:nowrap;min-width:0;font-size:clamp(30px,4.8vw,48px);}
-.header .logo-main{color:#f5f0f8;}
-.header .logo-x{color:var(--hdr-red);margin-left:3px;}
-.header .header-divider{display:block;width:100%;height:32px;margin:8px 0 12px;overflow:visible;pointer-events:none;}
-.header .divider-flow{stroke-dasharray:40 960;animation:hdrFlatFlow 7s linear infinite;}
-@keyframes hdrFlatFlow{from{stroke-dashoffset:1000;}to{stroke-dashoffset:0;}}
-.header .header-meta{display:flex;align-items:stretch;gap:0;font-family:'IBM Plex Mono','Noto Sans TC',monospace;}
-.header .header-meta .meta-item{display:flex;flex-direction:column;gap:4px;padding:0 20px;border-right:1px solid rgba(255,255,255,.09);min-width:0;}
-.header .header-meta .meta-item:first-child{padding-left:0;}
-.header .header-meta .meta-item:last-child{padding-right:0;border-right:none;}
-.header .header-meta .meta-event{flex:1 1 auto;}
-.header .header-meta .meta-item:not(.meta-event){flex:0 0 auto;}
-.header .meta-label{font-size:12px;line-height:1.5;letter-spacing:.18em;color:#96909e;text-transform:uppercase;white-space:nowrap;}
-.header .meta-value{font-size:14px;line-height:1.5;font-weight:600;letter-spacing:.02em;color:#fff;font-variant-numeric:tabular-nums;}
-.header .meta-value.accent{color:var(--hdr-blue-soft);white-space:normal;overflow-wrap:anywhere;}
+.header-inner{ max-width:1160px; margin:auto; position:relative; z-index:1; }
+.header .header-top{ display:flex; align-items:center; justify-content:space-between; min-height:34px; gap:18px; }
+.header .sys-tag{ display:inline-flex; align-items:center; gap:9px; color:var(--hdr-blue-soft); font:600 11px/1.4 'Space Grotesk','Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; }
+.header .sys-dot{ width:7px; height:7px; flex-shrink:0; background:var(--hdr-blue); box-shadow:0 0 10px rgba(255,157,66,.35); }
+.header .logo{ margin:0; font:900 italic clamp(30px,4.5vw,48px)/.95 'Rajdhani',sans-serif; letter-spacing:.3px; white-space:nowrap; }
+.header .logo-main{ color:#f6f1f8; text-shadow:0 2px 14px rgba(255,255,255,.08); }
+.header .logo-x{ margin-left:4px; color:var(--hdr-red); }
+.header .identity-card{ position:relative; min-height:128px; display:grid; place-items:center; margin:3px 0 4px; isolation:isolate; }
+.header .identity-bg{ position:absolute; inset:0; width:100%; height:100%; z-index:0; overflow:visible; pointer-events:none; }
+.header .identity-frame-main{ fill:none; stroke:url(#identityGradient); stroke-width:2.2; vector-effect:non-scaling-stroke; }
+.header .identity-frame-echo{ fill:none; stroke:#6a3732; stroke-width:1; opacity:.72; vector-effect:non-scaling-stroke; }
+.header .identity-frame-detail{ fill:none; stroke:#ff8740; stroke-width:1.5; opacity:.88; vector-effect:non-scaling-stroke; }
+.header .identity-frame-flow{ fill:none; stroke:#ffd09a; stroke-width:2.4; stroke-dasharray:48 952; vector-effect:non-scaling-stroke; }
+.header .identity-frame-flow-top{ animation:identityFlowTop 7s linear infinite; }
+.header .identity-frame-flow-bottom{ animation:identityFlowBottom 7s linear infinite; }
+.header .identity-crosshair{ stroke:#8c6556; stroke-width:1; opacity:.45; vector-effect:non-scaling-stroke; }
+.header .identity-copy{
+  position:absolute; z-index:1; left:56%; top:50%; transform:translate(-50%,-50%);
+  width:78%; max-width:760px; text-align:center; padding:12px 30px;
+  background:radial-gradient(ellipse at center,rgba(11,8,14,.97) 0%,rgba(11,8,14,.88) 58%,transparent 78%);
+}
+.header .identity-kicker{ margin-bottom:4px; color:#89818d; font:700 9px/1 'IBM Plex Mono',monospace; letter-spacing:.22em; }
+.header .identity-name{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff8ef; font:900 clamp(30px,5vw,58px)/1.05 'Rajdhani','Noto Sans TC',sans-serif; letter-spacing:.025em; text-shadow:0 0 18px rgba(255,143,73,.17); }
+.header .header-meta{ display:grid; grid-template-columns:auto auto; justify-content:end; align-items:stretch; border-top:1px solid rgba(255,255,255,.07); font-family:'IBM Plex Mono','Noto Sans TC',monospace; }
+.header .meta-item{ min-width:0; display:flex; align-items:center; gap:9px; padding:9px 18px; border-right:1px solid rgba(255,255,255,.08); }
+.header .meta-item:first-child{ padding-left:0; }
+.header .meta-item:last-child{ padding-right:0; border-right:0; }
+.header .meta-label{ color:#817b88; font-size:9px; letter-spacing:.17em; white-space:nowrap; }
+.header .meta-value{ color:#fff; font-size:12px; font-weight:700; letter-spacing:.03em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.header .meta-value.accent{ color:var(--hdr-blue-soft); }
+.header .status-dot{ width:5px; height:5px; border-radius:50%; background:var(--hdr-blue); box-shadow:0 0 8px rgba(255,157,66,.55); }
+/* One continuous two-stage loop: top L→R, then bottom R→L with a zero-delay handoff. */
+@keyframes identityFlowTop{
+  0%{ opacity:1; stroke-dashoffset:0; }
+  49.999%{ opacity:1; stroke-dashoffset:-1000; }
+  50%,100%{ opacity:0; stroke-dashoffset:-1000; }
+}
+@keyframes identityFlowBottom{
+  0%,49.999%{ opacity:0; stroke-dashoffset:0; }
+  50%{ opacity:1; stroke-dashoffset:0; }
+  100%{ opacity:1; stroke-dashoffset:-1000; }
+}
 @media(max-width:650px){
-  .header{padding:18px 16px 16px;}
-  .header .header-row1{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;}
-  .header .sys-tag{padding-bottom:0;font-size:10px;letter-spacing:.1em;white-space:nowrap;}
-  .header .logo{align-self:auto;font-size:clamp(27px,8vw,36px);}
-  .header .header-divider{height:23px;margin:7px 0 10px;}
-  .header .header-meta{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:start;gap:0;}
-  .header .header-meta .meta-item{padding:0 10px;border-right:1px solid rgba(255,255,255,.09);}
-  .header .header-meta .meta-item:first-child{padding-left:0;}
-  .header .header-meta .meta-item:last-child{padding-right:0;border-right:0;}
-  .header .header-meta .meta-event{min-width:0;}
-  .header .meta-label{font-size:9px;letter-spacing:.14em;}
-  .header .meta-value{font-size:11px;}
-  .header .meta-value.accent{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .header{ padding:14px 15px 11px; }
+  .header .header-top{ min-height:30px; gap:12px; }
+  .header .sys-tag{ font-size:9px; letter-spacing:.1em; }
+  .header .logo{ font-size:clamp(25px,7.6vw,34px); }
+  .header .identity-card{ min-height:102px; margin-top:1px; }
+  .header .identity-copy{ width:86%; max-width:none; padding:9px 18px; }
+  .header .identity-kicker{ font-size:7px; margin-bottom:3px; }
+  .header .identity-name{
+    overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere;
+    font-size:clamp(20px,5.8vw,27px); line-height:1.14;
+  }
+  .header .meta-item{ gap:6px; padding:7px 9px; }
+  .header .meta-item:first-child{ padding-left:0; }
+  .header .meta-item:last-child{ padding-right:0; }
+  .header .meta-label{ font-size:7px; letter-spacing:.12em; }
+  .header .meta-value{ font-size:9.5px; }
 }
-@media(prefers-reduced-motion:reduce){.header .divider-flow{animation:none;}}
+@media(max-width:390px){
+  .header .sys-tag{ font-size:8px; }
+  .header .logo{ font-size:24px; }
+  .header .identity-copy{ width:86%; padding-inline:12px; }
+  .header .meta-item{ padding-inline:7px; }
+  .header .meta-value{ font-size:9px; }
+}
+@media(prefers-reduced-motion:reduce){ .header .status-dot{ box-shadow:none; } .header .identity-frame-flow{ animation:none; } }
 
 /* ===== Tabs ===== */
 .tabs{
@@ -166,15 +199,15 @@ button{ cursor:pointer; }
 /* On narrow screens, all 4 tabs shrink to fit one row with no horizontal
    scrolling needed — equal width, tighter padding/font instead of overflow. */
 @media (max-width:700px){
-  .tabs{ flex-wrap:nowrap; overflow-x:visible; gap:6px; }
+  .tabs{ flex-wrap:nowrap; overflow-x:auto; gap:6px; scroll-snap-type:x proximity; }
   .tab{
-    flex:1 1 0; min-width:0; justify-content:center;
-    padding:9px 4px; font-size:12px; gap:4px;
+    flex:0 0 auto; min-width:82px; justify-content:center;
+    padding:9px 8px; font-size:12px; gap:4px; scroll-snap-align:start;
   }
   .tab svg{ width:14px; height:14px; flex-shrink:0; }
 }
 @media (max-width:400px){
-  .tab{ padding:8px 2px; font-size:10.5px; gap:3px; }
+  .tab{ min-width:76px; padding:8px 5px; font-size:10.5px; gap:3px; }
   .tab svg{ width:13px; height:13px; }
 }
 .btn-icon{ flex-shrink:0; display:inline-block; vertical-align:middle; }
@@ -258,17 +291,30 @@ button{ cursor:pointer; }
 /* ===== Optional attendance & roster management ===== */
 .attendance-manager{ margin:0 0 20px; }
 .attendance-toggle{
-  width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding:13px 14px; border:1px solid var(--border); border-radius:10px;
-  background:var(--panel-2); color:var(--text); text-align:left;
+  width:100%; min-height:74px; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 14px 12px 17px; border:1px solid rgba(255,157,66,.45); border-radius:12px;
+  background:linear-gradient(105deg,rgba(255,157,66,.14),rgba(22,22,22,.96) 48%); color:var(--text); text-align:left;
+  box-shadow:inset 3px 0 0 var(--hdr-blue), 0 8px 18px rgba(0,0,0,.18);
 }
-.attendance-toggle:hover{ border-color:var(--cyan); }
-.attendance-toggle-main{ display:flex; align-items:center; gap:10px; min-width:0; }
+.attendance-toggle:hover{ border-color:var(--hdr-blue-soft); filter:brightness(1.05); }
+.attendance-toggle:focus-visible{ outline:2px solid var(--hdr-blue-soft); outline-offset:2px; }
+.attendance-toggle-main{ display:flex; align-items:center; gap:11px; min-width:0; }
+.attendance-toggle-icon{
+  width:43px; height:43px; display:grid; place-items:center; flex-shrink:0;
+  border:1px solid rgba(255,157,66,.6); border-radius:10px; color:#ffe2b9;
+  background:rgba(255,157,66,.14); box-shadow:inset 0 1px rgba(255,255,255,.12);
+}
+.attendance-toggle-icon .btn-icon{ width:21px; height:21px; }
 .attendance-toggle-copy{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-.attendance-toggle-title{ font-size:13px; font-weight:700; }
-.attendance-toggle-note{ font-size:11.5px; color:var(--muted); font-weight:400; }
+.attendance-toggle-kicker{ color:var(--hdr-blue-soft); font:700 9px 'Space Mono',monospace; letter-spacing:.11em; }
+.attendance-toggle-title{ font-size:15px; font-weight:800; }
+.attendance-toggle-note{ font-size:11.5px; color:#aaa5ae; font-weight:400; }
+.attendance-toggle-end{ display:flex; align-items:center; gap:6px; color:var(--hdr-blue-soft); flex-shrink:0; }
+.attendance-toggle-state{ font-size:11px; font-weight:800; }
 .attendance-toggle-arrow{ color:var(--muted); transition:transform .18s ease; }
 .attendance-manager.open .attendance-toggle-arrow{ transform:rotate(180deg); }
+.attendance-manager.open .attendance-toggle{ border-color:var(--hdr-blue-soft); background:linear-gradient(105deg,rgba(255,157,66,.2),rgba(22,22,22,.98) 54%); }
 .attendance-panel{
   margin-top:8px; padding:12px; border:1px solid var(--border); border-radius:10px;
   background:rgba(8,12,18,.72);
@@ -349,7 +395,10 @@ button{ cursor:pointer; }
 .attendance-action .btn-icon, .attendance-toggle .btn-icon{ flex-shrink:0; }
 @media(max-width:680px){
   .attendance-manager{ margin-bottom:14px; }
-  .attendance-toggle{ padding:11px 12px; }
+  .attendance-toggle{ min-height:78px; padding:11px 12px 11px 15px; }
+  .attendance-toggle-icon{ width:44px; height:44px; }
+  .attendance-toggle-title{ font-size:15px; }
+  .attendance-toggle-state{ display:none; }
   .attendance-panel{ padding:9px; }
   .attendance-panel-head{ align-items:stretch; flex-direction:column; gap:7px; padding-bottom:8px; }
   .attendance-head-tools{ width:100%; justify-content:space-between; gap:7px; }
@@ -377,9 +426,189 @@ button{ cursor:pointer; }
 @media(max-width:390px){
   .header .sys-tag{font-size:9px;letter-spacing:.07em;}
   .header .logo{font-size:26px;}
-  .header .header-meta .meta-item{padding:0 7px;}
+  .header .header-meta .meta-item{padding:7px;}
   .header .meta-value{font-size:10.5px;}
   .attendance-action{font-size:10.5px;gap:2px;}
+}
+
+/* ===== Toolbox: random name draw ===== */
+.toolbox-card{ overflow:hidden; }
+.toolbox-heading{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  margin-bottom:18px; padding-bottom:15px; border-bottom:1px solid var(--border);
+}
+.toolbox-heading-main{ display:flex; align-items:center; gap:11px; min-width:0; }
+.toolbox-heading-icon{
+  width:40px; height:40px; display:grid; place-items:center; flex-shrink:0;
+  border:1px solid rgba(255,157,66,.42); border-radius:10px;
+  background:rgba(255,157,66,.08); color:var(--hdr-blue-soft);
+}
+.toolbox-title{ margin:0; font-family:'Rajdhani','Noto Sans TC',sans-serif; font-size:21px; font-weight:800; }
+.toolbox-subtitle{ margin-top:2px; color:var(--muted); font-size:12px; }
+.draw-layout{ display:grid; grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr); gap:16px; align-items:stretch; }
+.draw-pane{
+  min-width:0; padding:16px; border:1px solid var(--border); border-radius:12px;
+  background:linear-gradient(145deg,rgba(22,22,22,.94),rgba(10,10,12,.98));
+}
+.draw-pane-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+.draw-pane-title{ font-size:13px; font-weight:800; color:var(--text); }
+.draw-count-badge{
+  flex-shrink:0; padding:4px 7px; border:1px solid var(--border); border-radius:999px;
+  color:var(--hdr-blue-soft); background:rgba(255,157,66,.06); font:10px 'Space Mono',monospace;
+}
+.draw-name-input{
+  width:100%; min-height:274px; resize:vertical; padding:12px 13px;
+  border:1px solid var(--border); border-radius:9px; outline:0;
+  background:#090b10; color:var(--text); font:13px/1.7 'Noto Sans TC','Inter',sans-serif;
+}
+.draw-name-input:focus{ border-color:var(--hdr-blue); box-shadow:0 0 0 2px rgba(255,157,66,.1); }
+.draw-name-input::placeholder{ color:#62636a; }
+.draw-input-actions{ display:flex; justify-content:flex-end; margin-top:8px; }
+.draw-text-btn{
+  display:inline-flex; align-items:center; gap:5px; padding:6px 8px; border:0;
+  background:transparent; color:var(--muted); font-size:11px; font-weight:700;
+}
+.draw-text-btn:hover{ color:var(--hdr-blue-soft); }
+.draw-control{ margin-bottom:14px; }
+.draw-control .field-label{ margin-bottom:7px; }
+.draw-number-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.draw-number-input{
+  width:100%; height:42px; padding:0 12px; border:1px solid var(--border); border-radius:9px;
+  outline:0; background:#090b10; color:var(--text); font:700 15px 'Space Mono',monospace;
+}
+.draw-number-input:focus{ border-color:var(--hdr-blue); }
+.draw-btn{ min-width:126px; }
+.draw-hint{ margin-top:7px; color:var(--muted); font-size:11px; line-height:1.5; }
+.draw-result{
+  min-height:210px; display:flex; flex-direction:column; border:1px solid var(--border);
+  border-radius:10px; overflow:hidden; background:#090b10;
+}
+.draw-result-head{
+  min-height:42px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:8px 10px; border-bottom:1px solid var(--border); background:rgba(255,255,255,.02);
+}
+.draw-result-title{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:800; }
+.draw-copy-btn{
+  min-height:29px; display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  padding:5px 8px; border:1px solid var(--border); border-radius:7px;
+  background:var(--panel-2); color:var(--muted); font-size:10.5px; font-weight:700;
+}
+.draw-copy-btn:hover:not(:disabled){ border-color:var(--hdr-blue); color:var(--hdr-blue-soft); }
+.draw-copy-btn:disabled{ opacity:.4; cursor:default; }
+.draw-result-list{ display:flex; flex-direction:column; gap:0; padding:5px 10px; }
+.draw-result-empty{ margin:auto; padding:28px 16px; color:var(--muted); font-size:12px; text-align:center; }
+.draw-result.is-drawing{ border-color:rgba(255,157,66,.7); box-shadow:0 0 0 2px rgba(255,157,66,.09), inset 0 0 32px rgba(255,157,66,.06); }
+.draw-result.is-drawing .draw-result-empty{ color:#ffe2b9; font:800 22px/1.35 'Rajdhani','Noto Sans TC',sans-serif; letter-spacing:.05em; }
+.draw-result.is-drawing .draw-result-empty::before{ content:'隨機抽取中'; display:block; margin-bottom:7px; color:var(--hdr-blue-soft); font:700 10px 'Space Mono',monospace; letter-spacing:.16em; animation:drawPulse .62s ease-in-out infinite alternate; }
+.draw-btn.is-drawing{ pointer-events:none; filter:saturate(.72); }
+.draw-btn.is-drawing .btn-icon{ animation:drawIconSpin .65s linear infinite; }
+.draw-result-row{
+  display:grid; grid-template-columns:30px minmax(0,1fr); align-items:center; min-height:37px;
+  border-bottom:1px solid rgba(255,255,255,.055); animation:drawResultIn .25s ease both;
+}
+.draw-result-row:last-child{ border-bottom:0; }
+.draw-result-index{ color:var(--hdr-blue); font:10px 'Space Mono',monospace; }
+.draw-result-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:700; }
+.prize-draw-section{ margin-top:26px; padding-top:25px; border-top:1px solid var(--border); }
+.prize-heading{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:17px; }
+.prize-heading-main{ display:flex; align-items:center; gap:11px; min-width:0; }
+.prize-heading-icon{
+  width:40px; height:40px; display:grid; place-items:center; flex-shrink:0;
+  border:1px solid rgba(255,107,55,.44); border-radius:10px;
+  background:rgba(255,107,55,.085); color:#ff9b78;
+}
+.prize-title{ margin:0; color:#fff; font:800 22px/1.15 'Rajdhani','Noto Sans TC',sans-serif; }
+.prize-subtitle{ margin-top:4px; color:var(--muted); font-size:12px; line-height:1.5; }
+.prize-pool{
+  min-height:210px; max-height:310px; overflow:auto; display:flex; align-content:flex-start;
+  flex-wrap:wrap; gap:7px; padding:12px; border:1px solid var(--border); border-radius:9px; background:#090b10;
+}
+.prize-player-chip{
+  max-width:100%; height:31px; display:inline-flex; align-items:center; gap:6px; padding:0 9px;
+  border:1px solid rgba(255,255,255,.09); border-radius:7px; background:rgba(255,255,255,.035);
+  color:#dedbe0; font-size:12px; font-weight:700;
+}
+.prize-player-chip svg{ color:var(--hdr-blue); flex-shrink:0; }
+.prize-pool-empty{ width:100%; margin:auto; padding:28px 12px; color:var(--muted); font-size:12px; text-align:center; }
+.prize-reset-btn:disabled{ opacity:.4; cursor:default; }
+.prize-result-new{ color:#fff1df; }
+.prize-result-new .draw-result-index{ color:var(--red); }
+@keyframes drawResultIn{ from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+@keyframes drawPulse{ from{opacity:.4;transform:translateY(1px)} to{opacity:1;transform:translateY(-1px)} }
+@keyframes drawIconSpin{ to{transform:rotate(360deg)} }
+.draw-fullscreen{
+  position:fixed; inset:0; z-index:9999; display:grid; place-items:center;
+  width:100%; height:100dvh; padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));
+  background:
+    linear-gradient(rgba(255,157,66,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,157,66,.035) 1px,transparent 1px),
+    radial-gradient(circle at 50% 46%,rgba(255,107,55,.18),transparent 42%),
+    #07070b;
+  background-size:28px 28px,28px 28px,auto,auto;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .16s ease,visibility .16s ease;
+}
+.draw-fullscreen.active{ opacity:1; visibility:visible; pointer-events:auto; }
+.draw-fullscreen::before,.draw-fullscreen::after{ content:''; position:absolute; width:54px; height:54px; pointer-events:none; }
+.draw-fullscreen::before{ top:max(22px,env(safe-area-inset-top)); left:20px; border-top:2px solid var(--hdr-blue); border-left:2px solid var(--hdr-blue); }
+.draw-fullscreen::after{ right:20px; bottom:max(22px,env(safe-area-inset-bottom)); border-right:2px solid var(--red); border-bottom:2px solid var(--red); }
+.draw-fullscreen-inner{ width:min(100%,560px); text-align:center; }
+.draw-fullscreen-kicker{ color:var(--hdr-blue-soft); font:700 11px 'Space Mono',monospace; letter-spacing:.22em; }
+.draw-fullscreen-title{ margin:13px 0 0; color:#fff; font:800 clamp(24px,7vw,38px)/1.1 'Rajdhani','Noto Sans TC',sans-serif; letter-spacing:.04em; }
+.draw-fullscreen-stage{
+  position:relative; height:238px; overflow:hidden; margin:28px 0 25px; padding:0 16px;
+  border:1px solid rgba(255,157,66,.55); border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,157,66,.1),rgba(11,11,16,.96) 58%);
+  box-shadow:inset 0 0 35px rgba(255,157,66,.07),0 18px 60px rgba(0,0,0,.5);
+}
+.draw-fullscreen-stage::before{
+  content:''; position:absolute; z-index:2; left:10px; right:10px; top:50%; height:78px;
+  transform:translateY(-50%); pointer-events:none; border:1px solid rgba(255,157,66,.32);
+  border-left-color:var(--hdr-blue); border-right-color:var(--red); border-radius:11px;
+  background:linear-gradient(90deg,rgba(255,157,66,.04),rgba(255,255,255,.025),rgba(255,107,55,.04));
+  box-shadow:inset 0 0 24px rgba(255,157,66,.045),0 0 24px rgba(255,107,55,.06);
+}
+.draw-fullscreen-stage::after{
+  content:''; position:absolute; z-index:3; inset:0; pointer-events:none;
+  background:linear-gradient(#09090e 0%,rgba(9,9,14,.13) 31%,transparent 43%,transparent 57%,rgba(9,9,14,.13) 69%,#09090e 100%);
+}
+.draw-fullscreen-reel{ height:100%; display:grid; grid-template-rows:repeat(3,1fr); will-change:transform,opacity; }
+.draw-fullscreen-reel.tick{ animation:fullscreenSlotRoll var(--slot-speed,92ms) cubic-bezier(.2,.72,.32,1); }
+.draw-fullscreen-name{
+  min-width:0; display:flex; align-items:center; justify-content:center; padding:0 10px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-family:'Rajdhani','Noto Sans TC',sans-serif; font-weight:800;
+}
+.draw-fullscreen-name.side{ color:#8b858b; font-size:clamp(20px,6vw,30px); opacity:.28; filter:blur(1.4px); transform:scale(.86); }
+.draw-fullscreen-name.current{ color:#fff5e8; font-size:clamp(34px,11vw,58px); text-shadow:0 0 22px rgba(255,157,66,.38); }
+.draw-fullscreen-track{ height:4px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.09); }
+.draw-fullscreen-bar{ width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--hdr-blue),var(--red)); box-shadow:0 0 14px rgba(255,107,55,.65); }
+.draw-fullscreen.active .draw-fullscreen-bar{ animation:fullscreenDrawProgress 1.5s linear forwards; }
+body.draw-overlay-open{
+  position:fixed; left:0; right:0; width:100%;
+  overflow:hidden; overscroll-behavior:none; touch-action:none;
+}
+@keyframes fullscreenDrawProgress{ to{width:100%} }
+@keyframes fullscreenSlotRoll{ from{opacity:.52;transform:translateY(25px)} to{opacity:1;transform:translateY(0)} }
+@media(max-width:760px){
+  .draw-layout{ grid-template-columns:1fr; }
+  .toolbox-card{ padding:14px; }
+  .toolbox-heading{ margin-bottom:14px; padding-bottom:12px; }
+  .toolbox-title{ font-size:24px; }
+  .toolbox-subtitle{ font-size:12.5px; line-height:1.55; }
+  .draw-name-input{ min-height:190px; font-size:14px; }
+  .draw-pane{ padding:13px; }
+  .draw-number-input{ height:48px; font-size:17px; }
+  .draw-btn{ min-height:50px; font-size:15px; }
+  .draw-result{ min-height:180px; }
+  .draw-copy-btn{ min-height:34px; padding:6px 9px; }
+  .prize-draw-section{ margin-top:22px; padding-top:21px; }
+  .prize-pool{ min-height:150px; max-height:230px; }
+}
+@media(max-width:420px){
+  .toolbox-heading{ align-items:flex-start; }
+  .toolbox-heading-icon{ width:36px; height:36px; }
+  .draw-number-row{ grid-template-columns:minmax(0,1fr); }
+  .draw-btn{ width:100%; }
 }
 
 /* ===== Collapsed 參賽玩家 summary (after tournament starts) ===== */
@@ -1159,13 +1388,14 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 /* Viewer (read-only) mode: hide anything that can write data */
 .viewer-mode .tab[data-tab="referee"],
 .viewer-mode .tab[data-tab="setup"],
+.viewer-mode .tab[data-tab="tools"],
 .viewer-mode .goto-referee-btn,
 .viewer-mode .referee-only-btn,
 .viewer-mode .undo-btn{ display:none !important; }
 
 @media (max-width:700px){
   .container{ padding:0 12px 50px; }
-  .header-meta .meta-item{ padding:0 10px; }
+  .header-meta .meta-item{ padding:7px 10px; }
   .cloud-status-actions{ align-items:flex-start; }
   .cloud-status-hint{ text-align:left; }
   .match-result{ font-size:16px; }
@@ -1728,21 +1958,34 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 <header class="header" aria-label="賽事資訊">
   <div class="header-inner">
-    <div class="header-row1">
+    <div class="header-top">
       <div class="sys-tag"><span class="sys-dot" aria-hidden="true"></span>Tournament System</div>
       <div class="logo"><span class="logo-main">BEYBLADE <span class="logo-x">X</span></span></div>
     </div>
-    <svg class="header-divider" viewBox="0 0 1000 40" preserveAspectRatio="none" fill="none" aria-hidden="true">
-      <defs><linearGradient id="dividerGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F6A623"/><stop offset="45%" stop-color="#FF7A18"/><stop offset="75%" stop-color="#FF3D20"/><stop offset="100%" stop-color="#F6A623"/></linearGradient></defs>
-      <path d="M0 28H390L410 10H650L675 3H1000" stroke="url(#dividerGradient)" stroke-width="2" vector-effect="non-scaling-stroke"/>
-      <path d="M0 35H396L416 17H654L679 10H1000" stroke="#5b3430" stroke-width="1" vector-effect="non-scaling-stroke"/>
-      <path class="divider-flow" pathLength="1000" d="M0 28H390L410 10H650L675 3H1000" stroke="#ffd59b" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
-      <path d="M462 6L453 14M478 6L469 14M494 6L485 14" stroke="#ff7a32" stroke-width="2" vector-effect="non-scaling-stroke"/>
-    </svg>
+    <div class="identity-card">
+      <svg class="identity-bg" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="identityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f5a13c"/>
+            <stop offset="48%" stop-color="#ff792b"/>
+            <stop offset="100%" stop-color="#ff4128"/>
+          </linearGradient>
+        </defs>
+        <path class="identity-frame-echo" d="M0 57H170L198 26H392L405 18H690L704 26H845L875 57H1000M0 101H170L198 132H392L405 140H690L704 132H845L875 101H1000"/>
+        <path class="identity-frame-main" d="M0 50H164L192 19H387L400 11H695L709 19H851L881 50H1000M0 94H164L192 125H387L400 133H695L709 125H851L881 94H1000"/>
+        <path class="identity-frame-flow identity-frame-flow-top" pathLength="1000" d="M0 50H164L192 19H387L400 11H695L709 19H851L881 50H1000"/>
+        <path class="identity-frame-flow identity-frame-flow-bottom" pathLength="1000" d="M1000 94H881L851 125H709L695 133H400L387 125H192L164 94H0"/>
+        <path class="identity-frame-detail" d="M235 20L225 31M253 20L243 31M271 20L261 31M729 113L739 124M747 113L757 124M765 113L775 124"/>
+        <path class="identity-crosshair" d="M38 69V81M32 75H44M962 69V81M956 75H968"/>
+      </svg>
+      <div class="identity-copy">
+        <div class="identity-kicker">OFFICIAL EVENT</div>
+        <strong class="identity-name" id="headerTName">尚未設定賽事</strong>
+      </div>
+    </div>
     <div class="header-meta">
-      <div class="meta-item meta-event"><span class="meta-label">EVENT</span><span class="meta-value accent" id="headerTName">尚未設定賽事</span></div>
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.4</span></div>
-      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/8</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.5</span></div>
+      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/11</span></div>
     </div>
   </div>
 </header>
@@ -1765,6 +2008,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <button class="tab" data-tab="matches" onclick="switchTab('matches')"><span id="tabIconMatches" class="btn-icon-slot"></span> 對戰紀錄</button>
     <button class="tab" data-tab="referee" onclick="switchTab('referee')"><span id="tabIconReferee" class="btn-icon-slot"></span> 裁判台</button>
     <button class="tab" data-tab="setup" onclick="switchTab('setup')"><span id="tabIconSetup" class="btn-icon-slot"></span> 賽事設定</button>
+    <button class="tab" data-tab="tools" onclick="switchTab('tools')"><span id="tabIconTools" class="btn-icon-slot"></span> 小工具</button>
   </div>
 
   <!-- STANDINGS -->
@@ -1952,13 +2196,17 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         <div class="attendance-manager" id="attendanceManager">
           <button type="button" class="attendance-toggle" id="attendanceToggleBtn" onclick="toggleAttendanceManager()" aria-expanded="false" aria-controls="attendancePanel">
             <span class="attendance-toggle-main">
-              <span id="attendanceToggleIcon"></span>
+              <span class="attendance-toggle-icon"><span id="attendanceToggleIcon"></span></span>
               <span class="attendance-toggle-copy">
-                <span class="attendance-toggle-title">點名與名單管理（選用）</span>
-                <span class="attendance-toggle-note">不需要點名也可以直接開始比賽</span>
+                <span class="attendance-toggle-kicker">賽前確認</span>
+                <span class="attendance-toggle-title">點名與名單管理</span>
+                <span class="attendance-toggle-note">快速確認到場名單，再開始比賽</span>
               </span>
             </span>
-            <span class="attendance-toggle-arrow" id="attendanceToggleArrow"></span>
+            <span class="attendance-toggle-end">
+              <span class="attendance-toggle-state" id="attendanceToggleState">開啟</span>
+              <span class="attendance-toggle-arrow" id="attendanceToggleArrow"></span>
+            </span>
           </button>
           <div class="attendance-panel hidden" id="attendancePanel">
             <div class="attendance-panel-head">
@@ -1990,10 +2238,118 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     </div>
   </section>
 
+  <!-- TOOLS -->
+  <section id="tab-tools" class="hidden">
+    <div class="card toolbox-card">
+      <div class="toolbox-heading">
+        <div class="toolbox-heading-main">
+          <span class="toolbox-heading-icon" id="toolboxHeadingIcon" aria-hidden="true"></span>
+          <div>
+            <h2 class="toolbox-title">抽籤名單</h2>
+            <div class="toolbox-subtitle">貼上名單並設定抽選人數，系統將隨機抽出不重複的中籤者。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="draw-layout">
+        <div class="draw-pane">
+          <div class="draw-pane-head">
+            <label class="draw-pane-title" for="drawNamesInput">新增名單</label>
+            <span class="draw-count-badge" id="drawNameCount">0 人</span>
+          </div>
+          <textarea class="draw-name-input" id="drawNamesInput" spellcheck="false"
+                    placeholder="一行輸入一個名字&#10;例如：&#10;服部半藏&#10;霧隱才藏&#10;加藤段藏"
+                    oninput="updateDrawToolState(true)"></textarea>
+          <div class="draw-input-actions">
+            <button type="button" class="draw-text-btn" onclick="clearDrawNames()"><span id="drawClearIcon"></span>清空名單</button>
+          </div>
+        </div>
+
+        <div class="draw-pane">
+          <div class="draw-control">
+            <label class="field-label" for="drawCountInput">抽選人數</label>
+            <div class="draw-number-row">
+              <input class="draw-number-input" id="drawCountInput" type="number" min="1" value="1" inputmode="numeric" oninput="updateDrawToolState(false)">
+              <button type="button" class="btn btn-primary draw-btn" id="drawNamesBtn" onclick="drawRandomNames()"><span id="drawActionIcon"></span><span id="drawBtnLabel">開始抽籤</span></button>
+            </div>
+            <div class="draw-hint" id="drawHint">請先輸入抽籤名單。</div>
+          </div>
+
+          <div class="draw-result" aria-live="polite">
+            <div class="draw-result-head">
+              <div class="draw-result-title"><span id="drawResultIcon"></span>中籤名單</div>
+              <button type="button" class="draw-copy-btn" id="drawCopyBtn" onclick="copyDrawResults()" disabled><span id="drawCopyIcon"></span>一鍵複製</button>
+            </div>
+            <div class="draw-result-empty" id="drawResultEmpty">抽籤結果會顯示在這裡</div>
+            <div class="draw-result-list hidden" id="drawResultList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prize-draw-section">
+        <div class="prize-heading">
+          <div class="prize-heading-main">
+            <span class="prize-heading-icon" id="prizeHeadingIcon" aria-hidden="true"></span>
+            <div>
+              <h2 class="prize-title">參賽者抽選（抽選獎品用）</h2>
+              <div class="prize-subtitle">自動帶入參賽玩家；中獎後即從候選名單移除，可連續抽選且不會重複中獎。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="draw-layout">
+          <div class="draw-pane">
+            <div class="draw-pane-head">
+              <div class="draw-pane-title">可抽選參賽者</div>
+              <span class="draw-count-badge" id="prizePoolCount">0 人</span>
+            </div>
+            <div class="prize-pool" id="prizePoolList"></div>
+            <div class="draw-input-actions">
+              <button type="button" class="draw-text-btn prize-reset-btn" id="prizeResetBtn" onclick="resetPrizeDraw()" disabled><span id="prizeResetIcon"></span>重置中獎紀錄</button>
+            </div>
+          </div>
+
+          <div class="draw-pane">
+            <div class="draw-control">
+              <label class="field-label" for="prizeDrawCountInput">本次抽選人數</label>
+              <div class="draw-number-row">
+                <input class="draw-number-input" id="prizeDrawCountInput" type="number" min="1" value="1" inputmode="numeric" oninput="updatePrizeDrawState()">
+                <button type="button" class="btn btn-primary draw-btn" id="prizeDrawBtn" onclick="drawPrizeWinners()"><span id="prizeDrawIcon"></span><span id="prizeDrawBtnLabel">開始抽獎</span></button>
+              </div>
+              <div class="draw-hint" id="prizeDrawHint">請先建立參賽玩家名單。</div>
+            </div>
+
+            <div class="draw-result" id="prizeDrawResult" aria-live="polite">
+              <div class="draw-result-head">
+                <div class="draw-result-title"><span id="prizeResultIcon"></span>中獎紀錄</div>
+              </div>
+              <div class="draw-result-empty" id="prizeResultEmpty">中獎者會依抽出順序顯示在這裡</div>
+              <div class="draw-result-list hidden" id="prizeResultList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <div class="save-flag" id="saveFlag">已儲存</div>
 <div class="action-toast" id="actionToast"><span id="actionToastIcon"></span> <span id="actionToastMsg"></span></div>
+<div class="draw-fullscreen" id="drawFullscreen" role="dialog" aria-modal="true" aria-labelledby="drawFullscreenTitle" aria-hidden="true">
+  <div class="draw-fullscreen-inner">
+    <div class="draw-fullscreen-kicker">RANDOM DRAW SYSTEM</div>
+    <h2 class="draw-fullscreen-title" id="drawFullscreenTitle">抽籤進行中</h2>
+    <div class="draw-fullscreen-stage">
+      <div class="draw-fullscreen-reel" id="drawFullscreenReel">
+        <div class="draw-fullscreen-name side" id="drawFullscreenPrev">候選名單</div>
+        <div class="draw-fullscreen-name current" id="drawFullscreenName">準備抽取</div>
+        <div class="draw-fullscreen-name side" id="drawFullscreenNext">隨機抽選</div>
+      </div>
+    </div>
+    <div class="draw-fullscreen-track"><div class="draw-fullscreen-bar"></div></div>
+  </div>
+</div>
 
 <div class="modal" id="customModal">
   <div class="modal-box">
@@ -2368,6 +2724,8 @@ const ICONS = {
   'git-branch': '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
   gavel: '<path d="m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/>',
   settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  toolbox: '<path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><rect width="20" height="14" x="2" y="6" rx="2"/><path d="M22 12H2"/><path d="M10 12v2h4v-2"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   'arrow-right': '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   'share-2': '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
@@ -2377,6 +2735,9 @@ const ICONS = {
   'edit-3': '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
   'clipboard-check': '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  gift: '<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M7.5 8C5 8 4 6.7 4 5.4A2.4 2.4 0 0 1 6.5 3C9.3 3 12 8 12 8"/><path d="M16.5 8C19 8 20 6.7 20 5.4A2.4 2.4 0 0 0 17.5 3C14.7 3 12 8 12 8"/>',
+  'rotate-ccw': '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
   'user-check': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
   'user-x': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 8 5 5"/><path d="m22 8-5 5"/>',
   'trash-2': '<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
@@ -2417,6 +2778,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initBracketPanZoom();
   initBracketTheme();
   initStaticIcons();
+  initDrawTool();
+  initPrizeDraw();
 });
 
 // Fills in the icons for elements that exist as static markup (tabs,
@@ -2429,6 +2792,16 @@ function initStaticIcons(){
     tabIconMatches: 'git-branch',
     tabIconReferee: 'gavel',
     tabIconSetup: 'settings',
+    tabIconTools: 'toolbox',
+    toolboxHeadingIcon: 'toolbox',
+    drawClearIcon: 'trash-2',
+    drawActionIcon: 'shuffle',
+    drawResultIcon: 'user',
+    drawCopyIcon: 'copy',
+    prizeHeadingIcon: 'gift',
+    prizeResetIcon: 'rotate-ccw',
+    prizeDrawIcon: 'shuffle',
+    prizeResultIcon: 'user',
     cloudStatusIcon: 'cloud',
     awardReportIcon: 'share-2',
     bracketSearchIconSlot: 'search',
@@ -2667,6 +3040,480 @@ function showToast(message){
   toast.classList.add('show');
   clearTimeout(actionToastTimer);
   actionToastTimer = setTimeout(()=>toast.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   TOOLBOX — RANDOM NAME DRAW
+========================================================= */
+const DRAW_TOOL_STORAGE_KEY = 'beybladeX_drawTool_v1';
+const PRIZE_DRAW_STORAGE_KEY = 'beybladeX_prizeDraw_v1';
+let drawToolResults = [];
+let drawAnimationTimer = null;
+let drawAnimationInterval = null;
+let prizeDrawWinners = [];
+let prizeDrawInitialized = false;
+
+function getDrawNames(){
+  const input = document.getElementById('drawNamesInput');
+  if(!input) return [];
+  const seen = new Set();
+  return input.value.split(/\r?\n/).map(name => name.trim()).filter(name => {
+    if(!name || seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+}
+
+function saveDrawTool(){
+  const namesInput = document.getElementById('drawNamesInput');
+  const countInput = document.getElementById('drawCountInput');
+  if(!namesInput || !countInput) return;
+  try{
+    localStorage.setItem(DRAW_TOOL_STORAGE_KEY, JSON.stringify({
+      names:namesInput.value,
+      count:countInput.value
+    }));
+  }catch(e){}
+}
+
+function initDrawTool(){
+  const namesInput = document.getElementById('drawNamesInput');
+  const countInput = document.getElementById('drawCountInput');
+  if(!namesInput || !countInput) return;
+  try{
+    const saved = JSON.parse(localStorage.getItem(DRAW_TOOL_STORAGE_KEY) || 'null');
+    if(saved && typeof saved.names === 'string') namesInput.value = saved.names;
+    if(saved && Number(saved.count) >= 1) countInput.value = String(Math.floor(Number(saved.count)));
+  }catch(e){}
+  updateDrawToolState(false);
+}
+
+function resetDrawResults(){
+  if(drawAnimationTimer){ window.clearTimeout(drawAnimationTimer); drawAnimationTimer = null; }
+  if(drawAnimationInterval){ window.clearInterval(drawAnimationInterval); drawAnimationInterval = null; }
+  drawToolResults = [];
+  const list = document.getElementById('drawResultList');
+  const empty = document.getElementById('drawResultEmpty');
+  const copyBtn = document.getElementById('drawCopyBtn');
+  const result = document.querySelector('.draw-result');
+  const drawBtn = document.getElementById('drawNamesBtn');
+  const label = document.getElementById('drawBtnLabel');
+  const fullscreen = document.getElementById('drawFullscreen');
+  if(fullscreen){ fullscreen.classList.remove('active'); fullscreen.setAttribute('aria-hidden','true'); }
+  unlockDrawViewport();
+  if(result) result.classList.remove('is-drawing');
+  if(drawBtn) drawBtn.classList.remove('is-drawing');
+  if(label) label.textContent = '開始抽籤';
+  if(list){ list.innerHTML = ''; list.classList.add('hidden'); }
+  if(empty){ empty.textContent = '抽籤結果會顯示在這裡'; empty.classList.remove('hidden'); }
+  if(copyBtn) copyBtn.disabled = true;
+}
+
+function updateDrawToolState(clearResults){
+  const names = getDrawNames();
+  const countInput = document.getElementById('drawCountInput');
+  const badge = document.getElementById('drawNameCount');
+  const hint = document.getElementById('drawHint');
+  const drawBtn = document.getElementById('drawNamesBtn');
+  if(!countInput || !badge || !hint || !drawBtn) return;
+
+  const count = Math.floor(Number(countInput.value));
+  countInput.max = String(Math.max(1,names.length));
+  badge.textContent = `${names.length} 人`;
+
+  if(names.length === 0){
+    hint.textContent = '請先輸入抽籤名單。';
+    drawBtn.disabled = true;
+  }else if(!Number.isInteger(count) || count < 1){
+    hint.textContent = '抽選人數至少需要 1 人。';
+    drawBtn.disabled = true;
+  }else if(count > names.length){
+    hint.textContent = `抽選人數不能超過名單中的 ${names.length} 人。`;
+    drawBtn.disabled = true;
+  }else{
+    hint.textContent = `將從 ${names.length} 人中抽出 ${count} 人，名單不會重複中籤。`;
+    drawBtn.disabled = false;
+  }
+  if(clearResults) resetDrawResults();
+  saveDrawTool();
+}
+
+function secureRandomIndex(max){
+  if(max <= 1) return 0;
+  if(window.crypto && window.crypto.getRandomValues){
+    const range = 0x100000000;
+    const limit = Math.floor(range / max) * max;
+    const value = new Uint32Array(1);
+    do{ window.crypto.getRandomValues(value); }while(value[0] >= limit);
+    return value[0] % max;
+  }
+  return Math.floor(Math.random() * max);
+}
+
+let drawLockedScrollY = 0;
+function lockDrawViewport(){
+  drawLockedScrollY = window.scrollY || window.pageYOffset || 0;
+  document.body.style.top = `-${drawLockedScrollY}px`;
+  document.body.classList.add('draw-overlay-open');
+}
+
+function unlockDrawViewport(){
+  if(!document.body.classList.contains('draw-overlay-open')) return;
+  document.body.classList.remove('draw-overlay-open');
+  document.body.style.top = '';
+  window.scrollTo(0,drawLockedScrollY);
+}
+
+function drawRandomNames(){
+  if(drawAnimationTimer) return;
+  const names = getDrawNames();
+  const countInput = document.getElementById('drawCountInput');
+  const count = countInput ? Math.floor(Number(countInput.value)) : 0;
+  if(names.length === 0){ showToast('請先輸入抽籤名單'); return; }
+  if(!Number.isInteger(count) || count < 1 || count > names.length){
+    showToast(`抽選人數請設定在 1 到 ${names.length} 人之間`);
+    return;
+  }
+
+  const pool = [...names];
+  for(let i = pool.length - 1; i > 0; i--){
+    const j = secureRandomIndex(i + 1);
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  drawToolResults = pool.slice(0,count);
+  const result = document.querySelector('.draw-result');
+  const list = document.getElementById('drawResultList');
+  const empty = document.getElementById('drawResultEmpty');
+  const copyBtn = document.getElementById('drawCopyBtn');
+  const drawBtn = document.getElementById('drawNamesBtn');
+  const label = document.getElementById('drawBtnLabel');
+  const fullscreen = document.getElementById('drawFullscreen');
+  const fullscreenName = document.getElementById('drawFullscreenName');
+  const fullscreenPrev = document.getElementById('drawFullscreenPrev');
+  const fullscreenNext = document.getElementById('drawFullscreenNext');
+  const fullscreenReel = document.getElementById('drawFullscreenReel');
+  if(!result || !list || !empty || !copyBtn || !drawBtn || !fullscreen || !fullscreenName || !fullscreenPrev || !fullscreenNext || !fullscreenReel) return;
+
+  const fullscreenTitle = document.getElementById('drawFullscreenTitle');
+  const fullscreenKicker = fullscreen.querySelector('.draw-fullscreen-kicker');
+  if(fullscreenTitle) fullscreenTitle.textContent = '抽籤進行中';
+  if(fullscreenKicker) fullscreenKicker.textContent = 'RANDOM DRAW SYSTEM';
+
+  list.innerHTML = '';
+  list.classList.add('hidden');
+  empty.textContent = '抽籤進行中…';
+  empty.classList.remove('hidden');
+  copyBtn.disabled = true;
+  drawBtn.classList.add('is-drawing');
+  drawBtn.disabled = true;
+  if(label) label.textContent = '抽取中…';
+  fullscreen.classList.remove('active');
+  void fullscreen.offsetWidth;
+  fullscreen.classList.add('active');
+  fullscreen.setAttribute('aria-hidden','false');
+  lockDrawViewport();
+
+  const pickIndex = excluded => {
+    if(names.length <= excluded.length) return secureRandomIndex(names.length);
+    let index;
+    do{ index = secureRandomIndex(names.length); }while(excluded.includes(index));
+    return index;
+  };
+  let slots = [secureRandomIndex(names.length),0,0];
+  slots[1] = pickIndex([slots[0]]);
+  slots[2] = pickIndex([slots[0],slots[1]]);
+  const spinStartedAt = performance.now();
+  const showCandidate = () => {
+    slots = [slots[1],slots[2],pickIndex([slots[1],slots[2]])];
+    fullscreenPrev.textContent = names[slots[0]];
+    fullscreenName.textContent = names[slots[1]];
+    fullscreenNext.textContent = names[slots[2]];
+    const elapsed = Math.min(1500,performance.now() - spinStartedAt);
+    const speed = Math.round(58 + Math.pow(elapsed / 1500,2.25) * 145);
+    fullscreenReel.style.setProperty('--slot-speed',`${speed}ms`);
+    fullscreenReel.classList.remove('tick');
+    void fullscreenReel.offsetWidth;
+    fullscreenReel.classList.add('tick');
+    drawAnimationInterval = window.setTimeout(showCandidate,speed);
+  };
+  showCandidate();
+  drawAnimationTimer = window.setTimeout(() => {
+    if(drawAnimationInterval){ window.clearTimeout(drawAnimationInterval); drawAnimationInterval = null; }
+    drawAnimationTimer = null;
+    fullscreen.classList.remove('active');
+    fullscreen.setAttribute('aria-hidden','true');
+    unlockDrawViewport();
+    drawBtn.classList.remove('is-drawing');
+    if(label) label.textContent = '開始抽籤';
+    renderDrawResults();
+    updateDrawToolState(false);
+    showToast(`已抽出 ${count} 位中籤者`);
+  }, 1500);
+}
+
+function renderDrawResults(){
+  const list = document.getElementById('drawResultList');
+  const empty = document.getElementById('drawResultEmpty');
+  const copyBtn = document.getElementById('drawCopyBtn');
+  if(!list || !empty || !copyBtn) return;
+  list.innerHTML = drawToolResults.map((name,index) => `
+    <div class="draw-result-row" style="animation-delay:${index * 35}ms">
+      <span class="draw-result-index">${String(index + 1).padStart(2,'0')}</span>
+      <span class="draw-result-name">${escapeHtml(name)}</span>
+    </div>`).join('');
+  empty.classList.add('hidden');
+  list.classList.remove('hidden');
+  copyBtn.disabled = drawToolResults.length === 0;
+}
+
+function clearDrawNames(){
+  const input = document.getElementById('drawNamesInput');
+  const countInput = document.getElementById('drawCountInput');
+  if(input) input.value = '';
+  if(countInput) countInput.value = '1';
+  updateDrawToolState(true);
+  if(input) input.focus();
+}
+
+async function copyDrawResults(){
+  if(drawToolResults.length === 0){ showToast('目前沒有可複製的中籤名單'); return; }
+  const text = drawToolResults.join('\n');
+  let copied = false;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{ await navigator.clipboard.writeText(text); copied = true; }catch(e){}
+  }
+  if(!copied){
+    const helper = document.createElement('textarea');
+    helper.value = text;
+    helper.setAttribute('readonly','');
+    helper.setAttribute('aria-hidden','true');
+    helper.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+    document.body.appendChild(helper);
+    helper.focus({preventScroll:true});
+    helper.select();
+    helper.setSelectionRange(0,helper.value.length);
+    try{ copied = document.execCommand('copy'); }catch(e){ copied = false; }
+    helper.remove();
+  }
+  if(copied){
+    showToast('中籤名單已複製');
+  }else{
+    showToast('複製失敗，請手動選取名單');
+  }
+}
+
+/* =========================================================
+   TOOLBOX — PARTICIPANT PRIZE DRAW
+========================================================= */
+let prizeLastDrawNames = [];
+
+function getPrizeParticipants(){
+  const seen = new Set();
+  const savedPlayers = (Array.isArray(state.players) ? state.players : [])
+    .filter(player => player && player.name && !player.withdrawn)
+    .map(player => String(player.name).trim());
+  const setupPlayers = savedPlayers.length ? [] : Array.from(document.querySelectorAll('#playerInputs .player-chip'))
+    .filter(chip => chip.dataset.attendance !== 'absent')
+    .map(chip => String(chip.dataset.name || '').trim());
+  return (savedPlayers.length ? savedPlayers : setupPlayers)
+    .filter(name => {
+      if(!name || seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    });
+}
+
+function savePrizeDraw(){
+  const countInput = document.getElementById('prizeDrawCountInput');
+  try{
+    localStorage.setItem(PRIZE_DRAW_STORAGE_KEY, JSON.stringify({
+      winners:prizeDrawWinners,
+      count:countInput ? countInput.value : '1'
+    }));
+  }catch(e){}
+}
+
+function initPrizeDraw(){
+  const countInput = document.getElementById('prizeDrawCountInput');
+  try{
+    const saved = JSON.parse(localStorage.getItem(PRIZE_DRAW_STORAGE_KEY) || 'null');
+    if(saved && Array.isArray(saved.winners)) prizeDrawWinners = saved.winners.map(String);
+    if(countInput && saved && Number(saved.count) >= 1) countInput.value = String(Math.floor(Number(saved.count)));
+  }catch(e){}
+  prizeDrawInitialized = true;
+  syncPrizeDrawPlayers();
+}
+
+function syncPrizeDrawPlayers(){
+  if(!prizeDrawInitialized) return;
+  const participantSet = new Set(getPrizeParticipants());
+  const filtered = prizeDrawWinners.filter((name,index,list) => participantSet.has(name) && list.indexOf(name) === index);
+  if(filtered.length !== prizeDrawWinners.length){
+    prizeDrawWinners = filtered;
+    prizeLastDrawNames = prizeLastDrawNames.filter(name => participantSet.has(name));
+    savePrizeDraw();
+  }
+  updatePrizeDrawState();
+}
+
+function getPrizeRemaining(){
+  const winnerSet = new Set(prizeDrawWinners);
+  return getPrizeParticipants().filter(name => !winnerSet.has(name));
+}
+
+function renderPrizeDraw(){
+  const participants = getPrizeParticipants();
+  const remaining = getPrizeRemaining();
+  const pool = document.getElementById('prizePoolList');
+  const badge = document.getElementById('prizePoolCount');
+  const list = document.getElementById('prizeResultList');
+  const empty = document.getElementById('prizeResultEmpty');
+  const resetBtn = document.getElementById('prizeResetBtn');
+  if(!pool || !badge || !list || !empty || !resetBtn) return;
+
+  badge.textContent = participants.length ? `可抽 ${remaining.length} / ${participants.length} 人` : '0 人';
+  pool.innerHTML = remaining.length
+    ? remaining.map(name => `<span class="prize-player-chip">${icon('user',13)}<span>${escapeHtml(name)}</span></span>`).join('')
+    : `<div class="prize-pool-empty">${participants.length ? '所有參賽者皆已中獎' : '開始比賽後會自動帶入參賽玩家'}</div>`;
+
+  if(prizeDrawWinners.length){
+    list.innerHTML = prizeDrawWinners.map((name,index) => `
+      <div class="draw-result-row${prizeLastDrawNames.includes(name) ? ' prize-result-new' : ''}" style="animation-delay:${index * 30}ms">
+        <span class="draw-result-index">${String(index + 1).padStart(2,'0')}</span>
+        <span class="draw-result-name">${escapeHtml(name)}</span>
+      </div>`).join('');
+    empty.classList.add('hidden');
+    list.classList.remove('hidden');
+  }else{
+    list.innerHTML = '';
+    list.classList.add('hidden');
+    empty.classList.remove('hidden');
+  }
+  resetBtn.disabled = prizeDrawWinners.length === 0 || !!drawAnimationTimer;
+}
+
+function updatePrizeDrawState(){
+  if(!prizeDrawInitialized) return;
+  const remaining = getPrizeRemaining();
+  const countInput = document.getElementById('prizeDrawCountInput');
+  const hint = document.getElementById('prizeDrawHint');
+  const button = document.getElementById('prizeDrawBtn');
+  const label = document.getElementById('prizeDrawBtnLabel');
+  if(!countInput || !hint || !button || !label) return;
+  const count = Math.floor(Number(countInput.value));
+  countInput.max = String(Math.max(1,remaining.length));
+  label.textContent = prizeDrawWinners.length ? '繼續抽獎' : '開始抽獎';
+
+  if(getPrizeParticipants().length === 0){
+    hint.textContent = '請先在賽事設定建立參賽玩家。';
+    button.disabled = true;
+  }else if(remaining.length === 0){
+    hint.textContent = '所有參賽者皆已中獎，可重置紀錄後重新抽選。';
+    button.disabled = true;
+  }else if(!Number.isInteger(count) || count < 1){
+    hint.textContent = '本次抽選人數至少需要 1 人。';
+    button.disabled = true;
+  }else if(count > remaining.length){
+    hint.textContent = `本次最多可抽出 ${remaining.length} 人。`;
+    button.disabled = true;
+  }else{
+    hint.textContent = `將從剩餘 ${remaining.length} 人中抽出 ${count} 人，中獎者不會再次入選。`;
+    button.disabled = !!drawAnimationTimer;
+  }
+  renderPrizeDraw();
+  savePrizeDraw();
+}
+
+function drawPrizeWinners(){
+  if(drawAnimationTimer) return;
+  const remaining = getPrizeRemaining();
+  const countInput = document.getElementById('prizeDrawCountInput');
+  const count = countInput ? Math.floor(Number(countInput.value)) : 0;
+  if(remaining.length === 0){ showToast('目前沒有可抽選的參賽者'); return; }
+  if(!Number.isInteger(count) || count < 1 || count > remaining.length){
+    showToast(`本次抽選人數請設定在 1 到 ${remaining.length} 人之間`);
+    return;
+  }
+
+  const shuffled = [...remaining];
+  for(let i = shuffled.length - 1; i > 0; i--){
+    const j = secureRandomIndex(i + 1);
+    [shuffled[i],shuffled[j]] = [shuffled[j],shuffled[i]];
+  }
+  const newWinners = shuffled.slice(0,count);
+  const button = document.getElementById('prizeDrawBtn');
+  const label = document.getElementById('prizeDrawBtnLabel');
+  const result = document.getElementById('prizeDrawResult');
+  const fullscreen = document.getElementById('drawFullscreen');
+  const fullscreenName = document.getElementById('drawFullscreenName');
+  const fullscreenPrev = document.getElementById('drawFullscreenPrev');
+  const fullscreenNext = document.getElementById('drawFullscreenNext');
+  const fullscreenReel = document.getElementById('drawFullscreenReel');
+  if(!button || !label || !result || !fullscreen || !fullscreenName || !fullscreenPrev || !fullscreenNext || !fullscreenReel) return;
+
+  const fullscreenTitle = document.getElementById('drawFullscreenTitle');
+  const fullscreenKicker = fullscreen.querySelector('.draw-fullscreen-kicker');
+  if(fullscreenTitle) fullscreenTitle.textContent = '獎品抽選中';
+  if(fullscreenKicker) fullscreenKicker.textContent = 'PRIZE DRAW SYSTEM';
+  button.classList.add('is-drawing');
+  button.disabled = true;
+  label.textContent = '抽取中…';
+  result.classList.add('is-drawing');
+  fullscreen.classList.remove('active');
+  void fullscreen.offsetWidth;
+  fullscreen.classList.add('active');
+  fullscreen.setAttribute('aria-hidden','false');
+  lockDrawViewport();
+
+  const pickIndex = excluded => {
+    if(remaining.length <= excluded.length) return secureRandomIndex(remaining.length);
+    let index;
+    do{ index = secureRandomIndex(remaining.length); }while(excluded.includes(index));
+    return index;
+  };
+  let slots = [secureRandomIndex(remaining.length),0,0];
+  slots[1] = pickIndex([slots[0]]);
+  slots[2] = pickIndex([slots[0],slots[1]]);
+  const spinStartedAt = performance.now();
+  const showCandidate = () => {
+    slots = [slots[1],slots[2],pickIndex([slots[1],slots[2]])];
+    fullscreenPrev.textContent = remaining[slots[0]];
+    fullscreenName.textContent = remaining[slots[1]];
+    fullscreenNext.textContent = remaining[slots[2]];
+    const elapsed = Math.min(1500,performance.now() - spinStartedAt);
+    const speed = Math.round(58 + Math.pow(elapsed / 1500,2.25) * 145);
+    fullscreenReel.style.setProperty('--slot-speed',`${speed}ms`);
+    fullscreenReel.classList.remove('tick');
+    void fullscreenReel.offsetWidth;
+    fullscreenReel.classList.add('tick');
+    drawAnimationInterval = window.setTimeout(showCandidate,speed);
+  };
+  showCandidate();
+  drawAnimationTimer = window.setTimeout(() => {
+    if(drawAnimationInterval){ window.clearTimeout(drawAnimationInterval); drawAnimationInterval = null; }
+    drawAnimationTimer = null;
+    fullscreen.classList.remove('active');
+    fullscreen.setAttribute('aria-hidden','true');
+    unlockDrawViewport();
+    button.classList.remove('is-drawing');
+    result.classList.remove('is-drawing');
+    prizeLastDrawNames = newWinners;
+    prizeDrawWinners.push(...newWinners);
+    savePrizeDraw();
+    updatePrizeDrawState();
+    showToast(`已抽出 ${count} 位中獎者，可繼續抽獎`);
+  },1500);
+}
+
+function resetPrizeDraw(){
+  if(drawAnimationTimer || prizeDrawWinners.length === 0) return;
+  showConfirm('確定要清除所有中獎紀錄，讓全部參賽者重新加入抽選嗎？', () => {
+    prizeDrawWinners = [];
+    prizeLastDrawNames = [];
+    savePrizeDraw();
+    updatePrizeDrawState();
+    showToast('已重置中獎紀錄');
+  });
 }
 
 function buildShareLink(code){
@@ -3345,6 +4192,7 @@ function renumberPlayerRows(){
   const chipInput = document.getElementById('playerChipInput');
   if(chipInput) chipInput.placeholder = chips.length > 0 ? '新增玩家…（輸入名稱按下 ↵）' : '輸入玩家名稱後按 Enter 新增';
   if(attendanceManagerOpen) renderAttendanceManager();
+  syncPrizeDrawPlayers();
 }
 
 /* =========================================================
@@ -3373,6 +4221,8 @@ function renderAttendanceManager(){
   manager.classList.toggle('open', attendanceManagerOpen);
   panel.classList.toggle('hidden', !attendanceManagerOpen);
   toggle.setAttribute('aria-expanded', attendanceManagerOpen ? 'true' : 'false');
+  const toggleState = document.getElementById('attendanceToggleState');
+  if(toggleState) toggleState.textContent = attendanceManagerOpen ? '收合' : '開啟';
   if(!attendanceManagerOpen) return;
 
   const chips = Array.from(document.querySelectorAll('#playerInputs .player-chip'));
@@ -5687,8 +6537,8 @@ function resetTournament(){
    TABS
 ========================================================= */
 function switchTab(tab){
-  if(currentRole === 'viewer' && (tab === 'referee' || tab === 'setup')) return;
-  const tabs = ['standings','matches','referee','setup'];
+  if(currentRole === 'viewer' && (tab === 'referee' || tab === 'setup' || tab === 'tools')) return;
+  const tabs = ['standings','matches','referee','setup','tools'];
   tabs.forEach(name => {
     document.getElementById(`tab-${name}`).classList.toggle('hidden', name !== tab);
   });
@@ -5712,6 +6562,7 @@ function renderAll(){
   const setupHasFocus = applyingRemote && document.activeElement &&
     document.getElementById('tab-setup').contains(document.activeElement);
   if(!setupHasFocus) loadSetupInputs();
+  syncPrizeDrawPlayers();
   if(!document.getElementById('tab-referee').classList.contains('hidden')) renderReferee();
 }
 
