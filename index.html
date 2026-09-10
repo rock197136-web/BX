@@ -117,9 +117,12 @@ button{ cursor:pointer; }
 .header .identity-frame-main{ fill:none; stroke:url(#identityGradient); stroke-width:2.2; vector-effect:non-scaling-stroke; }
 .header .identity-frame-echo{ fill:none; stroke:#6a3732; stroke-width:1; opacity:.72; vector-effect:non-scaling-stroke; }
 .header .identity-frame-detail{ fill:none; stroke:#ff8740; stroke-width:1.5; opacity:.88; vector-effect:non-scaling-stroke; }
-.header .identity-frame-flow{ fill:none; stroke:#ffd09a; stroke-width:2.4; stroke-dasharray:48 952; vector-effect:non-scaling-stroke; }
-.header .identity-frame-flow-top{ animation:identityFlowTop 7s linear infinite; }
-.header .identity-frame-flow-bottom{ animation:identityFlowBottom 7s linear infinite; }
+.header .identity-frame-flow{
+  fill:none; stroke:#ffd09a; stroke-width:2.5; stroke-linecap:round;
+  stroke-dasharray:82 2018; vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 0 2px rgba(255,208,154,.9)) drop-shadow(0 0 5px rgba(255,121,43,.48));
+  will-change:stroke-dashoffset; animation:identityFlowLoop 8s linear infinite;
+}
 .header .identity-crosshair{ stroke:#8c6556; stroke-width:1; opacity:.45; vector-effect:non-scaling-stroke; }
 .header .identity-copy{
   position:absolute; z-index:1; left:56%; top:50%; transform:translate(-50%,-50%);
@@ -136,16 +139,10 @@ button{ cursor:pointer; }
 .header .meta-value{ color:#fff; font-size:12px; font-weight:700; letter-spacing:.03em; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .header .meta-value.accent{ color:var(--hdr-blue-soft); }
 .header .status-dot{ width:5px; height:5px; border-radius:50%; background:var(--hdr-blue); box-shadow:0 0 8px rgba(255,157,66,.55); }
-/* One continuous two-stage loop: top L→R, then bottom R→L with a zero-delay handoff. */
-@keyframes identityFlowTop{
-  0%{ opacity:1; stroke-dashoffset:0; }
-  49.999%{ opacity:1; stroke-dashoffset:-1000; }
-  50%,100%{ opacity:0; stroke-dashoffset:-1000; }
-}
-@keyframes identityFlowBottom{
-  0%,49.999%{ opacity:0; stroke-dashoffset:0; }
-  50%{ opacity:1; stroke-dashoffset:0; }
-  100%{ opacity:1; stroke-dashoffset:-1000; }
+/* One closed route: top L→R, right turn, bottom R→L, left turn, repeat. */
+@keyframes identityFlowLoop{
+  from{ stroke-dashoffset:0; }
+  to{ stroke-dashoffset:-2100; }
 }
 @media(max-width:650px){
   .header{ padding:14px 15px 11px; }
@@ -1973,8 +1970,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         </defs>
         <path class="identity-frame-echo" d="M0 57H170L198 26H392L405 18H690L704 26H845L875 57H1000M0 101H170L198 132H392L405 140H690L704 132H845L875 101H1000"/>
         <path class="identity-frame-main" d="M0 50H164L192 19H387L400 11H695L709 19H851L881 50H1000M0 94H164L192 125H387L400 133H695L709 125H851L881 94H1000"/>
-        <path class="identity-frame-flow identity-frame-flow-top" pathLength="1000" d="M0 50H164L192 19H387L400 11H695L709 19H851L881 50H1000"/>
-        <path class="identity-frame-flow identity-frame-flow-bottom" pathLength="1000" d="M1000 94H881L851 125H709L695 133H400L387 125H192L164 94H0"/>
+        <path class="identity-frame-flow" pathLength="2100" d="M1 50H164L192 19H387L400 11H695L709 19H851L881 50H999V94H881L851 125H709L695 133H400L387 125H192L164 94H1V50"/>
         <path class="identity-frame-detail" d="M235 20L225 31M253 20L243 31M271 20L261 31M729 113L739 124M747 113L757 124M765 113L775 124"/>
         <path class="identity-crosshair" d="M38 69V81M32 75H44M962 69V81M956 75H968"/>
       </svg>
