@@ -1170,6 +1170,100 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .winner-banner .trophy{ font-size:38px; }
 .winner-banner .wname{ font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:900; margin:8px 0; }
 
+/* ===== Master mode toggle switch ===== */
+.master-mode-switch{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+.master-mode-switch input{ position:absolute; opacity:0; width:0; height:0; }
+.master-mode-switch .switch-track{
+  position:relative; width:38px; height:22px; flex-shrink:0; border-radius:999px;
+  background:var(--panel-2); border:1px solid var(--border); transition:background .2s,border-color .2s;
+}
+.master-mode-switch .switch-thumb{
+  position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
+  background:var(--muted); transition:transform .2s,background .2s;
+}
+.master-mode-switch input:checked + .switch-track{ background:rgba(57,255,20,.16); border-color:var(--cyan); }
+.master-mode-switch input:checked + .switch-track .switch-thumb{
+  transform:translateX(16px); background:var(--cyan); box-shadow:0 0 8px rgba(57,255,20,.75);
+}
+.master-mode-switch .switch-label{ font-size:12px; font-weight:700; color:var(--muted); letter-spacing:.02em; white-space:nowrap; transition:color .2s; }
+.master-mode-switch input:checked ~ .switch-label{ color:var(--cyan); }
+
+/* =========================================================
+   MASTER MODE (主控模式)：縮小版裁判台
+   讓一個人同時掌握多桌賽況並直接按分，以手機直式瀏覽為主要
+   設計目標——盡量壓縮每個面板的高度，同時保留完整計分功能
+   （finish 按鈕 / 快速模式 / 撤銷 / 下一場），只是把視覺元素
+   縮到最小、資訊更緊湊，方便單手滑動操作。
+========================================================= */
+.referee-panels.master-mode{
+  grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+  gap:10px;
+}
+.master-mode .referee-panel{ border-radius:14px; }
+.master-mode .card{ padding:10px; }
+.master-mode .card-sub{ display:none; }
+#tab-referee.master-mode #refereeCardSub{ display:none; }
+.master-mode .ref-panel-head{ margin-bottom:6px; gap:6px; }
+.master-mode .ref-panel-head .ref-panel-label{ font-size:12px; padding:7px 10px; }
+.master-mode .ref-panel-head .icon-btn{ width:28px; height:28px; }
+.master-mode .ref-picker{ margin-bottom:6px; }
+.master-mode .ref-picker .field-label{ display:none; }
+.master-mode .ref-picker .text-input{ font-size:12px; padding:7px 10px; }
+.master-mode .score-console{ padding:8px; border-radius:12px; }
+.master-mode .referee-title{ font-size:10px; margin-bottom:6px; letter-spacing:1.5px; }
+.master-mode .ring-row{ gap:8px; margin-bottom:8px; }
+.master-mode .ring-wrap{ gap:2px; padding:8px 6px 6px !important; }
+.master-mode .ring-wrap::before{ font-size:7px !important; letter-spacing:1px !important; }
+.master-mode .battery-outer{ width:min(120px,90%) !important; margin-top:2px !important; }
+.master-mode .battery-body,
+.master-mode .battery-body.battery-seven{ height:9px !important; gap:3px !important; }
+.master-mode .battery-value{ font-size:clamp(20px,6vw,30px) !important; order:0; }
+.master-mode .ring-name{ font-size:12px !important; }
+.master-mode .vs-mark{ font-size:13px; }
+.master-mode .winner-banner{ padding:10px 10px; }
+.master-mode .winner-banner .trophy{ font-size:20px; }
+.master-mode .winner-banner .wname{ font-size:16px; margin:2px 0; }
+.master-mode .finish-grid{ gap:6px; }
+.master-mode .finish-col{ padding:5px; gap:6px; }
+.master-mode .finish-col-header{ display:none; }
+.master-mode .finish-btn{ min-height:40px; padding:5px 4px; gap:3px; flex-wrap:wrap; justify-content:center; }
+.master-mode .fin-badge{ width:22px; height:24px; }
+.master-mode .fin-badge-svg{ width:13px; height:13px; }
+.master-mode .fin-text{ display:none; }
+.master-mode .fin-ticks{ display:none; }
+.master-mode .finish-pts{ width:100%; height:18px; font-size:12px; clip-path:none; }
+.master-mode .ref-footer{ margin-top:6px; gap:6px; }
+.master-mode .ref-footer .btn{ padding:6px 8px; font-size:11px; border-radius:8px; }
+.master-mode .referee-empty{ padding:16px 10px !important; }
+.master-mode .referee-empty .big{ font-size:16px; margin-bottom:4px; }
+
+/* 主控模式 ×「不計分快速模式」：這組按鈕(.quick-console .quick-win-btn)
+   平常設計成又高又醒目的大按鈕（min-height 260px），主控模式下必須整組
+   壓成一顆矮按鈕（名字 + 獲勝字樣直接疊在一起），才能在手機一頁看到
+   多桌並直接點「誰獲勝」。用三層 class 疊加選擇器，specificity 一定
+   蓋過原本 .quick-console 那組規則。 */
+.master-mode .score-console.quick-console{ padding:8px; border-radius:14px; }
+.master-mode .quick-console .referee-title{ margin:0 0 6px; gap:8px; font-size:11px; }
+.master-mode .quick-console .referee-title::before,
+.master-mode .quick-console .referee-title::after{ width:26px; }
+.master-mode .quick-console .quick-win-grid{ gap:6px; }
+.master-mode .quick-console .quick-win-btn{
+  min-height:48px !important; min-width:0 !important; padding:8px 6px !important;
+  gap:4px !important; border-radius:10px !important; backdrop-filter:none !important;
+}
+.master-mode .quick-console .quick-win-name{
+  font-size:13px !important; line-height:1.1 !important; text-shadow:none !important;
+}
+.master-mode .quick-console .quick-win-label{
+  width:auto !important; min-height:20px !important; padding:3px 12px !important;
+  font-size:11px !important; letter-spacing:1px !important;
+}
+.master-mode .quick-console .quick-vs-mark{ width:20px !important; height:20px !important; font-size:8px !important; }
+/* 手機直式瀏覽：強制單欄，每桌像一張迷你裁判卡直接往下滑 */
+@media(max-width:650px){
+  .referee-panels.master-mode{ grid-template-columns:1fr; gap:8px; }
+}
+
 /* ===== Modal ===== */
 .modal{ position:fixed; inset:0; background:rgba(4,6,10,.8); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
 .modal.show{ display:flex; }
@@ -2129,9 +2223,16 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
     <div class="space-between" style="margin-bottom:14px;">
       <div>
         <div class="card-title" style="margin:0;">裁判台</div>
-        <div class="card-sub">多桌並行時可各自新增裁判面板，分頭計分・資料會即時同步。</div>
+        <div class="card-sub" id="refereeCardSub">多桌並行時可各自新增裁判面板，分頭計分・資料會即時同步。</div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="addRefereePanel()">＋ 新增裁判</button>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <label class="master-mode-switch" title="開啟後切換成縮小版裁判台，方便一次掌握多桌比分">
+          <input type="checkbox" id="masterModeCheckbox" onchange="toggleMasterMode(this.checked)">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">主控模式</span>
+        </label>
+        <button class="btn btn-primary btn-sm" onclick="addRefereePanel()">＋ 新增裁判</button>
+      </div>
     </div>
     <div id="refereeFocusBanner"></div>
     <div id="refereePanels" class="referee-panels"></div>
@@ -2768,6 +2869,7 @@ function setIconLabel(id, name, label, size){
 document.addEventListener('DOMContentLoaded', async () => {
   createPlayerInputs(2);
   loadRefereePanels();
+  loadMasterMode();
   await loadLocalCache();
   renderAll();
   initCloud();
@@ -6001,6 +6103,21 @@ let refereePanels = [];
 let focusedPanelId = null;
 const PANELS_KEY = 'beyblade-x-referee-panels-v1';
 
+// 主控模式：純本機顯示偏好（不隨賽事資料同步，每台裝置各自記住），
+// 讓裁判台切換成縮小版卡片，方便一次盯著多桌比分操作。
+let masterModeOn = false;
+const MASTER_MODE_KEY = 'beyblade-x-referee-master-mode-v1';
+function loadMasterMode(){
+  try{ masterModeOn = localStorage.getItem(MASTER_MODE_KEY) === '1'; }catch(e){ masterModeOn = false; }
+  const cb = document.getElementById('masterModeCheckbox');
+  if(cb) cb.checked = masterModeOn;
+}
+function toggleMasterMode(on){
+  masterModeOn = !!on;
+  try{ localStorage.setItem(MASTER_MODE_KEY, masterModeOn ? '1' : '0'); }catch(e){}
+  renderReferee();
+}
+
 function loadRefereePanels(){
   try{
     const raw = localStorage.getItem(PANELS_KEY);
@@ -6081,6 +6198,12 @@ function autoAssignPanel(panel, excludeIds){
 function renderReferee(){
   const wrap = document.getElementById('refereePanels');
   if(!wrap) return;
+
+  wrap.classList.toggle('master-mode', masterModeOn);
+  const refereeSection = document.getElementById('tab-referee');
+  if(refereeSection) refereeSection.classList.toggle('master-mode', masterModeOn);
+  const masterCb = document.getElementById('masterModeCheckbox');
+  if(masterCb) masterCb.checked = masterModeOn;
 
   if(state.matches.length === 0){
     wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事，</div>請於先於「賽事設定」建立賽事。</div></div>`;
