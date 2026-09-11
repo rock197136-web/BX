@@ -1196,69 +1196,118 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
    縮到最小、資訊更緊湊，方便單手滑動操作。
 ========================================================= */
 .referee-panels.master-mode{
-  grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
-  gap:10px;
+  grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+  gap:8px;
 }
-.master-mode .referee-panel{ border-radius:14px; }
-.master-mode .card{ padding:10px; }
+.master-mode .referee-panel{ border-radius:12px; }
+.master-mode .card{ padding:8px; }
 .master-mode .card-sub{ display:none; }
 #tab-referee.master-mode #refereeCardSub{ display:none; }
-.master-mode .ref-panel-head{ margin-bottom:6px; gap:6px; }
-.master-mode .ref-panel-head .ref-panel-label{ font-size:12px; padding:7px 10px; }
-.master-mode .ref-panel-head .icon-btn{ width:28px; height:28px; }
-.master-mode .ref-picker{ margin-bottom:6px; }
-.master-mode .ref-picker .field-label{ display:none; }
-.master-mode .ref-picker .text-input{ font-size:12px; padding:7px 10px; }
-.master-mode .score-console{ padding:8px; border-radius:12px; }
-.master-mode .referee-title{ font-size:10px; margin-bottom:6px; letter-spacing:1.5px; }
-.master-mode .ring-row{ gap:8px; margin-bottom:8px; }
-.master-mode .ring-wrap{ gap:2px; padding:8px 6px 6px !important; }
-.master-mode .ring-wrap::before{ font-size:7px !important; letter-spacing:1px !important; }
-.master-mode .battery-outer{ width:min(120px,90%) !important; margin-top:2px !important; }
+
+/* 主控模式的卡頭：裁判標籤 + 對戰選單改成同一列並排，
+   刻意做成一條「工具列」，跟正常模式一行一行往下排的長相不同。 */
+.master-mode .referee-panel{
+  display:flex !important; flex-wrap:wrap !important; align-items:center !important;
+  column-gap:6px; row-gap:5px;
+}
+.master-mode .referee-panel > .ref-panel-head{
+  flex:1 1 54%; min-width:110px; margin:0 !important; gap:4px !important;
+}
+.master-mode .referee-panel > .ref-panel-head .ref-panel-label{
+  font-size:11px; padding:6px 8px;
+}
+.master-mode .referee-panel > .ref-panel-head .icon-btn{ width:24px; height:24px; flex-shrink:0; }
+.master-mode .referee-panel > .ref-picker{ flex:1 1 40%; min-width:100px; margin:0 !important; }
+.master-mode .referee-panel > .ref-picker .field-label{ display:none; }
+.master-mode .referee-panel > .ref-picker .text-input{ font-size:11px; padding:6px 8px; }
+.master-mode .referee-panel > div[id^="refBody-"]{ flex:1 1 100%; order:3; }
+
+/* 分數區塊：換成單行橫式「電量條」計分列，名字／電量／分數
+   都擠在同一行，而不是正常模式那種上下堆疊的直式電池卡片。 */
+.master-mode .score-console{ padding:8px; border-radius:10px; }
+.master-mode .referee-title{
+  font-size:10px; margin-bottom:5px; letter-spacing:1.5px; gap:8px;
+}
+.master-mode .quick-console .referee-title{
+  margin:0 0 5px; font-size:10px; gap:8px;
+}
+.master-mode .referee-title::before,
+.master-mode .referee-title::after{ width:20px; }
+.master-mode .quick-console .referee-title::before,
+.master-mode .quick-console .referee-title::after{ width:20px; }
+.master-mode .ring-row{
+  display:flex !important; flex-direction:row !important; align-items:center !important;
+  justify-content:space-between !important; gap:6px !important; margin-bottom:6px !important;
+}
+.master-mode .ring-wrap{
+  display:flex !important; flex-direction:row !important; align-items:center !important;
+  gap:5px !important; flex:1 1 0; min-width:0; padding:0 !important;
+}
+.master-mode .ring-wrap .ring-name{
+  order:1; font-size:11px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.master-mode .ring-wrap .battery-outer{
+  order:2; width:auto !important; flex:1 1 auto; min-width:26px; margin:0 !important;
+}
+.master-mode .ring-wrap .battery-value{
+  order:3; font-size:12px !important; flex-shrink:0; white-space:nowrap;
+}
+.master-mode .ring-row > .ring-wrap:last-child .ring-name{ order:3; }
+.master-mode .ring-row > .ring-wrap:last-child .battery-value{ order:1; }
+.master-mode .battery-cap{ display:none !important; }
 .master-mode .battery-body,
-.master-mode .battery-body.battery-seven{ height:9px !important; gap:3px !important; }
-.master-mode .battery-value{ font-size:clamp(20px,6vw,30px) !important; order:0; }
-.master-mode .ring-name{ font-size:12px !important; }
-.master-mode .vs-mark{ font-size:13px; }
-.master-mode .winner-banner{ padding:10px 10px; }
-.master-mode .winner-banner .trophy{ font-size:20px; }
-.master-mode .winner-banner .wname{ font-size:16px; margin:2px 0; }
-.master-mode .finish-grid{ gap:6px; }
-.master-mode .finish-col{ padding:5px; gap:6px; }
+.master-mode .battery-body.battery-seven{
+  flex-direction:row !important; width:100% !important; height:12px !important;
+  padding:2px 3px !important; gap:2px !important; border-radius:6px !important;
+}
+.master-mode .vs-mark{ font-size:10px; flex-shrink:0; }
+
+.master-mode .winner-banner{ padding:8px 10px; }
+.master-mode .winner-banner .trophy{ font-size:18px; }
+.master-mode .winner-banner .wname{ font-size:15px; margin:2px 0; }
+
+/* Finish 按鈕（正常計分模式）：維持格狀小按鈕，本身就跟電量條
+   長相不同，這裡只再壓縮尺寸。 */
+.master-mode .finish-grid{ gap:5px; }
+.master-mode .finish-col{ padding:4px; gap:5px; }
 .master-mode .finish-col-header{ display:none; }
-.master-mode .finish-btn{ min-height:40px; padding:5px 4px; gap:3px; flex-wrap:wrap; justify-content:center; }
-.master-mode .fin-badge{ width:22px; height:24px; }
-.master-mode .fin-badge-svg{ width:13px; height:13px; }
+.master-mode .finish-btn{ min-height:36px; padding:4px; gap:2px; flex-wrap:wrap; justify-content:center; }
+.master-mode .fin-badge{ width:20px; height:22px; }
+.master-mode .fin-badge-svg{ width:12px; height:12px; }
 .master-mode .fin-text{ display:none; }
 .master-mode .fin-ticks{ display:none; }
-.master-mode .finish-pts{ width:100%; height:18px; font-size:12px; clip-path:none; }
-.master-mode .ref-footer{ margin-top:6px; gap:6px; }
-.master-mode .ref-footer .btn{ padding:6px 8px; font-size:11px; border-radius:8px; }
-.master-mode .referee-empty{ padding:16px 10px !important; }
-.master-mode .referee-empty .big{ font-size:16px; margin-bottom:4px; }
+.master-mode .finish-pts{ width:100%; height:16px; font-size:11px; clip-path:none; }
 
-/* 主控模式 ×「不計分快速模式」：這組按鈕(.quick-console .quick-win-btn)
-   平常設計成又高又醒目的大按鈕（min-height 260px），主控模式下必須整組
-   壓成一顆矮按鈕（名字 + 獲勝字樣直接疊在一起），才能在手機一頁看到
-   多桌並直接點「誰獲勝」。用三層 class 疊加選擇器，specificity 一定
-   蓋過原本 .quick-console 那組規則。 */
-.master-mode .score-console.quick-console{ padding:8px; border-radius:14px; }
-.master-mode .quick-console .referee-title{ margin:0 0 6px; gap:8px; font-size:11px; }
-.master-mode .quick-console .referee-title::before,
-.master-mode .quick-console .referee-title::after{ width:26px; }
+.master-mode .ref-footer{ margin-top:5px; gap:5px; }
+.master-mode .ref-footer .btn{ padding:5px 8px; font-size:10px; border-radius:7px; }
+.master-mode .referee-empty{ padding:14px 10px !important; }
+.master-mode .referee-empty .big{ font-size:14px; margin-bottom:4px; }
+
+/* 主控模式 ×「不計分快速模式」：把原本直式堆疊（名字在上、
+   獲勝膠囊在下）的大卡片，改成一條橫式色塊——名字靠左、
+   「獲勝」字樣靠右，整顆都可以點，看起來是完全不同的按鈕
+   造型，而不只是縮小版。用三層 class 疊加選擇器讓 specificity
+   一定蓋過原本 .quick-console 那組規則。 */
+.master-mode .score-console.quick-console{ padding:8px; border-radius:12px; }
 .master-mode .quick-console .quick-win-grid{ gap:6px; }
 .master-mode .quick-console .quick-win-btn{
-  min-height:48px !important; min-width:0 !important; padding:8px 6px !important;
-  gap:4px !important; border-radius:10px !important; backdrop-filter:none !important;
+  flex-direction:row !important; justify-content:space-between !important;
+  min-height:0 !important; height:38px !important; min-width:0 !important;
+  padding:0 10px !important; gap:6px !important; border-radius:8px !important;
+  backdrop-filter:none !important;
 }
+.master-mode .quick-console .quick-win-btn::before{ opacity:.08 !important; }
 .master-mode .quick-console .quick-win-name{
-  font-size:13px !important; line-height:1.1 !important; text-shadow:none !important;
+  font-size:12px !important; line-height:1 !important; text-shadow:none !important;
+  overflow:hidden; text-overflow:ellipsis;
 }
 .master-mode .quick-console .quick-win-label{
-  width:auto !important; min-height:20px !important; padding:3px 12px !important;
-  font-size:11px !important; letter-spacing:1px !important;
+  position:static !important; width:auto !important; min-height:0 !important;
+  padding:3px 9px !important; font-size:9px !important; letter-spacing:1px !important;
+  flex-shrink:0; background:none !important; box-shadow:none !important;
+  border-width:1px !important;
 }
-.master-mode .quick-console .quick-vs-mark{ width:20px !important; height:20px !important; font-size:8px !important; }
+.master-mode .quick-console .quick-vs-mark{ width:16px !important; height:16px !important; font-size:7px !important; flex-shrink:0; }
 /* 手機直式瀏覽：強制單欄，每桌像一張迷你裁判卡直接往下滑 */
 @media(max-width:650px){
   .referee-panels.master-mode{ grid-template-columns:1fr; gap:8px; }
