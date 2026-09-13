@@ -1182,11 +1182,56 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .btn-switch-match:active:not(:disabled){ transform:translateY(0); }
 .btn-switch-match:disabled{ opacity:.38; cursor:not-allowed; filter:saturate(.45); }
-.next-match-preview.is-switched{ animation:nextMatchPreviewSwitch .55s ease-out; }
+.btn-switch-match.is-switching{ opacity:.76; filter:brightness(1.08); }
+.btn-switch-match.is-switching .btn-icon{ animation:switchMatchIconSpin .48s linear infinite; }
+@keyframes switchMatchIconSpin{ to{ transform:rotate(360deg); } }
+
+.next-match-preview{
+  position:relative; isolation:isolate; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  min-height:30px; margin-top:2px; padding:5px 12px;
+  border:1px solid transparent; border-radius:999px;
+  transform-origin:center; will-change:transform,opacity,filter;
+}
+.next-match-preview .next-match-refresh-mark{
+  width:16px; height:16px; display:inline-grid; place-items:center; flex-shrink:0;
+  color:currentColor; opacity:.72;
+}
+.next-match-preview .next-match-refresh-mark .btn-icon{ width:13px; height:13px; }
+.next-match-preview.is-refreshing-out{
+  pointer-events:none;
+  animation:nextMatchPreviewOut .26s cubic-bezier(.55,0,1,.45) forwards;
+}
+.next-match-preview.is-refreshing-out::after,
+.next-match-preview.is-switched::after{
+  content:""; position:absolute; z-index:-1; top:-35%; bottom:-35%; width:32%;
+  background:linear-gradient(90deg,transparent,rgba(255,222,145,.72),transparent);
+  transform:skewX(-18deg); pointer-events:none;
+}
+.next-match-preview.is-refreshing-out::after{ animation:nextMatchSweepOut .26s ease-in forwards; }
+.next-match-preview.is-switched{
+  animation:nextMatchPreviewSwitch .82s cubic-bezier(.2,.85,.24,1) both;
+}
+.next-match-preview.is-switched::after{ animation:nextMatchSweepIn .68s .06s ease-out both; }
+@keyframes nextMatchPreviewOut{
+  0%{ opacity:1; transform:translateX(0) scale(1); filter:blur(0); color:var(--muted); }
+  42%{ opacity:1; transform:translateX(4px) scale(.98); color:#ffc45e; border-color:rgba(255,174,47,.42); background:rgba(255,164,35,.08); }
+  100%{ opacity:0; transform:translateX(-22px) scale(.92); filter:blur(3px); color:#ffae2f; }
+}
 @keyframes nextMatchPreviewSwitch{
-  0%{ opacity:.2; transform:translateY(5px); filter:blur(2px); }
-  55%{ opacity:1; color:#ffc45e; transform:translateY(0); filter:blur(0); }
-  100%{ color:var(--muted); }
+  0%{ opacity:0; transform:translateX(24px) scale(.9); filter:blur(4px); color:#fff0c6; border-color:rgba(255,174,47,0); background:rgba(255,164,35,0); box-shadow:0 0 0 rgba(255,158,31,0); }
+  28%{ opacity:1; transform:translateX(0) scale(1.06); filter:blur(0); color:#fff8e7; border-color:rgba(255,195,76,.88); background:rgba(255,164,35,.2); box-shadow:0 0 0 3px rgba(255,164,35,.1),0 0 20px rgba(255,142,24,.34); }
+  58%{ transform:scale(.985); color:#ffc45e; border-color:rgba(255,174,47,.54); background:rgba(255,164,35,.1); box-shadow:0 0 12px rgba(255,142,24,.18); }
+  100%{ opacity:1; transform:scale(1); filter:blur(0); color:var(--muted); border-color:transparent; background:transparent; box-shadow:none; }
+}
+@keyframes nextMatchSweepOut{ from{ left:-42%; } to{ left:112%; } }
+@keyframes nextMatchSweepIn{ from{ left:-42%; opacity:0; } 18%{ opacity:1; } to{ left:112%; opacity:0; } }
+@media(prefers-reduced-motion:reduce){
+  .next-match-preview.is-refreshing-out,
+  .next-match-preview.is-switched,
+  .next-match-preview.is-refreshing-out::after,
+  .next-match-preview.is-switched::after,
+  .btn-switch-match.is-switching .btn-icon{ animation-duration:.01ms !important; animation-iteration-count:1 !important; }
 }
 
 .winner-banner{
@@ -6632,6 +6677,7 @@ function computeNextMatchForPanel(panelId){
 }
 
 const nextMatchPreviewFlashPanels = new Set();
+const nextMatchSwitchingPanels = new Set();
 
 function getAvailableNextMatchesForPanel(panelId){
   const assignments = computeNextMatchAssignments();
@@ -6657,7 +6703,7 @@ function hasAlternativeNextMatch(panelId){
 
 function switchToOtherPendingMatch(panelId){
   const panel = refereePanels.find(p => p.id === panelId);
-  if(!panel) return;
+  if(!panel || nextMatchSwitchingPanels.has(panelId)) return;
   const current = computeNextMatchForPanel(panelId);
   const candidates = getAvailableNextMatchesForPanel(panelId);
   if(candidates.length < 2){
@@ -6669,11 +6715,27 @@ function switchToOtherPendingMatch(panelId){
   // available match; the saved choice is what the green next button loads.
   const currentIndex = candidates.findIndex(m => current && m.id === current.id);
   const selected = candidates[(currentIndex + 1 + candidates.length) % candidates.length];
-  panel.nextMatchId = selected.id;
-  nextMatchPreviewFlashPanels.add(panelId);
-  savePanels();
-  renderReferee();
-  nextMatchPreviewFlashPanels.delete(panelId);
+  nextMatchSwitchingPanels.add(panelId);
+
+  // Phase 1: visibly sweep the old preview away. Phase 2 rebuilds the panel
+  // with the chosen match and plays the brighter arrival/lock-on animation.
+  const body = document.getElementById(`refBody-${panelId}`);
+  const preview = body && body.querySelector('.next-match-preview');
+  const switchButton = body && body.querySelector('.btn-switch-match');
+  if(preview) preview.classList.add('is-refreshing-out');
+  if(switchButton){
+    switchButton.disabled = true;
+    switchButton.classList.add('is-switching');
+  }
+
+  setTimeout(() => {
+    panel.nextMatchId = selected.id;
+    nextMatchPreviewFlashPanels.add(panelId);
+    savePanels();
+    nextMatchSwitchingPanels.delete(panelId);
+    renderReferee();
+    nextMatchPreviewFlashPanels.delete(panelId);
+  }, preview ? 260 : 0);
 }
 
 function renderRefereeMatch(match, panelId){
@@ -6692,7 +6754,10 @@ function renderRefereeMatch(match, panelId){
 
   const nextMatchPreview = completed ? computeNextMatchForPanel(panelId) : null;
   const nextMatchHtml = nextMatchPreview
-    ? `<div class="text-muted next-match-preview ${nextMatchPreviewFlashPanels.has(panelId) ? 'is-switched' : ''}">下一場・${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</div>`
+    ? `<div class="text-muted next-match-preview ${nextMatchPreviewFlashPanels.has(panelId) ? 'is-switched' : ''}" aria-live="polite">
+         <span class="next-match-refresh-mark">${icon('shuffle',13)}</span>
+         <span>下一場・${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</span>
+       </div>`
     : `<div class="text-muted">目前沒有下一場對戰了</div>`;
 
   const ringRowHtml = quickMode ? '' : `
@@ -6758,7 +6823,7 @@ function renderRefereeMatch(match, panelId){
       ${quickMode ? '' : `<button class="btn btn-dark" onclick="undoLastPoint('${match.id}')" ${match.log.length===0?'disabled':''}>撤銷上一分</button>`}
       <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>重新這場</button>
       ${completed ? (nextMatchPreview
-          ? `<button class="btn btn-switch-match" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) ? '' : 'disabled'}>轉換他場對戰 ${icon('shuffle',15)}</button>
+          ? `<button class="btn btn-switch-match ${nextMatchSwitchingPanels.has(panelId) ? 'is-switching' : ''}" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) && !nextMatchSwitchingPanels.has(panelId) ? '' : 'disabled'}>轉換他場對戰 ${icon('shuffle',15)}</button>
              <button class="btn btn-primary" onclick="advanceReferee('${panelId}')">下一場對戰 ${icon('arrow-right',16)}</button>`
           : (hasPendingMatches()
               ? `<button class="btn btn-dark" disabled>目前無可分配場次</button>`
