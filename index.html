@@ -1981,6 +1981,37 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .bracket-status-badge.live{ background:#2a0a0a; color:#ff6b6b; border:1px solid rgba(255,69,69,.75); }
 .bracket-status-badge.next{ background:#2a2205; color:#ffd23f; border:1px solid rgba(255,196,0,.75); }
+.bracket-match.final-match .bracket-status-badge.with-final{
+  top:auto; bottom:-11px;
+}
+.single-match-tag.final-match-heading,
+.double-tree .de-source.final-match-heading{
+  width:max-content; max-width:188px; height:18px; line-height:18px; overflow:visible; z-index:5;
+  display:flex; align-items:center; gap:6px;
+  color:#e9ad43; font-size:12.5px; font-weight:800; letter-spacing:.55px;
+  transform-origin:left center;
+  text-shadow:0 0 7px rgba(245,196,66,.34);
+  animation:bracketFinalHeadingBreath 2s ease-in-out infinite;
+}
+.final-match-heading .btn-icon{
+  width:14px; height:14px; flex-shrink:0; stroke-width:2.15;
+  filter:drop-shadow(0 0 3px rgba(255,206,91,.6));
+}
+.final-match-heading::after{
+  content:""; position:absolute; z-index:-1; inset:-8px -13px;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(245,196,66,.2),rgba(245,196,66,.07) 48%,transparent 74%);
+  opacity:.34; transform-origin:left center;
+  animation:bracketFinalHeadingHalo 2s ease-in-out infinite;
+}
+@keyframes bracketFinalHeadingBreath{
+  0%,100%{ color:#dc9e38; text-shadow:0 0 5px rgba(245,196,66,.3); filter:brightness(.96); }
+  50%{ color:#ffd77c; text-shadow:0 0 8px rgba(255,211,101,.82),0 0 18px rgba(245,175,45,.48); filter:brightness(1.18); }
+}
+@keyframes bracketFinalHeadingHalo{
+  0%,100%{ opacity:.22; transform:scale(.92); }
+  50%{ opacity:.75; transform:scale(1.12); }
+}
 .bracket-status-dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .bracket-status-badge.live .bracket-status-dot{
   background:#ff3b3b; box-shadow:0 0 6px #ff3b3b; animation: bmDotPulse 1.1s ease-in-out infinite;
@@ -1989,6 +2020,10 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 @keyframes bmDotPulse{
   0%,100%{ opacity:1; transform:scale(1); }
   50%{ opacity:.35; transform:scale(.7); }
+}
+@media(prefers-reduced-motion:reduce){
+  .final-match-heading,
+  .final-match-heading::after{ animation:none; }
 }
 
 /* V3.2 referee console visual upgrade */
@@ -5120,7 +5155,10 @@ function renderDoubleBracket(){
         const p=positions.get(m.id);
         // 顯示編號只計算真正需要上場的對戰；隱藏的輪空籤位不占號碼。
         const matchLabel = doubleMatchLabel(m);
-        html+=`<div class="de-source" style="top:${p.y-55}px" title="${escapeHtml(matchLabel)}">${doubleMatchLabelHtml(m)}</div>`;
+        const sourceLabel = bracket === 'final'
+          ? `${icon('trophy',14)}<span>${escapeHtml(matchLabel)}</span>`
+          : doubleMatchLabelHtml(m);
+        html+=`<div class="de-source ${bracket === 'final' ? 'final-match-heading' : ''}" style="top:${p.y-55}px" title="${escapeHtml(matchLabel)}">${sourceLabel}</div>`;
         html+=bracketMatchBoxHtml(m,p.y-37,live,nextIds,bracket==='final');
       });
       html+='</div></div>';
@@ -5799,9 +5837,9 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal){
     : null;
   const statusClass = status === 'live' ? 'is-live' : status === 'next' ? 'is-next' : '';
   const statusBadge = status === 'live'
-    ? `<div class="bracket-status-badge live"><span class="bracket-status-dot"></span>進行中</div>`
+    ? `<div class="bracket-status-badge live ${isFinal ? 'with-final' : ''}"><span class="bracket-status-dot"></span>進行中</div>`
     : status === 'next'
-      ? `<div class="bracket-status-badge next"><span class="bracket-status-dot"></span>即將上場</div>`
+      ? `<div class="bracket-status-badge next ${isFinal ? 'with-final' : ''}"><span class="bracket-status-dot"></span>即將上場</div>`
       : '';
   const finalClass = isFinal ? 'final-match' : '';
   const sparkles = isFinal
@@ -5953,7 +5991,9 @@ function renderBracket(){
     matches.forEach(m => {
       const centerY = pos[m.id];
       if(!m.isBye){
-        html += `<div class="single-match-tag" style="top:${centerY - HALF - BRACKET_TAG_H}px;">第 ${singleMatchNumbers.get(m.id)} 場</div>`;
+        html += isFinalRound
+          ? `<div class="single-match-tag final-match-heading" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${icon('trophy',14)}<span>決賽・第 ${singleMatchNumbers.get(m.id)} 場</span></div>`
+          : `<div class="single-match-tag" style="top:${centerY - HALF - BRACKET_TAG_H}px;">第 ${singleMatchNumbers.get(m.id)} 場</div>`;
         html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound);
       }
     });
