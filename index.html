@@ -784,10 +784,18 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .match.match-highlight{
   animation: matchJumpHighlight 1.6s ease-out;
 }
+.match.match-search-hit{
+  animation: matchSearchHighlight 2s ease-out;
+}
 @keyframes matchJumpHighlight{
   0%{ background:rgba(255,255,255,.12); box-shadow:0 0 0 2px rgba(255,157,66,.9), 0 0 24px 4px rgba(255,157,66,.5); border-color:var(--hdr-blue); }
   100%{ background:transparent; box-shadow:none; }
 }
+@keyframes matchSearchHighlight{
+  0%,20%{ border-color:rgb(var(--theme-opposite-rgb)); box-shadow:0 0 0 2px rgba(var(--theme-opposite-rgb),.58),0 0 22px rgba(var(--theme-rgb),.4); }
+  100%{ border-color:var(--border); box-shadow:none; }
+}
+.match-search-hit .match-search-hit-name{ color:rgb(var(--theme-opposite-rgb)) !important; }
 .match-header{ display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; margin-bottom:12px; font-family:'Space Mono',monospace; }
 .status-pill{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
 .status-pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
@@ -1160,7 +1168,26 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   background:var(--panel-2); border:1px solid var(--border);
 }
 
-.ref-footer{ margin-top:18px; display:flex; justify-content:center; gap:10px; }
+.ref-footer{ margin-top:18px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+
+.btn-switch-match{
+  color:#241200; font-weight:800;
+  background:linear-gradient(135deg,#ffd36a 0%,#ffad2f 48%,#f07818 100%);
+  border:1px solid rgba(255,196,76,.82);
+  box-shadow:0 5px 16px rgba(240,120,24,.22),inset 0 1px 0 rgba(255,255,255,.42);
+}
+.btn-switch-match:hover:not(:disabled){
+  color:#160b00; transform:translateY(-1px);
+  box-shadow:0 7px 20px rgba(240,120,24,.34),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.btn-switch-match:active:not(:disabled){ transform:translateY(0); }
+.btn-switch-match:disabled{ opacity:.38; cursor:not-allowed; filter:saturate(.45); }
+.next-match-preview.is-switched{ animation:nextMatchPreviewSwitch .55s ease-out; }
+@keyframes nextMatchPreviewSwitch{
+  0%{ opacity:.2; transform:translateY(5px); filter:blur(2px); }
+  55%{ opacity:1; color:#ffc45e; transform:translateY(0); filter:blur(0); }
+  100%{ color:var(--muted); }
+}
 
 .winner-banner{
   text-align:center; padding:34px 20px;
@@ -1673,9 +1700,15 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket-search-item:hover, .bracket-search-item.active{ background:var(--panel-2); }
 .bracket-search-item .bsi-mark{ color:rgb(var(--theme-rgb)); font-weight:800; }
 .bracket-search-empty{ padding:10px 8px; text-align:center; color:var(--muted); font-size:12.5px; }
+.match-record-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.match-record-actions{ display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:1; }
 @media (max-width:640px){
   .bracket-header-actions{ width:100%; justify-content:stretch; }
   .bracket-search-wrap{ width:100%; max-width:none; order:-1; }
+  .match-record-head{ align-items:stretch; flex-direction:column; }
+  .match-record-actions{ width:100%; flex-wrap:wrap; justify-content:stretch; }
+  .match-record-actions .bracket-search-wrap{ flex:1 1 100%; }
+  .match-record-actions .btn{ flex:1 1 auto; }
 }
 
 @keyframes bracketSearchGlow{
@@ -2130,8 +2163,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
       </div>
     </div>
     <div class="header-meta">
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.5</span></div>
-      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/11</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.6</span></div>
+      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/14</span></div>
     </div>
   </div>
 </header>
@@ -2266,9 +2299,24 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   <!-- MATCHES -->
   <section id="tab-matches" class="hidden">
     <div class="card">
-      <div class="space-between" style="margin-bottom:14px;">
+      <div class="match-record-head">
         <div class="card-title" style="margin:0;">對戰紀錄</div>
-        <button class="btn btn-primary btn-sm" onclick="jumpToNextPendingMatch()">快速跳轉到未開始場次</button>
+        <div class="match-record-actions">
+          <div class="bracket-search-wrap hidden" id="matchSearchWrap">
+            <div class="bracket-search-box">
+              <span class="bracket-search-icon" id="matchSearchIconSlot"></span>
+              <input type="text" class="bracket-search-input" id="matchSearchInput"
+                     placeholder="搜尋選手姓名..." autocomplete="off" aria-label="搜尋對戰紀錄中的選手姓名"
+                     oninput="onMatchSearchInput(this.value)"
+                     onkeydown="onMatchSearchKeydown(event)"
+                     onfocus="onMatchSearchInput(this.value)">
+              <button type="button" class="bracket-search-clear hidden" id="matchSearchClearBtn"
+                      aria-label="清除搜尋" onclick="clearMatchSearch()"><span id="matchSearchClearIcon"></span></button>
+            </div>
+            <ul class="bracket-search-list hidden" id="matchSearchList" role="listbox"></ul>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="jumpToNextPendingMatch()">快速跳轉到未開始場次</button>
+        </div>
       </div>
       <div class="match-list" id="matchList"></div>
     </div>
@@ -2311,7 +2359,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         </div>
         <div>
           <div class="field-label">賽制</div>
-          <select id="formatSelect" class="text-input" onchange="onFormatChange()">
+          <select id="formatSelect" class="text-input" onchange="onFormatChange(true)">
             <option value="knockout">單淘汰賽（輸了就出局）</option>
             <option value="double_elimination">雙敗淘汰賽（輸兩場出局）</option>
             <option value="single">單循環（每人對戰一次）</option>
@@ -2320,7 +2368,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
           <div class="text-muted" id="formatNote" style="margin-top:6px;"></div>
           <div id="quickModeSection" class="hidden" style="margin-top:12px;">
             <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input type="checkbox" id="quickModeCheckbox" style="width:18px; height:18px; accent-color:var(--cyan); flex-shrink:0; cursor:pointer;">
+              <input type="checkbox" id="quickModeCheckbox" checked style="width:18px; height:18px; accent-color:var(--cyan); flex-shrink:0; cursor:pointer;">
               <span style="font-size:13px;">不計分快速模式（裁判只需選出勝者，不記錄比分）</span>
             </label>
           </div>
@@ -2343,7 +2391,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
         <div id="bulkAddSection" class="hidden" style="margin-bottom:20px;">
           <div class="field-label">批量新增名單（淘汰賽限定・一行一個名字）</div>
           <textarea id="bulkNamesInput" class="text-input" rows="5" style="resize:vertical; font-family:'Space Mono',monospace;" placeholder="玩家A&#10;玩家B&#10;玩家C&#10;玩家D"></textarea>
-          <button class="icon-btn" style="width:auto;padding:0 14px;height:40px;margin-top:10px;" onclick="applyBulkNames()">套用名單</button>
+          <button class="btn btn-primary" style="width:auto;padding:0 16px;height:40px;margin-top:10px;" onclick="applyBulkNames()">套用批量名單</button>
         </div>
 
         <div class="attendance-manager" id="attendanceManager">
@@ -2847,7 +2895,7 @@ function initBracketTheme(){
    STATE
 ========================================================= */
 let state = {
-  tournament:{ name:'', pointsToWin:4, format:'knockout', quickMode:false, status:'registration' },
+  tournament:{ name:'', pointsToWin:4, format:'knockout', quickMode:true, status:'registration' },
   players:[],
   matches:[],
   currentRound:1
@@ -2960,6 +3008,8 @@ function initStaticIcons(){
     awardReportIcon: 'share-2',
     bracketSearchIconSlot: 'search',
     bracketSearchClearIcon: 'x',
+    matchSearchIconSlot: 'search',
+    matchSearchClearIcon: 'x',
     attendanceSearchIcon: 'search',
     actionToastIcon: 'check-circle',
     cloudModalIcon: 'radio',
@@ -4291,12 +4341,13 @@ function addPlayerRow(){
   document.getElementById('playerChipInput').focus();
 }
 
-function onFormatChange(){
+function onFormatChange(userChanged){
   const format = document.getElementById('formatSelect').value;
   const isKnockout = isElimination(format);
   document.getElementById('bulkAddSection').classList.toggle('hidden', !isKnockout);
   document.getElementById('quickModeSection').classList.toggle('hidden', !isKnockout);
   if(!isKnockout) document.getElementById('quickModeCheckbox').checked = false;
+  else if(userChanged) document.getElementById('quickModeCheckbox').checked = true;
   const note = document.getElementById('formatNote');
   if(note){
     note.innerText = format === 'double_elimination' ? '雙敗淘汰：首敗進敗部、再敗出局。敗部冠軍須連勝兩場總決賽；輪空自動晉級，不計敗場。' : isKnockout
@@ -4314,18 +4365,49 @@ function appendPlayerRow(container, value, attendance){
 
 function applyBulkNames(){
   const raw = document.getElementById('bulkNamesInput').value;
-  const names = raw.split('\n').map(s => s.trim()).filter(Boolean);
-  if(names.length < 2){
-    showAlert('請至少輸入 2 位玩家名稱，一行一個。');
+  const names = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  if(names.length === 0){
+    showAlert('請輸入至少 1 位玩家名稱，一行一個。');
     return;
   }
+
   const container = document.getElementById('playerInputs');
-  container.innerHTML = '';
-  names.forEach(name => appendPlayerRow(container, name));
+  ensureChipInput(container);
+
+  // 比對時統一全形／半形、大小寫及連續空白，避免同一姓名被重複加入。
+  // 既有名單不清空；同一批輸入中的重複姓名也只會新增第一次出現者。
+  const normalizePlayerName = name => String(name || '')
+    .normalize('NFKC')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('zh-Hant');
+  const registeredNames = new Set(
+    Array.from(container.querySelectorAll('.player-chip'))
+      .map(chip => normalizePlayerName(chip.dataset.name))
+      .filter(Boolean)
+  );
+  const addedNames = [];
+  let duplicateCount = 0;
+
+  names.forEach(name => {
+    const normalized = normalizePlayerName(name);
+    if(!normalized || registeredNames.has(normalized)){
+      duplicateCount++;
+      return;
+    }
+    registeredNames.add(normalized);
+    addedNames.push(name);
+    appendPlayerRow(container, name);
+  });
+
   renumberPlayerRows();
   renderAttendanceManager();
   document.getElementById('bulkNamesInput').value = '';
-  showAlert(`已新增 ${names.length} 位玩家，請確認名單後按「開始比賽」。`);
+  const totalPlayers = container.querySelectorAll('.player-chip').length;
+  const duplicateMessage = duplicateCount > 0
+    ? `，已自動忽略 ${duplicateCount} 筆重複姓名`
+    : '';
+  showAlert(`已新增 ${addedNames.length} 位玩家${duplicateMessage}。目前參賽名單共 ${totalPlayers} 位。`);
 }
 
 function removePlayerChip(btn){
@@ -4961,9 +5043,18 @@ function renderDoubleBracket(){
   if(watermark) watermark.textContent=state.tournament.name||'';
   document.getElementById('bracketRulesSummary').textContent='雙敗淘汰・敗部冠軍須連勝兩場總決賽';
   refreshDoubleDisplayNumbers(state.matches);
-  const live=new Set(refereePanels.map(p=>p.matchId));
-  const next=nextPlayableMatch([...live]);
-  const nextIds=new Set(next?[next.id]:[]);
+  const live=new Set(
+    refereePanels.map(p=>p.matchId).filter(id=>{
+      const match=state.matches.find(m=>m.id===id);
+      return match && match.status!=='completed' && match.playerA && match.playerB && !match.isBye && !match.inactive;
+    })
+  );
+  const assignedUpcoming=Object.values(computeNextMatchAssignments()).filter(Boolean);
+  const nextIds=new Set(
+    assignedUpcoming.length
+      ? assignedUpcoming.map(match=>match.id)
+      : (refereePanels.length===0 ? [nextPlayableMatch([...live])?.id].filter(Boolean) : [])
+  );
   let html='';
   ['winners','losers','final'].forEach(bracket=>{
     const ms=state.matches.filter(m=>m.bracket===bracket && !m.inactive);
@@ -5253,7 +5344,9 @@ function resetMatch(matchId){
   const match = state.matches.find(m=>m.id===matchId);
   if(!match) return;
   showConfirm('確定要重新開始這場對戰嗎？目前紀錄與受影響的後續場次結果將被清除。', () => {
+    refereePanels.filter(panel => panel.matchId === matchId).forEach(panel => delete panel.nextMatchId);
     performResetMatch(match);
+    savePanels();
     saveState();
     renderAll();
   });
@@ -5788,28 +5881,15 @@ function renderBracket(){
         return mm && mm.status !== 'completed' && mm.playerA && mm.playerB && !mm.isBye;
       })
   );
-  // One "即將上場" candidate per IDLE referee table (a panel with no live
-  // match right now — e.g. it just finished and is waiting to pick up the
-  // next one), so with multiple tables the bracket can highlight several
-  // upcoming matches at once instead of always just a single one. Each idle
-  // table gets a DIFFERENT match (same claim-in-order logic used for the
-  // referee tab's own "下一場" preview), so two idle tables never both
-  // highlight the same box. With no referee panels at all (e.g. viewing as
-  // a spectator before any table is set up), fall back to highlighting just
-  // the single next match, same as before.
-  const idleSlots = refereePanels.length > 0
-    ? Math.max(0, refereePanels.length - liveIds.size)
-    : 1;
-  const nextIds = new Set();
-  {
-    const claimed = new Set(liveIds);
-    for(let i = 0; i < idleSlots; i++){
-      const nm = nextPlayableMatch(Array.from(claimed));
-      if(!nm) break;
-      nextIds.add(nm.id);
-      claimed.add(nm.id);
-    }
-  }
+  // Use exactly the same per-table assignments as the referee winner panel.
+  // A manually switched preview therefore removes "即將上場" from the old
+  // card and applies it to the newly selected card on every connected device.
+  const assignedUpcoming = Object.values(computeNextMatchAssignments()).filter(Boolean);
+  const nextIds = new Set(
+    assignedUpcoming.length
+      ? assignedUpcoming.map(match => match.id)
+      : (refereePanels.length === 0 ? [nextPlayableMatch(Array.from(liveIds))?.id].filter(Boolean) : [])
+  );
   const bronzeMatch = state.matches.find(m => m.thirdPlace);
   // 使用與「對戰紀錄」相同的實際場次順序；輪空不占編號。
   const singleMatchNumbers = new Map(
@@ -6073,10 +6153,152 @@ function closeBracketSearchOnOutsideClick(e){
 document.addEventListener('click', closeBracketSearchOnOutsideClick);
 
 /* =========================================================
+   MATCH RECORDS: PLAYER SEARCH
+   Uses the same type-ahead interaction as the bracket search,
+   then highlights every recorded match involving that player.
+========================================================= */
+let matchSearchActiveIndex = -1;
+let matchSearchResults = [];
+let matchSearchHighlightTimer = null;
+
+function updateMatchSearchVisibility(){
+  const wrap = document.getElementById('matchSearchWrap');
+  if(!wrap) return;
+  const show = Array.isArray(state.players) && state.players.length > 0 &&
+    Array.isArray(state.matches) && state.matches.some(m => !m.isBye && !m.inactive);
+  wrap.classList.toggle('hidden', !show);
+  if(!show) clearMatchSearch();
+}
+
+function onMatchSearchInput(rawQuery){
+  const query = String(rawQuery || '').trim();
+  const listEl = document.getElementById('matchSearchList');
+  const clearBtn = document.getElementById('matchSearchClearBtn');
+  if(clearBtn) clearBtn.classList.toggle('hidden', query.length === 0);
+
+  if(!query){
+    matchSearchResults = [];
+    matchSearchActiveIndex = -1;
+    if(listEl){ listEl.innerHTML = ''; listEl.classList.add('hidden'); }
+    clearMatchSearchHighlights();
+    return;
+  }
+
+  const normalizedQuery = query.normalize('NFKC').toLocaleLowerCase('zh-Hant');
+  matchSearchResults = (Array.isArray(state.players) ? state.players : [])
+    .filter(p => p && p.name && p.name.normalize('NFKC').toLocaleLowerCase('zh-Hant').includes(normalizedQuery));
+  matchSearchActiveIndex = matchSearchResults.length ? 0 : -1;
+  renderMatchSearchList(query);
+}
+
+function renderMatchSearchList(query){
+  const listEl = document.getElementById('matchSearchList');
+  if(!listEl) return;
+  listEl.innerHTML = matchSearchResults.length
+    ? matchSearchResults.map((p, i) => `
+      <li class="bracket-search-item ${i === matchSearchActiveIndex ? 'active' : ''}"
+          role="option" data-index="${i}"
+          onmousedown="event.preventDefault(); selectMatchSearchResult(${i});">
+        <span class="bsi-mark">${icon('target',12)}</span><span>${escapeHtml(p.name)}</span>
+      </li>`).join('')
+    : `<li class="bracket-search-empty">找不到符合「${escapeHtml(query)}」的選手</li>`;
+  listEl.classList.remove('hidden');
+}
+
+function onMatchSearchKeydown(e){
+  if(e.key === 'Escape'){
+    e.preventDefault();
+    clearMatchSearch();
+    e.target.blur();
+    return;
+  }
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    if(matchSearchResults.length){
+      selectMatchSearchResult(matchSearchActiveIndex >= 0 ? matchSearchActiveIndex : 0);
+    }
+    return;
+  }
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    if(!matchSearchResults.length) return;
+    e.preventDefault();
+    const direction = e.key === 'ArrowDown' ? 1 : -1;
+    matchSearchActiveIndex = (matchSearchActiveIndex + direction + matchSearchResults.length) % matchSearchResults.length;
+    const listEl = document.getElementById('matchSearchList');
+    if(listEl){
+      Array.from(listEl.children).forEach((li, i) => li.classList.toggle('active', i === matchSearchActiveIndex));
+    }
+  }
+}
+
+function clearMatchSearchHighlights(){
+  clearTimeout(matchSearchHighlightTimer);
+  document.querySelectorAll('#matchList .match-search-hit').forEach(el => el.classList.remove('match-search-hit'));
+  document.querySelectorAll('#matchList .match-search-hit-name').forEach(el => el.classList.remove('match-search-hit-name'));
+}
+
+function clearMatchSearch(){
+  const input = document.getElementById('matchSearchInput');
+  const listEl = document.getElementById('matchSearchList');
+  const clearBtn = document.getElementById('matchSearchClearBtn');
+  if(input) input.value = '';
+  if(listEl){ listEl.innerHTML = ''; listEl.classList.add('hidden'); }
+  if(clearBtn) clearBtn.classList.add('hidden');
+  matchSearchResults = [];
+  matchSearchActiveIndex = -1;
+  clearMatchSearchHighlights();
+}
+
+function selectMatchSearchResult(index){
+  const player = matchSearchResults[index];
+  if(!player) return;
+  const input = document.getElementById('matchSearchInput');
+  const listEl = document.getElementById('matchSearchList');
+  if(input) input.value = player.name;
+  if(listEl){ listEl.innerHTML = ''; listEl.classList.add('hidden'); }
+  locatePlayerMatchRecords(player.id);
+}
+
+function locatePlayerMatchRecords(playerId){
+  const playerMatches = state.matches.filter(m =>
+    !m.isBye && !m.inactive && (m.playerA === playerId || m.playerB === playerId)
+  );
+  if(!playerMatches.length){
+    showToast('目前沒有這位選手的對戰紀錄');
+    return;
+  }
+
+  clearMatchSearchHighlights();
+  const cards = playerMatches.map(m =>
+    document.querySelector(`#matchList .match[data-match-id="${cssEscapeId(m.id)}"]`)
+  ).filter(Boolean);
+  cards.forEach(card => {
+    card.classList.add('match-search-hit');
+    card.querySelectorAll(`[data-player-id="${cssEscapeId(playerId)}"]`).forEach(name => name.classList.add('match-search-hit-name'));
+  });
+
+  const pendingMatch = playerMatches.find(m => m.status !== 'completed');
+  const targetMatch = pendingMatch || playerMatches[playerMatches.length - 1];
+  const target = document.querySelector(`#matchList .match[data-match-id="${cssEscapeId(targetMatch.id)}"]`);
+  if(target) target.scrollIntoView({ behavior:'smooth', block:'center' });
+  matchSearchHighlightTimer = setTimeout(clearMatchSearchHighlights, 2100);
+}
+
+function closeMatchSearchOnOutsideClick(e){
+  const wrap = document.getElementById('matchSearchWrap');
+  if(wrap && !wrap.contains(e.target)){
+    const listEl = document.getElementById('matchSearchList');
+    if(listEl){ listEl.innerHTML = ''; listEl.classList.add('hidden'); }
+  }
+}
+document.addEventListener('click', closeMatchSearchOnOutsideClick);
+
+/* =========================================================
    RENDER: MATCHES TAB
 ========================================================= */
 function renderMatches(){
   const matchList = document.getElementById('matchList');
+  updateMatchSearchVisibility();
 
   // Bye "matches" are an automatic advance, not a real match played between
   // two people — they don't belong in 對戰紀錄 at all (no one actually
@@ -6103,23 +6325,23 @@ function renderMatches(){
     const logBHtml = m.log.filter(l=>l.side==='B').map(chip).join('');
 
     return `
-      <div class="match ${completed?'completed':''}">
+      <div class="match ${completed?'completed':''}" data-match-id="${escapeHtml(m.id)}">
         <div class="match-header">
           <span>第 ${idx+1} 場</span>
           <span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>
         </div>
         <div class="match-result">${completed ? `
-          <div class="mr-versus"><span class="mr-name">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name">${escapeHtml(pb)}</span></div>
-          <div class="mr-outcome"><span class="mr-arrow">→</span><span class="mr-name">${escapeHtml(nameOf(m.winner))}</span><span class="mr-suffix">獲勝</span><span class="mr-score">${m.forfeited ? '棄權判負' : m.isBye ? '輪空' : m.quickWin ? '快速模式' : `${m.pointsA} : ${m.pointsB}`}</span></div>
-        ` : `<div class="mr-versus"><span class="mr-name">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name">${escapeHtml(pb)}</span></div>`}</div>
+          <div class="mr-versus"><span class="mr-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</span></div>
+          <div class="mr-outcome"><span class="mr-arrow">→</span><span class="mr-name" data-player-id="${escapeHtml(m.winner || '')}">${escapeHtml(nameOf(m.winner))}</span><span class="mr-suffix">獲勝</span><span class="mr-score">${m.forfeited ? '棄權判負' : m.isBye ? '輪空' : m.quickWin ? '快速模式' : `${m.pointsA} : ${m.pointsB}`}</span></div>
+        ` : `<div class="mr-versus"><span class="mr-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</span></div>`}</div>
         ${(logAHtml || logBHtml) ? `
         <div class="match-log">
           <div class="match-log-side">
-            <div class="match-log-name">${escapeHtml(pa)}</div>
+            <div class="match-log-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</div>
             ${logAHtml}
           </div>
           <div class="match-log-side">
-            <div class="match-log-name">${escapeHtml(pb)}</div>
+            <div class="match-log-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</div>
             ${logBHtml}
             </div>
           </div>` : ''}
@@ -6239,7 +6461,10 @@ function renamePanel(panelId, label){
 
 function pickRefereeMatch(panelId, matchId){
   const panel = refereePanels.find(p => p.id === panelId);
-  if(panel) panel.matchId = matchId;
+  if(panel){
+    panel.matchId = matchId;
+    delete panel.nextMatchId;
+  }
   savePanels();
   renderReferee();
 }
@@ -6249,6 +6474,7 @@ function autoAssignPanel(panel, excludeIds){
   if(cur && !cur.isBye) return; // keep an existing valid pick (even if completed, so the result stays visible)
   const nextUp = nextPlayableMatch(excludeIds);
   panel.matchId = nextUp ? nextUp.id : ((state.matches.find(m => !m.isBye)) || state.matches[0]).id;
+  delete panel.nextMatchId;
 }
 
 function renderReferee(){
@@ -6386,10 +6612,14 @@ function computeNextMatchAssignments(){
   const claimed = new Set(inUse);
   waiting.forEach(panel => {
     const currentRound = state.matches.find(x => x.id === panel.matchId)?.round;
-    const sameRoundNext = state.matches.find(m =>
-      m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !claimed.has(m.id));
-    const next = sameRoundNext || state.matches.find(m =>
-      m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !claimed.has(m.id));
+    const savedChoice = panel.nextMatchId && state.matches.find(m =>
+      m.id === panel.nextMatchId && m.status === 'pending' && m.playerA && m.playerB &&
+      !m.isBye && !m.inactive && !claimed.has(m.id));
+    const sameRoundNext = !savedChoice && state.matches.find(m =>
+      m.round === currentRound && m.status === 'pending' && m.playerA && m.playerB &&
+      !m.isBye && !m.inactive && !claimed.has(m.id));
+    const next = savedChoice || sameRoundNext || state.matches.find(m =>
+      m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !m.inactive && !claimed.has(m.id));
     assignments[panel.id] = next || null;
     if(next) claimed.add(next.id);
   });
@@ -6399,6 +6629,51 @@ function computeNextMatchAssignments(){
 
 function computeNextMatchForPanel(panelId){
   return computeNextMatchAssignments()[panelId] || null;
+}
+
+const nextMatchPreviewFlashPanels = new Set();
+
+function getAvailableNextMatchesForPanel(panelId){
+  const assignments = computeNextMatchAssignments();
+  const inUse = new Set(
+    refereePanels
+      .filter(p => p.id !== panelId && state.matches.find(m => m.id === p.matchId)?.status !== 'completed')
+      .map(p => p.matchId)
+  );
+  const claimedByOtherPanels = new Set(
+    Object.entries(assignments)
+      .filter(([id, match]) => id !== panelId && match)
+      .map(([, match]) => match.id)
+  );
+  return state.matches.filter(m =>
+    m.status === 'pending' && m.playerA && m.playerB && !m.isBye && !m.inactive &&
+    !inUse.has(m.id) && !claimedByOtherPanels.has(m.id)
+  );
+}
+
+function hasAlternativeNextMatch(panelId){
+  return getAvailableNextMatchesForPanel(panelId).length > 1;
+}
+
+function switchToOtherPendingMatch(panelId){
+  const panel = refereePanels.find(p => p.id === panelId);
+  if(!panel) return;
+  const current = computeNextMatchForPanel(panelId);
+  const candidates = getAvailableNextMatchesForPanel(panelId);
+  if(candidates.length < 2){
+    showToast('目前沒有其他可切換的未完成對戰');
+    return;
+  }
+
+  // Candidates stay in schedule order. Each press advances to a different
+  // available match; the saved choice is what the green next button loads.
+  const currentIndex = candidates.findIndex(m => current && m.id === current.id);
+  const selected = candidates[(currentIndex + 1 + candidates.length) % candidates.length];
+  panel.nextMatchId = selected.id;
+  nextMatchPreviewFlashPanels.add(panelId);
+  savePanels();
+  renderReferee();
+  nextMatchPreviewFlashPanels.delete(panelId);
 }
 
 function renderRefereeMatch(match, panelId){
@@ -6417,7 +6692,7 @@ function renderRefereeMatch(match, panelId){
 
   const nextMatchPreview = completed ? computeNextMatchForPanel(panelId) : null;
   const nextMatchHtml = nextMatchPreview
-    ? `<div class="text-muted">下一場・${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</div>`
+    ? `<div class="text-muted next-match-preview ${nextMatchPreviewFlashPanels.has(panelId) ? 'is-switched' : ''}">下一場・${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</div>`
     : `<div class="text-muted">目前沒有下一場對戰了</div>`;
 
   const ringRowHtml = quickMode ? '' : `
@@ -6482,9 +6757,12 @@ function renderRefereeMatch(match, panelId){
     <div class="ref-footer">
       ${quickMode ? '' : `<button class="btn btn-dark" onclick="undoLastPoint('${match.id}')" ${match.log.length===0?'disabled':''}>撤銷上一分</button>`}
       <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>重新這場</button>
-      ${completed ? (hasPendingMatches()
-          ? `<button class="btn btn-primary" onclick="advanceReferee('${panelId}')">下一場對戰 ${icon('arrow-right',16)}</button>`
-          : `<button class="btn btn-primary" onclick="showFinalResults()">戰績結算</button>`
+      ${completed ? (nextMatchPreview
+          ? `<button class="btn btn-switch-match" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) ? '' : 'disabled'}>轉換他場對戰 ${icon('shuffle',15)}</button>
+             <button class="btn btn-primary" onclick="advanceReferee('${panelId}')">下一場對戰 ${icon('arrow-right',16)}</button>`
+          : (hasPendingMatches()
+              ? `<button class="btn btn-dark" disabled>目前無可分配場次</button>`
+              : `<button class="btn btn-primary" onclick="showFinalResults()">戰績結算</button>`)
         ) : ''}
     </div>
   `;
@@ -6583,6 +6861,7 @@ function advanceReferee(panelId){
   if(!panel) return;
   const next = computeNextMatchForPanel(panelId);
   panel.matchId = next ? next.id : panel.matchId;
+  delete panel.nextMatchId;
   savePanels();
   renderReferee();
 }
@@ -6695,7 +6974,7 @@ function resetTournament(){
       try{ await window.cloudSync.clearMatches(); }catch(e){}
     }
     state = {
-      tournament:{ name:'', pointsToWin:4, format:'knockout', quickMode:false, status:'registration' },
+      tournament:{ name:'', pointsToWin:4, format:'knockout', quickMode:true, status:'registration' },
       players:[], matches:[], currentRound:1
     };
     refereePanels = [{ id: genPanelId(), matchId:null, label:'' }];
