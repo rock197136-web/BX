@@ -653,6 +653,15 @@ body.draw-overlay-open{
 .btn-danger{ background:rgba(142,37,37,.25); color:#ff8f8f; border:1px solid rgba(142,37,37,.6); }
 .btn-success{ background:linear-gradient(90deg,#247b45,#2fa860); color:#eafff2; }
 .btn-warning{ background:rgba(245,255,0,.12); color:var(--gold); border:1px solid rgba(245,255,0,.45); }
+#shuffleScheduleBtn{
+  background:linear-gradient(135deg,#8f1726 0%,#c52335 52%,#79101d 100%);
+  color:#fff; border:1px solid rgba(255,92,112,.78);
+  box-shadow:0 5px 16px rgba(197,35,53,.25),inset 0 1px 0 rgba(255,255,255,.18);
+}
+#shuffleScheduleBtn:hover:not(:disabled){
+  background:linear-gradient(135deg,#a51c2d 0%,#db2c41 52%,#8c1422 100%);
+  box-shadow:0 7px 20px rgba(219,44,65,.35),inset 0 1px 0 rgba(255,255,255,.22);
+}
 .btn-ghost{ background:transparent; color:var(--muted); border:1px solid var(--border); }
 .btn:disabled{ opacity:.35; cursor:not-allowed; box-shadow:none; }
 .btn-block{ width:100%; }
@@ -1405,8 +1414,11 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .progress{ height:7px; background:var(--panel-2); border-radius:20px; overflow:hidden; margin-top:12px; }
 .progress-bar{ height:100%; background:linear-gradient(90deg,#ffffff,#ffb347,#8b1a1a); transition:width .3s; }
 
-.save-flag{ position:fixed; bottom:18px; right:18px; background:var(--panel); border:1px solid var(--border); color:var(--muted); padding:8px 14px; border-radius:20px; font-size:12px; opacity:0; transition:opacity .3s; pointer-events:none; }
+.save-flag{ position:fixed; bottom:18px; right:18px; background:var(--panel); border:1px solid var(--border); color:var(--muted); padding:8px 14px; border-radius:20px; font-size:12px; opacity:0; transition:opacity .3s,border-color .2s,color .2s; pointer-events:none; }
 .save-flag.show{ opacity:1; }
+.save-flag.syncing{ color:#ffd36a; border-color:rgba(255,196,76,.55); }
+.save-flag.synced{ color:#7dff9a; border-color:rgba(69,220,109,.5); }
+.save-flag.error{ color:#ff9aaa; border-color:rgba(255,74,101,.62); }
 
 .action-toast{
   position:fixed; top:18px; left:50%; z-index:300;
@@ -3255,7 +3267,10 @@ function initBracketPanZoom(){
 const EVENT_CODE_KEY = 'beyblade-x-event-code';
 const EVENT_ROLE_KEY = 'beyblade-x-event-role';
 const EVENT_VIEWER_KEY = 'beyblade-x-event-viewer-code';
+const ROSTER_DRAFT_KEY = 'beyblade-x-roster-draft-v1';
 let dirtyMatchIds = new Set();
+let cloudRetryTimer = null;
+let cloudNeedsFullReplace = false;
 function markDirty(id){ if(id) dirtyMatchIds.add(id); }
 function markAllDirty(){ state.matches.forEach(m => markDirty(m.id)); }
 
@@ -3279,16 +3294,22 @@ async function loadLocalCache(){
 
 async function saveState(silent){
   const json = JSON.stringify(state);
-  try{ localStorage.setItem(STORAGE_KEY, json); }catch(e){}
+  let localSaved = false;
+  try{ localStorage.setItem(STORAGE_KEY, json); localSaved = true; }catch(e){}
   if(window.storage){
-    try{ await window.storage.set(STORAGE_KEY, json, false); }catch(e){}
+    try{ await window.storage.set(STORAGE_KEY, json, false); localSaved = true; }catch(e){}
   }
-  if(!silent) flashSaved();
-  await pushToCloud();
+  const hasCloud = !!(window.cloudSync && window.cloudSync.ready && currentEventCode);
+  if(!silent) flashSaved(localSaved ? (hasCloud ? '同步中…' : '本機已保存') : '本機保存失敗', localSaved ? (hasCloud ? 'syncing' : '') : 'error', hasCloud ? 0 : 1300);
+  const synced = await pushToCloud();
+  if(!silent && hasCloud) flashSaved(synced ? '雲端已同步' : '同步失敗，待重試', synced ? 'synced' : 'error', synced ? 1300 : 2600);
 }
 
 async function pushToCloud(){
-  if(!(window.cloudSync && window.cloudSync.ready && currentEventCode)) { dirtyMatchIds.clear(); return; }
+  if(!(window.cloudSync && window.cloudSync.ready && currentEventCode)) return false;
+  const fullReplace = cloudNeedsFullReplace;
+  const ids = fullReplace ? state.matches.map(m => m.id) : Array.from(dirtyMatchIds);
+  const sentSignatures = new Map(state.matches.filter(m => ids.includes(m.id)).map(m => [m.id, matchSignature(m)]));
   try{
     await window.cloudSync.pushMeta({
       name: state.tournament.name,
@@ -3299,20 +3320,36 @@ async function pushToCloud(){
       players: state.players,
       currentRound: state.currentRound
     });
-    const ids = Array.from(dirtyMatchIds);
-    dirtyMatchIds.clear();
     const toPush = state.matches.filter(m => ids.includes(m.id));
+    if(fullReplace) await window.cloudSync.clearMatches();
     if(toPush.length) await window.cloudSync.pushMatches(toPush);
+    ids.forEach(id => {
+      const current = state.matches.find(m => m.id === id);
+      if(current && matchSignature(current) === sentSignatures.get(id)) dirtyMatchIds.delete(id);
+    });
+    if(fullReplace && state.matches.length === sentSignatures.size && state.matches.every(m => sentSignatures.get(m.id) === matchSignature(m))) cloudNeedsFullReplace = false;
+    if(cloudRetryTimer){ clearTimeout(cloudRetryTimer); cloudRetryTimer = null; }
+    return true;
   }catch(e){
     console.error('雲端同步失敗（本機資料仍完整保存）', e);
+    if(!cloudRetryTimer){
+      cloudRetryTimer = setTimeout(() => {
+        cloudRetryTimer = null;
+        pushToCloud();
+      }, 3000);
+    }
+    return false;
   }
 }
 
-function flashSaved(){
+function flashSaved(message, status, duration){
   const flag = document.getElementById('saveFlag');
+  if(!flag) return;
+  flag.textContent = message || '本機已保存';
+  flag.className = `save-flag show ${status || ''}`.trim();
   flag.classList.add('show');
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(()=>flag.classList.remove('show'), 900);
+  if(duration !== 0) saveTimer = setTimeout(()=>flag.classList.remove('show'), duration || 1300);
 }
 
 let actionToastTimer;
@@ -4291,6 +4328,11 @@ function onCloudMatches(list){
     const bi = parseInt(String(b.id).split('-')[1] || 0, 10) || 0;
     return ai - bi;
   });
+  // 全量重建時 clearMatches 會先送來空快照；此時保留本機新賽程，等待完整清單抵達。
+  if(cloudNeedsFullReplace && incoming.length === 0 && state.matches.length > 0){
+    applyingRemote = false;
+    return;
+  }
 
   // Perf: a snapshot fires for every push — including the echo of our own
   // score taps — so diff against what's already rendered and only do the
@@ -4325,6 +4367,48 @@ function onCloudMatches(list){
 /* =========================================================
    SETUP: PLAYER ROWS
 ========================================================= */
+let restoringRosterDraft = false;
+let rosterDraftPrompted = false;
+
+function normalizePlayerName(name){
+  return String(name || '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('zh-Hant');
+}
+
+function findDuplicatePlayerChip(name, exceptChip){
+  const key = normalizePlayerName(name);
+  return Array.from(document.querySelectorAll('#playerInputs .player-chip'))
+    .find(chip => chip !== exceptChip && normalizePlayerName(chip.dataset.name) === key);
+}
+
+function saveRosterDraft(){
+  if(restoringRosterDraft || state.tournament.status === 'running') return;
+  const players = Array.from(document.querySelectorAll('#playerInputs .player-chip')).map(chip => ({
+    name: chip.dataset.name || '', attendance: chip.dataset.attendance || 'pending'
+  })).filter(p => p.name.trim());
+  try{
+    if(players.length) localStorage.setItem(ROSTER_DRAFT_KEY, JSON.stringify({ players, updatedAt:Date.now() }));
+    else localStorage.removeItem(ROSTER_DRAFT_KEY);
+  }catch(e){}
+}
+
+function readRosterDraft(){
+  try{
+    const draft = JSON.parse(localStorage.getItem(ROSTER_DRAFT_KEY) || 'null');
+    return draft && Array.isArray(draft.players) && draft.players.length ? draft : null;
+  }catch(e){ return null; }
+}
+
+function restoreRosterDraft(draft){
+  if(!draft || !Array.isArray(draft.players)) return;
+  restoringRosterDraft = true;
+  createPlayerInputs(0);
+  draft.players.forEach(p => addPlayerChip(p.name, p.attendance));
+  restoringRosterDraft = false;
+  renumberPlayerRows();
+  renderAttendanceManager();
+  showToast(`已恢復 ${draft.players.length} 位選手與點名狀態`);
+}
+
 function createPlayerInputs(n){
   // n 保留參數相容舊呼叫點，但晶片式清單不需要空白佔位列
   const container = document.getElementById('playerInputs');
@@ -4357,25 +4441,34 @@ function onChipInputKeydown(e){
     const chips = container.querySelectorAll('.player-chip');
     if(chips.length > 0) chips[chips.length-1].remove();
     renumberPlayerRows();
+    saveRosterDraft();
   }
 }
 
 function addPlayerChip(name, attendance){
   const container = document.getElementById('playerInputs');
   ensureChipInput(container);
+  const displayName = String(name || '').trim().replace(/\s+/g, ' ');
+  if(!displayName) return false;
+  if(findDuplicatePlayerChip(displayName)){
+    showToast(`已忽略重複姓名：${displayName}`);
+    return false;
+  }
   const chip = document.createElement('span');
   chip.className = 'player-chip';
-  chip.dataset.name = name;
+  chip.dataset.name = displayName;
   chip.dataset.attendance = attendance || 'pending';
   const idx = container.querySelectorAll('.player-chip').length + 1;
   chip.innerHTML = `
     <span class="chip-index">${String(idx).padStart(2,'0')}</span>
-    <span class="chip-name" ondblclick="editChip(this)" title="雙擊可重新命名">${escapeHtml(name)}</span>
+    <span class="chip-name" ondblclick="editChip(this)" title="雙擊可重新命名">${escapeHtml(displayName)}</span>
     <button type="button" class="chip-remove" onclick="removePlayerChip(this)" title="移除">×</button>
   `;
   const chipInput = document.getElementById('playerChipInput');
   container.insertBefore(chip, chipInput);
   renumberPlayerRows();
+  saveRosterDraft();
+  return true;
 }
 
 function editChip(nameSpan){
@@ -4394,8 +4487,15 @@ function editChip(nameSpan){
   const commit = () => {
     if(committed) return;
     committed = true;
-    const val = input.value.trim();
+    const val = input.value.trim().replace(/\s+/g, ' ');
     if(!val){ chip.remove(); renumberPlayerRows(); return; }
+    if(findDuplicatePlayerChip(val, chip)){
+      showAlert(`「${val}」已在參賽名單內，請使用不同姓名或加上辨識碼。`);
+      input.value = current;
+      committed = false;
+      input.focus();
+      return;
+    }
     chip.dataset.name = val;
     chip.classList.remove('input-error');
     const newSpan = document.createElement('span');
@@ -4406,6 +4506,7 @@ function editChip(nameSpan){
     if(input.parentNode === chip) chip.replaceChild(newSpan, input);
     renumberPlayerRows();
     renderAttendanceManager();
+    saveRosterDraft();
   };
   input.addEventListener('keydown', (e) => {
     if(e.key === 'Enter'){ e.preventDefault(); commit(); }
@@ -4454,13 +4555,7 @@ function applyBulkNames(){
   const container = document.getElementById('playerInputs');
   ensureChipInput(container);
 
-  // 比對時統一全形／半形、大小寫及連續空白，避免同一姓名被重複加入。
-  // 既有名單不清空；同一批輸入中的重複姓名也只會新增第一次出現者。
-  const normalizePlayerName = name => String(name || '')
-    .normalize('NFKC')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLocaleLowerCase('zh-Hant');
+  // 既有名單不清空；所有姓名入口共用 normalizePlayerName 的比較規則。
   const registeredNames = new Set(
     Array.from(container.querySelectorAll('.player-chip'))
       .map(chip => normalizePlayerName(chip.dataset.name))
@@ -4495,6 +4590,7 @@ function removePlayerChip(btn){
   if(chip) chip.remove();
   renumberPlayerRows();
   renderAttendanceManager();
+  saveRosterDraft();
 }
 
 function renumberPlayerRows(){
@@ -4670,6 +4766,7 @@ function setAttendanceStatus(index, status){
   if(!chip) return;
   chip.dataset.attendance = status;
   renderAttendanceManager();
+  saveRosterDraft();
 }
 
 function jumpToNextPendingAttendance(){
@@ -4707,13 +4804,19 @@ function startAttendanceNameEdit(index, button){
   const commit = (restore) => {
     if(committed) return;
     committed = true;
-    const value = restore ? original : input.value.trim();
+    const value = restore ? original : input.value.trim().replace(/\s+/g, ' ');
     if(value){
+      if(!restore && findDuplicatePlayerChip(value, chip)){
+        showAlert(`「${value}」已在參賽名單內，請使用不同姓名或加上辨識碼。`);
+        renderAttendanceManager();
+        return;
+      }
       chip.dataset.name = value;
       const chipName = chip.querySelector('.chip-name');
       if(chipName) chipName.textContent = value;
     }
     renderAttendanceManager();
+    saveRosterDraft();
   };
   input.addEventListener('keydown', e => {
     if(e.key === 'Enter'){ e.preventDefault(); commit(false); }
@@ -4731,6 +4834,7 @@ function deleteAttendancePlayer(index){
     if(chip.isConnected) chip.remove();
     renumberPlayerRows();
     renderAttendanceManager();
+    saveRosterDraft();
   });
 }
 
@@ -4775,9 +4879,13 @@ function startTournament(){
     const filled = entries.filter(e => e.name && e.attendance !== 'absent');
     names = filled.map(e => e.name);
 
-    const groups = {};
-    filled.forEach(e => { (groups[e.name] = groups[e.name] || []).push(e); });
-    const dupGroups = Object.values(groups).filter(g => g.length > 1);
+    const groups = new Map();
+    filled.forEach(e => {
+      const key = normalizePlayerName(e.name);
+      if(!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    });
+    const dupGroups = Array.from(groups.values()).filter(g => g.length > 1);
 
     if(dupGroups.length > 0){
       dupGroups.forEach(g => g.forEach(e => e.chip.classList.add('input-error')));
@@ -4834,37 +4942,10 @@ function finalizeStartTournament(names){
   markAllDirty();
   playerSetupExpanded = false; // 開賽（或重新產生賽程）後，「參賽玩家」自動收合成摘要
   attendanceManagerOpen = false;
+  try{ localStorage.removeItem(ROSTER_DRAFT_KEY); }catch(e){}
 
-  (async () => {
-    if(window.cloudSync && window.cloudSync.ready && currentEventCode){
-      try{
-        // Push the updated player names FIRST. Otherwise other synced
-        // devices can receive the new match list (which only stores
-        // playerA/playerB as ids like "P01") before their copy of
-        // state.players knows those ids map to real names — so their
-        // schedule/referee screens briefly (or, if this push happens to
-        // fail, permanently) show "P01 VS P08" instead of the entered names.
-        await window.cloudSync.pushMeta({
-          name: state.tournament.name,
-          pointsToWin: state.tournament.pointsToWin,
-          format: state.tournament.format,
-          quickMode: state.tournament.quickMode,
-          status: state.tournament.status,
-          players: state.players,
-          currentRound: state.currentRound
-        });
-        // See note in finalizeScheduleShuffle: clearMatches()'s own snapshot
-        // echo can wipe state.matches before we push, so push newMatches
-        // directly and re-assert local state afterwards.
-        await window.cloudSync.clearMatches();
-        await window.cloudSync.pushMatches(newMatches);
-      }catch(e){ console.error(e); }
-    }
-    dirtyMatchIds.clear();
-    state.matches = newMatches;
-    renderAll();
-    saveState();
-  })();
+  cloudNeedsFullReplace = true;
+  saveState();
   renderAll();
   switchTab('standings');
 }
@@ -5599,37 +5680,8 @@ function finalizeScheduleShuffle(btn){
   savePanels();
   markAllDirty();
 
-  (async () => {
-    if(window.cloudSync && window.cloudSync.ready && currentEventCode){
-      try{
-        // Push the (possibly reshuffled) player list FIRST — same reasoning
-        // as finalizeStartTournament: other devices must know id→name
-        // mapping before they receive matches that reference those ids,
-        // or their screens show raw ids like "P01" instead of names.
-        await window.cloudSync.pushMeta({
-          name: state.tournament.name,
-          pointsToWin: state.tournament.pointsToWin,
-          format: state.tournament.format,
-          quickMode: state.tournament.quickMode,
-          status: state.tournament.status,
-          players: state.players,
-          currentRound: state.currentRound
-        });
-        // clearMatches() triggers our own onSnapshot listener with an empty
-        // list almost immediately, which would otherwise wipe state.matches
-        // before the new bracket gets pushed. Push newMatches directly
-        // (not state.matches, which may already be emptied by that echo),
-        // then re-assert local state afterwards so the race can't leave the
-        // schedule empty.
-        await window.cloudSync.clearMatches();
-        await window.cloudSync.pushMatches(newMatches);
-      }catch(e){ console.error(e); }
-    }
-    dirtyMatchIds.clear();
-    state.matches = newMatches;
-    renderAll();
-    saveState();
-  })();
+  cloudNeedsFullReplace = true;
+  saveState();
 
   renderAll();
   showToast('對戰賽程已刷新');
@@ -6755,24 +6807,30 @@ function switchToOtherPendingMatch(panelId){
   // available match; the saved choice is what the green next button loads.
   const currentIndex = candidates.findIndex(m => current && m.id === current.id);
   const selected = candidates[(currentIndex + 1 + candidates.length) % candidates.length];
+  const startingMatchId = panel.matchId;
+  // 先提交選擇，再播放動畫；動畫期間按「下一場」也會進入畫面剛選定的場次。
+  panel.nextMatchId = selected.id;
   nextMatchSwitchingPanels.add(panelId);
+  savePanels();
 
   // Phase 1: visibly sweep the old preview away. Phase 2 rebuilds the panel
   // with the chosen match and plays the brighter arrival/lock-on animation.
   const body = document.getElementById(`refBody-${panelId}`);
   const preview = body && body.querySelector('.next-match-preview');
   const switchButton = body && body.querySelector('.btn-switch-match');
+  const nextButton = body && body.querySelector('.btn-next-match');
   if(preview) preview.classList.add('is-refreshing-out');
   if(switchButton){
     switchButton.disabled = true;
     switchButton.classList.add('is-switching');
   }
+  if(nextButton) nextButton.disabled = true;
 
   setTimeout(() => {
-    panel.nextMatchId = selected.id;
-    nextMatchPreviewFlashPanels.add(panelId);
-    savePanels();
     nextMatchSwitchingPanels.delete(panelId);
+    const stillOnWinner = panel.matchId === startingMatchId &&
+      state.matches.find(m => m.id === startingMatchId)?.status === 'completed';
+    if(stillOnWinner) nextMatchPreviewFlashPanels.add(panelId);
     renderReferee();
     nextMatchPreviewFlashPanels.delete(panelId);
   }, preview ? 260 : 0);
@@ -6864,7 +6922,7 @@ function renderRefereeMatch(match, panelId){
       <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>重新這場</button>
       ${completed ? (nextMatchPreview
           ? `<button class="btn btn-switch-match ${nextMatchSwitchingPanels.has(panelId) ? 'is-switching' : ''}" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) && !nextMatchSwitchingPanels.has(panelId) ? '' : 'disabled'}>轉換他場對戰 ${icon('shuffle',15)}</button>
-             <button class="btn btn-primary" onclick="advanceReferee('${panelId}')">下一場對戰 ${icon('arrow-right',16)}</button>`
+             <button class="btn btn-primary btn-next-match" onclick="advanceReferee('${panelId}')" ${nextMatchSwitchingPanels.has(panelId) ? 'disabled' : ''}>下一場對戰 ${icon('arrow-right',16)}</button>`
           : (hasPendingMatches()
               ? `<button class="btn btn-dark" disabled>目前無可分配場次</button>`
               : `<button class="btn btn-primary" onclick="showFinalResults()">戰績結算</button>`)
@@ -7021,6 +7079,13 @@ function loadSetupInputs(){
   } else if(showDetail && document.getElementById('playerInputs').children.length === 0){
     createPlayerInputs(0);
   }
+  if(showDetail && !isRunning && state.players.length === 0 && !rosterDraftPrompted){
+    const draft = readRosterDraft();
+    if(draft){
+      rosterDraftPrompted = true;
+      showConfirm(`發現尚未開賽的名單草稿（${draft.players.length} 位），是否恢復姓名與點名狀態？`, () => restoreRosterDraft(draft));
+    }
+  }
   updatePlayerSetupVisibility();
 
   const note = document.getElementById('setupNote');
@@ -7074,6 +7139,7 @@ function togglePlayerSetupSection(){
 function resetTournament(){
   showConfirm('確定要刪除目前所有比賽資料嗎？此動作無法復原。', async () => {
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    try{ localStorage.removeItem(ROSTER_DRAFT_KEY); }catch(e){}
     if(window.storage){ try{ await window.storage.delete(STORAGE_KEY, false); }catch(e){} }
     if(window.cloudSync && window.cloudSync.ready && currentEventCode){
       try{ await window.cloudSync.clearMatches(); }catch(e){}
