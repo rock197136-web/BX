@@ -2215,6 +2215,100 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .score-console.completed-console .ref-footer .btn:hover:not(:disabled){ filter:brightness(1.08); transform:none; }
 .score-console.completed-console .ref-footer .btn:active:not(:disabled){ transform:translateY(1px); }
 .score-console.completed-console .ref-footer .btn:disabled{ opacity:.35; box-shadow:none; }
+/* Role colors inherit the header's amber / vermilion system, replacing blue-red. */
+.quick-console{ background:radial-gradient(ellipse at 0 0,rgba(255,157,66,.14),transparent 55%),radial-gradient(ellipse at 100% 0,rgba(255,71,38,.12),transparent 55%),radial-gradient(circle,#d6a16d14 .7px,transparent 1px) 0 0/10px 10px,linear-gradient(135deg,#160f20,#09070d 55%,#160b0d); border-color:#5c4a48; }
+.quick-console .referee-title::before{ background:linear-gradient(90deg,transparent,#ff9d42); }
+.quick-console .referee-title::after{ background:linear-gradient(90deg,#ff4726,transparent); }
+.quick-console .quick-win-btn{ --quick-rgb:255,157,66; }
+.quick-console .quick-win-btn.side-red{ --quick-rgb:255,71,38; }
+.quick-console .quick-vs-mark{ border-color:#695653; box-shadow:-3px 0 8px #ff9d4233,3px 0 8px #ff472633,inset 0 1px #ffffff22; }
+.master-mode .quick-console .quick-win-btn.side-blue .quick-win-name{ color:#ffd29a !important; }
+.master-mode .quick-console .quick-win-btn.side-red .quick-win-name{ color:#ffb2a1 !important; }
+/* Keep all completed controls in a single compact action row on phones. */
+@media(max-width:680px){
+  .score-console.completed-console .ref-footer{ grid-template-columns:82px minmax(0,1fr) minmax(0,1.12fr); gap:6px; align-items:stretch; }
+  .score-console.completed-console .ref-footer > .btn-ghost{ grid-column:auto; justify-self:stretch; min-height:42px; padding:6px 4px; font-size:10.5px; }
+  .score-console.completed-console .ref-footer .btn-switch-match,.score-console.completed-console .ref-footer .btn-next-match{ min-height:42px; padding:7px 5px; font-size:11.5px; }
+}
+/* Shared charcoal / champagne hierarchy across header and referee controls. */
+:root{
+  --cyan:#e9bb68; --cyan-soft:#e6c991; --teal:#d9ad60;
+  --orange:#e9bb68; --gold:#e9bb68; --blue:#e9bb68;
+  --hdr-blue:#e9bb68; --hdr-blue-soft:#f0d7a8; --hdr-red:#c69b57;
+  --sb-a:#e9bb68; --sb-b:#d0bb95;
+  --fin-spin:#e9bb68; --fin-over:#e9bb68; --fin-burst:#e9bb68; --fin-xtreme:#e9bb68;
+}
+body{background:radial-gradient(1200px 600px at 100% -10%,#e9bb680a,transparent 60%),var(--bg);}
+.btn-primary,.btn-success{
+  background:linear-gradient(120deg,#f0cd8b,#d9ad60); color:#211a0f;
+  border:1px solid #edca87; box-shadow:inset 0 1px #fff3,0 2px 5px #0005;
+}
+.btn-warning{background:#e9bb680c;color:#e9bb68;border:1px solid #e9bb6859;}
+.btn-dark,.btn-ghost{background:#191b1e;color:#c4c5c8;border-color:#393b40;}
+.score-console,.score-console.quick-console,.score-console.completed-console{
+  background:radial-gradient(ellipse at 50% 0,#e9bb680d,transparent 70%),#111316;
+  border-color:#42413c; box-shadow:inset 0 1px #ffffff08;
+}
+.score-console .referee-title::before{background:linear-gradient(90deg,transparent,#e9bb68);}
+.score-console .referee-title::after{background:linear-gradient(90deg,#e9bb68,transparent);}
+.score-console .quick-win-btn.side-blue,.score-console .quick-win-btn.side-red{
+  --quick-rgb:233,187,104; border-color:#e9bb6870;
+  background:linear-gradient(100deg,#e9bb6814,#17191c);
+  box-shadow:inset 3px 0 #e9bb68,inset 0 1px #ffffff08;
+}
+.score-console .quick-win-btn.side-blue .quick-win-label,
+.score-console .quick-win-btn.side-red .quick-win-label{
+  color:#e9bb68!important;border-color:#e9bb6880!important;
+  background:#e9bb680a!important;text-shadow:none!important;
+}
+.score-console .quick-win-btn.side-blue .quick-win-name,
+.score-console .quick-win-btn.side-red .quick-win-name,
+.master-mode .score-console.quick-console .quick-win-btn.side-blue .quick-win-name,
+.master-mode .score-console.quick-console .quick-win-btn.side-red .quick-win-name{
+  color:#f2f2f2!important;text-shadow:none!important;
+}
+.score-console .quick-vs-mark{color:#e9bb68;border-color:#555047;box-shadow:none;background:#191b1e;}
+.score-console .ring-wrap,.score-console .ring-wrap:last-child{--side-rgb:233,187,104;}
+.master-mode .score-console .ring-row>.ring-wrap:first-child .ring-name,
+.master-mode .score-console .ring-row>.ring-wrap:last-child .ring-name{color:#f2f2f2!important;}
+.score-console .finish-col.side-a,.score-console .finish-col.side-b{--sb-side-rgb:233,187,104;}
+.score-console .btn-switch-match{background:#e9bb680a;color:#e9bb68;border:1px solid #e9bb6866;box-shadow:none;}
+.score-console .btn-next-match{background:linear-gradient(120deg,#f0cd8b,#d9ad60);color:#211a0f;border:1px solid #edca87;}
+/* Green is reserved for confirmed attendance; warnings retain semantic red. */
+.attendance-action.arrived:not(.active){background:#191b1e;color:#c4c5c8;border-color:#393b40;box-shadow:none;}
+/* Minimal score controls: text and pictograms, not neon machinery. */
+.master-mode-switch input:checked+.switch-track{background:#e9bb6820;border-color:#e9bb68;box-shadow:none;}
+.master-mode-switch input:checked+.switch-track .switch-thumb{background:#e9bb68;box-shadow:none;}
+.icon-btn.focus-btn.active{background:#e9bb6814;box-shadow:none;}
+.score-console .ring-wrap{background:#181a1d;border:1px solid #555047;border-radius:12px;box-shadow:none;}
+.score-console .ring-score,.score-console .ring-name{color:#f2f2f2;text-shadow:none;filter:none;}
+.score-console .finish-col{padding:0;background:none;border:0;box-shadow:none;gap:8px;}
+.score-console .finish-col-header{background:none;box-shadow:none;font-size:14px;color:#b9b7b1;padding:4px;}
+.score-console .finish-btn,.master-mode .score-console .finish-btn{
+  --fin-rgb:233,187,104;display:flex;flex-wrap:nowrap;justify-content:flex-start;
+  min-height:52px;padding:10px 12px;gap:10px;clip-path:none;border-radius:10px;
+  background:#1b1d20;border:1px solid #41403b;box-shadow:none;
+}
+.score-console .finish-btn:hover{background:#e9bb6814;border-color:#e9bb6880;filter:none;}
+.score-console .finish-btn:active{transform:scale(.98);filter:none;box-shadow:none;}
+.score-console .fin-badge{width:28px;height:28px;clip-path:none;background:none;box-shadow:none;filter:none;color:#e9bb68;}
+.score-console .fin-badge-svg{width:24px;height:24px;}
+.score-console .finish-label,.master-mode .score-console .finish-label{font-size:15px;font-weight:700;letter-spacing:0;color:#eee9df;text-shadow:none;}
+.score-console .finish-sub,.score-console .fin-ticks{display:none;}
+.score-console .finish-pts,.master-mode .score-console .finish-pts{width:auto;height:auto;min-width:34px;padding:4px 6px;clip-path:none;border-radius:6px;background:#e9bb6814!important;color:#e9bb68!important;font-size:20px;box-shadow:none;}
+.score-console .ring-vs{color:#e9bb68;text-shadow:none;filter:none;}
+@media(max-width:680px){.score-console .finish-btn,.master-mode .score-console .finish-btn{padding:9px 7px;gap:6px;}.score-console .finish-label{font-size:13px;}.score-console .fin-badge{width:22px;}.score-console .finish-pts{font-size:18px;min-width:28px;}}
+/* Bilingual micro-labels keep finish selection quiet and legible. */
+.score-console .finish-btn,.master-mode .score-console .finish-btn{min-height:58px;text-align:left;}
+.score-console .fin-text{gap:4px;align-items:flex-start;}
+.score-console .finish-sub,.master-mode .score-console .finish-sub{
+  display:block;font-family:'Inter',sans-serif;font-size:9px;font-weight:600;
+  width:100%;line-height:1.2;letter-spacing:0;color:#e9bb688c;opacity:.72;
+  text-align:justify;text-justify:inter-character;overflow:visible;
+}
+.score-console .finish-sub::after{content:'';display:inline-block;width:100%;}
+.score-console .finish-label{line-height:1.2;}
+@media(max-width:680px){.score-console .finish-sub,.master-mode .score-console .finish-sub{font-size:8px;letter-spacing:.13em;}}
 </style>
 </head>
 <body>
@@ -7100,7 +7194,7 @@ function renderRefereeMatch(match, panelId){
 
     <div class="ref-footer">
       ${quickMode ? '' : `<button class="btn btn-dark" onclick="undoLastPoint('${match.id}')" ${match.log.length===0?'disabled':''}>撤銷上一分</button>`}
-      <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>重新這場</button>
+      <button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(quickMode ? !completed : match.log.length===0) ? 'disabled':''}>勝負重置</button>
       ${completed ? (nextMatchPreview
           ? `<button class="btn btn-switch-match ${nextMatchSwitchingPanels.has(panelId) ? 'is-switching' : ''}" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) && !nextMatchSwitchingPanels.has(panelId) ? '' : 'disabled'}>轉換他場對戰 ${icon('shuffle',15)}</button>
              <button class="btn btn-primary btn-next-match" onclick="advanceReferee('${panelId}')" ${nextMatchSwitchingPanels.has(panelId) ? 'disabled' : ''}>下一場對戰 ${icon('arrow-right',16)}</button>`
@@ -7113,6 +7207,15 @@ function renderRefereeMatch(match, panelId){
 }
 
 function finBadgeIcon(key){
+  const paths={
+    SPIN:'<path d="M19 7a8 8 0 1 0 1 9M19 3v4h-4"/><path d="M9 12h6"/>',
+    OVER:'<path d="M3 18h14M14 5h7v7M20 6l-9 9"/><path d="M4 9h5v5H4z"/>',
+    BURST:'<path d="m9 4-2 5-4 2 5 2 2 7 3-6 7-2-6-3-2-6"/><path d="m18 4 2-2M20 18l2 2M3 3l2 2"/>',
+    XTREME:'<path d="M3 17h8l4-10h6M17 3l4 4-4 4"/><path d="m4 10 3-3 3 3"/>'
+  };
+  return `<svg class="fin-badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[key]||paths.SPIN}</svg>`;
+}
+function legacyFinBadgeIcon(key){
   if(key === 'SPIN'){
     return `<svg class="fin-badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>`;
   }
@@ -7127,10 +7230,9 @@ function finBadgeIcon(key){
 function finishButtons(matchId, side){
   return Object.entries(FINISH).map(([key, f]) => `
     <button class="finish-btn ${f.cls}" onclick="recordFinish('${matchId}','${side}','${key}')">
-      <span class="fin-badge ${f.cls}">${finBadgeIcon(key)}</span>
       <span class="fin-text">
         <span class="finish-label">${f.label}</span>
-        <span class="finish-sub">${f.en}</span>
+        <span class="finish-sub">${key}</span>
       </span>
       <span class="fin-ticks"></span>
       <span class="finish-pts">+${f.points}</span>
