@@ -394,8 +394,8 @@ button{ cursor:pointer; }
   background:var(--panel-2); color:var(--muted); font-size:11.5px; font-weight:700;
 }
 .attendance-action:hover{ color:var(--text); border-color:var(--muted); }
-.attendance-action.arrived{ color:#07150b; border-color:#55ef86; background:linear-gradient(135deg,#64f28c,#35c968); box-shadow:0 3px 0 rgba(15,91,43,.8); }
-.attendance-action.arrived.active{ color:#041108; border-color:#8affaa; background:linear-gradient(135deg,#8affaa,#48dc78); }
+.attendance-action.arrived{ color:#b6b9c0; border-color:#383b42; background:#202228; box-shadow:none; }
+.attendance-action.arrived.active{ color:#041108; border-color:#8affaa; background:linear-gradient(135deg,#8affaa,#48dc78); box-shadow:0 3px 0 rgba(15,91,43,.8); }
 .attendance-action.absent.active{ color:#ff9d9d; border-color:#d45050; background:rgba(212,80,80,.14); }
 .attendance-more{ position:relative; }
 .attendance-more > summary{ list-style:none; width:36px; padding:6px; font-size:20px; letter-spacing:2px; }
@@ -2160,6 +2160,61 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .quick-console .quick-vs-mark{align-self:center;flex-shrink:0;width:60px;height:60px;border:1px solid #526079;border-radius:50%;color:#e0e9f5;font-size:24px;background:linear-gradient(#0a1422,#060a11);box-shadow:-3px 0 8px #00baff33,3px 0 8px #ff436633,inset 0 1px #ffffff22;}
 @media(max-width:700px){.score-console.quick-console{padding:14px 10px;}.quick-console .quick-win-grid{gap:8px;}.quick-console .quick-win-btn{min-height:210px;padding:24px 10px;gap:20px;border-radius:18px;}.quick-console .quick-win-label{width:100%;min-height:44px;padding:8px;font-size:20px;letter-spacing:1px;}.quick-console .quick-win-name{font-size:23px;}.quick-console .quick-vs-mark{width:34px;height:34px;font-size:16px;}.quick-console .referee-title{font-size:16px;gap:12px;}.quick-console .referee-title::before,.quick-console .referee-title::after{width:40px;}}
 
+/* Completed console: shared center axis and compact, readable hierarchy. */
+.score-console .winner-banner{ padding:14px 12px; border-radius:12px; background:rgba(255,184,78,.055); border-color:rgba(255,184,78,.25); }
+.score-console .winner-banner .wname{ margin:0; font-size:18px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
+.score-console .winner-banner .winner-check{ width:17px; height:17px; border-radius:5px; font-size:11px; }
+.score-console .next-match-preview{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; width:100%; min-height:0; margin:10px 0 0; padding:10px 4px 0; border:0; border-top:1px solid rgba(255,255,255,.09); border-radius:0; }
+.score-console .next-match-refresh-mark{ display:none; }
+.score-console .next-match-kicker{ text-align:center; color:#aeb3be; font-size:11px; }
+.score-console .next-match-names{ text-align:center; color:#e9ebf0; font-size:20px; line-height:1.4; text-shadow:none; }
+.score-console .ref-footer{ margin-top:10px; padding-top:0; gap:7px; }
+.score-console .ref-footer .btn{ min-height:38px; padding:8px 10px; font-size:12px; }
+.score-console .ref-footer .btn-next-match{ flex:1.15; }
+.score-console .ref-footer .btn-switch-match{ flex:1; }
+.master-mode .score-console .winner-banner{ padding:10px; }
+.master-mode .score-console .winner-banner .wname{ font-size:15px; }
+.master-mode .score-console .next-match-preview{ margin-top:8px; padding-top:8px; }
+.master-mode .score-console .next-match-names{ font-size:17px; }
+@media(max-width:680px){
+  .score-console .ref-footer{ display:grid; grid-template-columns:1fr 1fr; }
+  .score-console .ref-footer > .btn-ghost{ grid-column:1/-1; justify-self:end; min-height:30px; padding:4px 8px; font-size:11px; box-shadow:none; }
+  .score-console .ref-footer .btn-switch-match,.score-console .ref-footer .btn-next-match{ width:100%; min-width:0; min-height:42px; padding:8px 6px; font-size:12px; }
+}
+.score-console .winner-word,.score-console .versus-word{ font-size:.8em; color:#ffd45a; font-weight:700; text-shadow:none; }
+/* Completed match: charcoal surfaces and one amber accent family. */
+.score-console.completed-console{
+  --result-gold:#e9bb68;
+  background:radial-gradient(circle at 50% 0,rgba(233,187,104,.075),transparent 65%),#111316;
+  border-color:#414039; box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.score-console.completed-console .referee-title{ color:#bcb7ac; }
+.score-console.completed-console .referee-title::before{ background:linear-gradient(90deg,transparent,#927342); }
+.score-console.completed-console .referee-title::after{ background:linear-gradient(90deg,#927342,transparent); }
+.score-console.completed-console .winner-banner{
+  background:linear-gradient(180deg,rgba(233,187,104,.06),rgba(233,187,104,.015));
+  border-color:rgba(233,187,104,.2); box-shadow:none;
+}
+.score-console.completed-console .winner-check{ background:var(--result-gold); color:#231b10; }
+.score-console.completed-console .winner-word,.score-console.completed-console .versus-word{ color:var(--result-gold); }
+.score-console.completed-console .ref-footer{ gap:8px; margin-top:12px; }
+.score-console.completed-console .ref-footer .btn{
+  border-radius:9px; font-weight:800; box-shadow:none; min-height:42px;
+}
+.score-console.completed-console .ref-footer .btn-primary{
+  background:linear-gradient(135deg,#f0cc89,#ddb064); color:#241b0e;
+  border:1px solid #e9bb68; box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 3px 8px rgba(0,0,0,.2);
+}
+.score-console.completed-console .ref-footer .btn-switch-match{
+  background:rgba(233,187,104,.045); color:var(--result-gold); border:1px solid rgba(233,187,104,.45);
+}
+.score-console.completed-console .ref-footer .btn-ghost,
+.score-console.completed-console .ref-footer .btn-dark{
+  background:#191b1e; color:#a9abb0; border:1px solid #35373c;
+}
+.score-console.completed-console .ref-footer .btn:hover:not(:disabled){ filter:brightness(1.08); transform:none; }
+.score-console.completed-console .ref-footer .btn:active:not(:disabled){ transform:translateY(1px); }
+.score-console.completed-console .ref-footer .btn:disabled{ opacity:.35; box-shadow:none; }
 </style>
 </head>
 <body>
@@ -2316,8 +2371,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
       </div>
     </div>
     <div class="header-meta">
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.6</span></div>
-      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/14</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.7</span></div>
+      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/15</span></div>
     </div>
   </div>
 </header>
@@ -6979,7 +7034,7 @@ function renderRefereeMatch(match, panelId){
     ? `<div class="text-muted next-match-preview ${nextMatchPreviewFlashPanels.has(panelId) ? 'is-switched' : ''}" aria-live="polite">
          <span class="next-match-refresh-mark">${icon('shuffle',13)}</span>
          <span class="next-match-kicker">下一場・第 ${realMatchNumber(nextMatchPreview)} 場</span>
-         <span class="next-match-names">${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</span>
+         <span class="next-match-names">${escapeHtml(nameOf(nextMatchPreview.playerA))} <span class="versus-word">VS</span> ${escapeHtml(nameOf(nextMatchPreview.playerB))}</span>
        </div>`
     : `<div class="text-muted">目前沒有下一場對戰了</div>`;
 
@@ -7001,7 +7056,7 @@ function renderRefereeMatch(match, panelId){
 
   const mainHtml = completed ? `
       <div class="winner-banner">
-        <div class="wname"><span class="winner-check">✓</span>${escapeHtml(nameOf(match.winner))} 獲勝</div>
+        <div class="wname"><span class="winner-check">✓</span>${escapeHtml(nameOf(match.winner))} <span class="winner-word">獲勝</span></div>
         ${nextMatchHtml}
       </div>
     ` : (!match.playerA || !match.playerB) ? `
@@ -7037,6 +7092,7 @@ function renderRefereeMatch(match, panelId){
   const refTitleLabel = match.bracket ? doubleRoundLabel(match) : match.thirdPlace ? '季軍戰' : (isKnockoutFmt ? bracketRoundLabel(match.round, maxRound) : `第 ${match.round} 輪`);
   body.classList.add("score-console");
   body.classList.toggle("quick-console", quickMode);
+  body.classList.toggle("completed-console", completed);
   body.innerHTML = `
     <div class="referee-title">${refTitleLabel}</div>
     ${ringRowHtml}
