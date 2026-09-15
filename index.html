@@ -318,13 +318,22 @@ button{ cursor:pointer; }
 }
 .attendance-panel-head{
   display:flex; justify-content:space-between; align-items:center; gap:10px;
-  padding:2px 2px 10px; border-bottom:1px solid var(--border); margin-bottom:8px;
+  position:sticky; top:8px; z-index:20; padding:9px; margin-bottom:8px;
+  background:rgba(13,17,25,.96); border:1px solid var(--border); border-radius:9px;
+  box-shadow:0 8px 18px rgba(0,0,0,.3); backdrop-filter:blur(12px);
 }
 .attendance-panel-title{ font-size:12px; color:var(--muted); }
 .attendance-head-tools{ display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
 .attendance-counts{ font-size:11.5px; color:var(--muted); white-space:nowrap; }
 .attendance-counts .arrived{ color:#75e6a4; }
 .attendance-counts .absent{ color:#ff9292; }
+.attendance-counts .pending{ color:#f1cb78; }
+.attendance-next-pending{
+  min-height:34px; padding:7px 10px; border:1px solid rgba(255,176,69,.48); border-radius:7px;
+  background:rgba(255,157,66,.12); color:var(--hdr-blue-soft); font-size:11px; font-weight:800;
+  display:inline-flex; align-items:center; justify-content:center; gap:5px; white-space:nowrap;
+}
+.attendance-next-pending:disabled{ opacity:.42; }
 .attendance-pending-jump{
   display:inline-flex; align-items:center; gap:3px; padding:3px 5px; margin:-3px -5px;
   border:0; border-radius:5px; background:transparent; color:var(--muted);
@@ -359,7 +368,7 @@ button{ cursor:pointer; }
 .attendance-list{ display:flex; flex-direction:column; gap:7px; }
 .attendance-empty{ padding:18px 10px; text-align:center; color:var(--muted); font-size:12px; }
 .attendance-row{
-  display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 9px;
+  position:relative; display:grid; grid-template-columns:minmax(90px,1fr) auto; align-items:center; gap:10px; min-height:56px; padding:8px 9px;
   border:1px solid var(--border); border-radius:9px; background:var(--panel);
 }
 .attendance-row.is-arrived{ border-color:rgba(64,196,112,.45); background:rgba(36,123,69,.09); }
@@ -373,7 +382,7 @@ button{ cursor:pointer; }
 .attendance-index{
   width:24px; color:var(--muted); font:10px 'Space Mono',monospace; flex-shrink:0;
 }
-.attendance-player-name{ font-size:13px; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.attendance-player-name{ font-size:13px; font-weight:600; min-width:0; overflow-wrap:anywhere; line-height:1.35; }
 .attendance-name-input{
   width:100%; min-width:90px; padding:7px 9px; border:1px solid var(--cyan); border-radius:7px;
   outline:none; background:#0d1119; color:var(--text); font:13px inherit;
@@ -385,10 +394,22 @@ button{ cursor:pointer; }
   background:var(--panel-2); color:var(--muted); font-size:11.5px; font-weight:700;
 }
 .attendance-action:hover{ color:var(--text); border-color:var(--muted); }
-.attendance-action.arrived.active{ color:#8af0b1; border-color:#2fa860; background:rgba(47,168,96,.16); }
+.attendance-action.arrived{ color:#07150b; border-color:#55ef86; background:linear-gradient(135deg,#64f28c,#35c968); box-shadow:0 3px 0 rgba(15,91,43,.8); }
+.attendance-action.arrived.active{ color:#041108; border-color:#8affaa; background:linear-gradient(135deg,#8affaa,#48dc78); }
 .attendance-action.absent.active{ color:#ff9d9d; border-color:#d45050; background:rgba(212,80,80,.14); }
-.attendance-action.edit:hover{ color:var(--cyan-soft); border-color:var(--cyan); }
-.attendance-action.delete:hover{ color:#ff9292; border-color:#d45050; }
+.attendance-more{ position:relative; }
+.attendance-more > summary{ list-style:none; width:36px; padding:6px; font-size:20px; letter-spacing:2px; }
+.attendance-more > summary::-webkit-details-marker{ display:none; }
+.attendance-more-menu{
+  position:absolute; z-index:40; right:0; top:calc(100% + 6px); width:132px; padding:5px;
+  border:1px solid var(--border); border-radius:9px; background:#141922; box-shadow:0 12px 28px rgba(0,0,0,.48);
+}
+.attendance-more-menu button{
+  width:100%; min-height:38px; display:flex; align-items:center; gap:8px; padding:8px 10px;
+  border:0; border-radius:6px; background:transparent; color:var(--text); font-weight:700; text-align:left;
+}
+.attendance-more-menu button:hover{ background:var(--panel-2); }
+.attendance-more-menu button.delete{ color:#ff9292; }
 .attendance-action .btn-icon, .attendance-toggle .btn-icon{ flex-shrink:0; }
 @media(max-width:680px){
   .attendance-manager{ margin-bottom:14px; }
@@ -398,23 +419,24 @@ button{ cursor:pointer; }
   .attendance-toggle-state{ display:none; }
   .attendance-panel{ padding:9px; }
   .attendance-panel-head{ align-items:stretch; flex-direction:column; gap:7px; padding-bottom:8px; }
-  .attendance-head-tools{ width:100%; justify-content:space-between; gap:7px; }
-  .attendance-search{ width:min(148px,46vw); }
+  .attendance-head-tools{ width:100%; display:grid; grid-template-columns:1fr auto; justify-content:stretch; gap:7px; }
+  .attendance-counts{ grid-column:1/-1; }
+  .attendance-search{ width:100%; }
   .attendance-list{ gap:6px; }
   .attendance-row{
     width:100%; height:auto !important; min-height:0 !important;
-    display:grid; grid-template-columns:minmax(0,1fr); align-items:center;
-    gap:8px; padding:9px; overflow:visible;
+    display:grid; grid-template-columns:minmax(82px,1fr) auto; align-items:center;
+    gap:7px; padding:9px; overflow:visible;
   }
   .attendance-player{ width:100%; min-width:0; min-height:24px; flex:none; }
   .attendance-index{ width:25px; }
   .attendance-player-name{ font-size:13px; }
   .attendance-actions{
-    width:100%; display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+    width:auto; display:flex;
     align-items:center; gap:5px;
   }
   .attendance-action{
-    width:100%; min-width:0; min-height:34px; padding:6px 3px;
+    width:auto; min-width:0; min-height:38px; padding:7px 9px;
     gap:4px; font-size:11px; white-space:nowrap;
   }
   .attendance-action .btn-icon{ width:13px; height:13px; }
@@ -790,6 +812,29 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .match:hover{ border-color:#3a3a3a; transform:translateY(-1px); box-shadow:0 6px 18px -8px rgba(0,0,0,.5); }
 .match.completed{ border-color:rgba(255,157,66,.4); border-left-color:var(--hdr-blue); }
+.match.completed:not(.expanded){ padding:12px 14px; }
+.match.completed:not(.expanded) .match-header{ margin-bottom:7px; }
+.match-summary-toggle{
+  display:block; width:100%; padding:0; border:0; background:transparent; color:inherit; text-align:inherit; cursor:pointer;
+}
+.match-summary-toggle:focus-visible{ outline:2px solid var(--hdr-blue); outline-offset:5px; border-radius:6px; }
+.match-toggle-icon{ display:inline-flex; margin-left:7px; color:var(--muted); transition:transform .18s ease; }
+.match.expanded .match-toggle-icon{ transform:rotate(180deg); }
+.match-collapsible{ overflow:hidden; }
+.match-collapsible.hidden{ display:none; }
+.mr-name.match-winner{ color:var(--hdr-blue-soft); font-weight:900; }
+.mr-name.match-loser{ color:#aaaeb7; font-weight:600; }
+.winner-check{ display:inline-grid; place-items:center; width:19px; height:19px; border-radius:6px; margin-right:2px; background:var(--hdr-blue); color:#201000; font-size:12px; }
+.match-more{ position:relative; flex:1; max-width:160px; }
+.match-more > summary{ list-style:none; }
+.match-more > summary{ display:flex; align-items:center; justify-content:center; width:100%; }
+.match-more > summary::-webkit-details-marker{ display:none; }
+.match-more-menu{
+  position:absolute; z-index:35; right:0; bottom:calc(100% + 6px); width:145px; padding:5px;
+  border:1px solid var(--border); border-radius:9px; background:#141922; box-shadow:0 12px 28px rgba(0,0,0,.5);
+}
+.match-more-menu button{ width:100%; min-height:40px; border:0; border-radius:6px; background:transparent; color:#ffb06e; font-weight:800; }
+.match-more-menu button:hover{ background:var(--panel-2); }
 .match.match-highlight{
   animation: matchJumpHighlight 1.6s ease-out;
 }
@@ -1197,16 +1242,18 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 .next-match-preview{
   position:relative; isolation:isolate; overflow:hidden;
-  display:inline-flex; align-items:center; justify-content:center; gap:7px;
-  min-height:30px; margin-top:2px; padding:5px 12px;
+  display:grid; grid-template-columns:auto 1fr; align-items:center; justify-content:center; gap:2px 8px;
+  width:100%; min-height:54px; margin-top:8px; padding:7px 12px;
   border:1px solid transparent; border-radius:999px;
   transform-origin:center; will-change:transform,opacity,filter;
 }
 .next-match-preview .next-match-refresh-mark{
-  width:16px; height:16px; display:inline-grid; place-items:center; flex-shrink:0;
+  grid-row:1/3; width:16px; height:16px; display:inline-grid; place-items:center; flex-shrink:0;
   color:currentColor; opacity:.72;
 }
 .next-match-preview .next-match-refresh-mark .btn-icon{ width:13px; height:13px; }
+.next-match-kicker{ color:#b5b8c1; font:700 10px 'Space Mono',monospace; letter-spacing:.06em; text-align:left; }
+.next-match-names{ color:#e0e2e8; font:800 17px 'Rajdhani','Noto Sans TC',sans-serif; line-height:1.3; text-align:left; overflow-wrap:anywhere; }
 .next-match-preview.is-refreshing-out{
   pointer-events:none;
   animation:nextMatchPreviewOut .26s cubic-bezier(.55,0,1,.45) forwards;
@@ -1244,12 +1291,13 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 
 .winner-banner{
-  text-align:center; padding:34px 20px;
+  text-align:center; padding:16px 16px 12px;
   background:linear-gradient(160deg, rgba(245,200,0,.16), transparent);
   border:1px solid rgba(245,200,0,.4); border-radius:14px;
 }
 .winner-banner .trophy{ font-size:38px; }
-.winner-banner .wname{ font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:900; margin:8px 0; }
+.winner-banner .wname{ display:flex; align-items:center; justify-content:center; gap:7px; font-family:'Rajdhani',sans-serif; font-size:21px; font-weight:900; margin:0; white-space:nowrap; }
+.winner-banner .winner-check{ flex-shrink:0; }
 
 /* ===== Master mode toggle switch ===== */
 .master-mode-switch{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
@@ -1349,6 +1397,9 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .master-mode .winner-banner{ padding:8px 10px; }
 .master-mode .winner-banner .trophy{ font-size:18px; }
 .master-mode .winner-banner .wname{ font-size:15px; margin:2px 0; }
+.master-mode .next-match-preview{ min-height:42px; margin-top:4px; padding:4px 8px; }
+.master-mode .next-match-kicker{ font-size:8px; }
+.master-mode .next-match-names{ font-size:13px; }
 
 /* Finish 按鈕（正常計分模式）：維持格狀小按鈕，本身就跟電量條
    長相不同，這裡只再壓縮尺寸。 */
@@ -1759,12 +1810,22 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket-search-empty{ padding:10px 8px; text-align:center; color:var(--muted); font-size:12.5px; }
 .match-record-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
 .match-record-actions{ display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:1; }
+.match-status-filter{
+  display:inline-grid; grid-template-columns:repeat(3,1fr); padding:3px; gap:2px;
+  border:1px solid var(--border); border-radius:9px; background:#0d1119;
+}
+.match-filter-btn{
+  min-height:34px; padding:6px 10px; border:0; border-radius:6px;
+  background:transparent; color:var(--muted); font-size:11.5px; font-weight:800; white-space:nowrap;
+}
+.match-filter-btn.active{ background:var(--hdr-blue); color:#251200; }
 @media (max-width:640px){
   .bracket-header-actions{ width:100%; justify-content:stretch; }
   .bracket-search-wrap{ width:100%; max-width:none; order:-1; }
   .match-record-head{ align-items:stretch; flex-direction:column; }
   .match-record-actions{ width:100%; flex-wrap:wrap; justify-content:stretch; }
   .match-record-actions .bracket-search-wrap{ flex:1 1 100%; }
+  .match-status-filter{ flex:1 1 100%; width:100%; }
   .match-record-actions .btn{ flex:1 1 auto; }
 }
 
@@ -2407,6 +2468,11 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
             </div>
             <ul class="bracket-search-list hidden" id="matchSearchList" role="listbox"></ul>
           </div>
+          <div class="match-status-filter" role="group" aria-label="對戰狀態篩選">
+            <button type="button" class="match-filter-btn active" data-filter="all" onclick="setMatchStatusFilter('all')">全部</button>
+            <button type="button" class="match-filter-btn" data-filter="pending" onclick="setMatchStatusFilter('pending')">未完成</button>
+            <button type="button" class="match-filter-btn" data-filter="completed" onclick="setMatchStatusFilter('completed')">已完成</button>
+          </div>
           <button class="btn btn-primary btn-sm" onclick="jumpToNextPendingMatch()">快速跳轉到未開始場次</button>
         </div>
       </div>
@@ -2516,6 +2582,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
                   </label>
                   <ul class="attendance-search-results hidden" id="attendanceSearchResults" role="listbox"></ul>
                 </div>
+                <button type="button" class="attendance-next-pending" id="attendanceNextPendingBtn" onclick="jumpToNextPendingAttendance()">下一位待確認 <span id="attendanceNextPendingIcon"></span></button>
               </div>
             </div>
             <div class="attendance-list" id="attendanceList"></div>
@@ -4641,7 +4708,12 @@ function renderAttendanceManager(){
   const arrived = chips.filter(chip => chip.dataset.attendance === 'arrived').length;
   const absent = chips.filter(chip => chip.dataset.attendance === 'absent').length;
   const pending = chips.length - arrived - absent;
-  counts.innerHTML = `<span class="arrived">報到 ${arrived}</span> ・ <span class="absent">未到 ${absent}</span> ・ <button type="button" class="attendance-pending-jump" onclick="jumpToNextPendingAttendance()" ${pending === 0 ? 'disabled' : ''} title="跳到下一位未標記選手">未標記 ${pending}${icon('arrow-right',11)}</button>`;
+  counts.innerHTML = `<span class="arrived">已到 ${arrived}</span> ／ <span class="absent">未到 ${absent}</span> ／ <span class="pending">待確認 ${pending}</span>`;
+  const nextPendingBtn = document.getElementById('attendanceNextPendingBtn');
+  if(nextPendingBtn){
+    nextPendingBtn.disabled = pending === 0;
+    nextPendingBtn.innerHTML = pending === 0 ? `${icon('check',13)} 已全部確認` : `下一位待確認 ${icon('arrow-right',13)}`;
+  }
 
   if(chips.length === 0){
     list.innerHTML = '<div class="attendance-empty">請先在上方新增玩家名單</div>';
@@ -4657,10 +4729,15 @@ function renderAttendanceManager(){
         <span class="attendance-player-name">${escapeHtml(chip.dataset.name || '')}</span>
       </div>
       <div class="attendance-actions">
-        <button type="button" class="attendance-action arrived${status === 'arrived' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'arrived')" aria-pressed="${status === 'arrived'}" title="標記報到">${icon('user-check',14)}<span>報到</span></button>
+        <button type="button" class="attendance-action arrived${status === 'arrived' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'arrived')" aria-pressed="${status === 'arrived'}" title="標記報到">${icon(status === 'arrived' ? 'check' : 'user-check',14)}<span>${status === 'arrived' ? '已報到' : '報到'}</span></button>
         <button type="button" class="attendance-action absent${status === 'absent' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'absent')" aria-pressed="${status === 'absent'}" title="標記未到">${icon('user-x',14)}<span>未到</span></button>
-        <button type="button" class="attendance-action edit" onclick="startAttendanceNameEdit(${index},this)" title="編輯名稱">${icon('edit-3',14)}<span>編輯</span></button>
-        <button type="button" class="attendance-action delete" onclick="deleteAttendancePlayer(${index})" title="刪除玩家">${icon('trash-2',14)}<span>刪除</span></button>
+        <details class="attendance-more">
+          <summary class="attendance-action" aria-label="更多選手操作" title="更多操作">⋯</summary>
+          <div class="attendance-more-menu">
+            <button type="button" onclick="startAttendanceNameEdit(${index},this);this.closest('details').removeAttribute('open')">${icon('edit-3',14)}<span>編輯姓名</span></button>
+            <button type="button" class="delete" onclick="this.closest('details').removeAttribute('open');deleteAttendancePlayer(${index})">${icon('trash-2',14)}<span>刪除選手</span></button>
+          </div>
+        </details>
       </div>
     </div>`;
   }).join('');
@@ -6406,6 +6483,9 @@ function locatePlayerMatchRecords(playerId){
   }
 
   clearMatchSearchHighlights();
+  matchStatusFilter = 'all';
+  playerMatches.filter(m => m.status === 'completed').forEach(m => expandedMatchIds.add(m.id));
+  renderMatches();
   const cards = playerMatches.map(m =>
     document.querySelector(`#matchList .match[data-match-id="${cssEscapeId(m.id)}"]`)
   ).filter(Boolean);
@@ -6433,6 +6513,34 @@ document.addEventListener('click', closeMatchSearchOnOutsideClick);
 /* =========================================================
    RENDER: MATCHES TAB
 ========================================================= */
+let matchStatusFilter = 'all';
+const expandedMatchIds = new Set();
+
+function setMatchStatusFilter(filter){
+  matchStatusFilter = ['all','pending','completed'].includes(filter) ? filter : 'all';
+  document.querySelectorAll('.match-filter-btn').forEach(btn => {
+    const active = btn.dataset.filter === matchStatusFilter;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  renderMatches();
+}
+
+function toggleMatchDetails(matchId, button){
+  const card = button && button.closest('.match');
+  const details = card && card.querySelector('.match-collapsible');
+  if(!card || !details) return;
+  const willExpand = details.classList.contains('hidden');
+  details.classList.toggle('hidden', !willExpand);
+  card.classList.toggle('expanded', willExpand);
+  button.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+  if(willExpand) expandedMatchIds.add(matchId); else expandedMatchIds.delete(matchId);
+}
+
+function realMatchNumber(match){
+  return state.matches.filter(m => !m.isBye && !m.inactive).findIndex(m => m.id === match.id) + 1;
+}
+
 function renderMatches(){
   const matchList = document.getElementById('matchList');
   updateMatchSearchVisibility();
@@ -6448,11 +6556,26 @@ function renderMatches(){
     return;
   }
 
-  let html = '';
+  const visibleMatches = realMatches.filter(m =>
+    matchStatusFilter === 'all' ||
+    (matchStatusFilter === 'completed' ? m.status === 'completed' : m.status !== 'completed')
+  );
+  document.querySelectorAll('.match-filter-btn').forEach(btn => {
+    const active = btn.dataset.filter === matchStatusFilter;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
 
-  html += realMatches.map((m, idx) => {
+  if(visibleMatches.length === 0){
+    matchList.innerHTML = `<div class="referee-empty">目前沒有${matchStatusFilter === 'completed' ? '已完成' : '未完成'}的對戰。</div>`;
+    return;
+  }
+
+  const html = visibleMatches.map(m => {
     const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
     const completed = m.status === 'completed';
+    const expanded = !completed || expandedMatchIds.has(m.id);
+    const matchNo = realMatchNumber(m);
     const chip = (l) => {
       const f = FINISH[l.finish];
       const hex = resolveColor(f.color);
@@ -6460,33 +6583,33 @@ function renderMatches(){
     };
     const logAHtml = m.log.filter(l=>l.side==='A').map(chip).join('');
     const logBHtml = m.log.filter(l=>l.side==='B').map(chip).join('');
+    const playerName = (id, name) => completed
+      ? `<span class="mr-name ${m.winner === id ? 'match-winner' : 'match-loser'}" data-player-id="${escapeHtml(id || '')}">${m.winner === id ? '<span class="winner-check">✓</span>' : ''}${escapeHtml(name)}</span>`
+      : `<span class="mr-name" data-player-id="${escapeHtml(id || '')}">${escapeHtml(name)}</span>`;
+    const scoreHtml = completed && !m.quickWin && !m.forfeited
+      ? `<span class="mr-score">${m.pointsA} : ${m.pointsB}</span>`
+      : completed && m.forfeited ? `<span class="mr-score">棄權判負</span>` : '';
 
     return `
-      <div class="match ${completed?'completed':''}" data-match-id="${escapeHtml(m.id)}">
-        <div class="match-header">
-          <span>第 ${idx+1} 場</span>
-          <span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>
-        </div>
-        <div class="match-result">${completed ? `
-          <div class="mr-versus"><span class="mr-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</span></div>
-          <div class="mr-outcome"><span class="mr-arrow">→</span><span class="mr-name" data-player-id="${escapeHtml(m.winner || '')}">${escapeHtml(nameOf(m.winner))}</span><span class="mr-suffix">獲勝</span><span class="mr-score">${m.forfeited ? '棄權判負' : m.isBye ? '輪空' : m.quickWin ? '快速模式' : `${m.pointsA} : ${m.pointsB}`}</span></div>
-        ` : `<div class="mr-versus"><span class="mr-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</span><span class="mr-vs">VS</span><span class="mr-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</span></div>`}</div>
-        ${(logAHtml || logBHtml) ? `
-        <div class="match-log">
-          <div class="match-log-side">
-            <div class="match-log-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</div>
-            ${logAHtml}
+      <div class="match ${completed?'completed':''} ${expanded?'expanded':''}" data-match-id="${escapeHtml(m.id)}">
+        ${completed ? `<div class="match-summary-toggle" role="button" tabindex="0" onclick="toggleMatchDetails('${m.id}',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMatchDetails('${m.id}',this)}" aria-expanded="${expanded}">` : ''}
+          <div class="match-header">
+            <span>第 ${matchNo} 場</span>
+            <span><span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>${completed ? `<span class="match-toggle-icon">${icon('chevron-down',14)}</span>` : ''}</span>
           </div>
-          <div class="match-log-side">
-            <div class="match-log-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</div>
-            ${logBHtml}
-            </div>
+          <div class="match-result"><div class="mr-versus">${playerName(m.playerA,pa)}<span class="mr-vs">VS</span>${playerName(m.playerB,pb)}${scoreHtml}</div></div>
+        ${completed ? '</div>' : ''}
+        <div class="match-collapsible ${expanded ? '' : 'hidden'}">
+          ${(logAHtml || logBHtml) ? `
+          <div class="match-log">
+            <div class="match-log-side"><div class="match-log-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</div>${logAHtml}</div>
+            <div class="match-log-side"><div class="match-log-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</div>${logBHtml}</div>
           </div>` : ''}
-          ${m.isBye ? '' : `
           <div class="match-actions">
             <button class="btn btn-primary goto-referee-btn" onclick="goToReferee('${m.id}')">${completed ? '查看 / 修改' : '前往裁判台'}</button>
-            ${completed ? `<button class="btn btn-ghost referee-only-btn" onclick="resetMatch('${m.id}')">重新比賽</button>` : ''}
-          </div>`}
+            ${completed ? `<details class="match-more referee-only-btn"><summary class="btn btn-ghost">更多 ⋯</summary><div class="match-more-menu"><button type="button" onclick="this.closest('details').removeAttribute('open');resetMatch('${m.id}')">重新這場</button></div></details>` : ''}
+          </div>
+        </div>
         </div>`;
   }).join('');
 
@@ -6494,7 +6617,8 @@ function renderMatches(){
 }
 
 function jumpToNextPendingMatch(){
-  if(matchesDirty){ renderMatches(); matchesDirty = false; }
+  if(matchStatusFilter === 'completed') matchStatusFilter = 'pending';
+  if(matchesDirty || matchStatusFilter === 'pending'){ renderMatches(); matchesDirty = false; }
   const target = document.querySelector('#matchList .match:not(.completed)');
   if(!target){ showToast('目前沒有尚未開始的對戰'); return; }
   target.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -6854,7 +6978,8 @@ function renderRefereeMatch(match, panelId){
   const nextMatchHtml = nextMatchPreview
     ? `<div class="text-muted next-match-preview ${nextMatchPreviewFlashPanels.has(panelId) ? 'is-switched' : ''}" aria-live="polite">
          <span class="next-match-refresh-mark">${icon('shuffle',13)}</span>
-         <span>下一場・${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</span>
+         <span class="next-match-kicker">下一場・第 ${realMatchNumber(nextMatchPreview)} 場</span>
+         <span class="next-match-names">${escapeHtml(nameOf(nextMatchPreview.playerA))} VS ${escapeHtml(nameOf(nextMatchPreview.playerB))}</span>
        </div>`
     : `<div class="text-muted">目前沒有下一場對戰了</div>`;
 
@@ -6876,7 +7001,7 @@ function renderRefereeMatch(match, panelId){
 
   const mainHtml = completed ? `
       <div class="winner-banner">
-        <div class="wname">${escapeHtml(nameOf(match.winner))} 獲勝</div>
+        <div class="wname"><span class="winner-check">✓</span>${escapeHtml(nameOf(match.winner))} 獲勝</div>
         ${nextMatchHtml}
       </div>
     ` : (!match.playerA || !match.playerB) ? `
