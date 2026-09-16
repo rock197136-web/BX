@@ -9,20 +9,20 @@
 <title>BEYBLADE X 對戰系統 V3.8</title>
 <meta name="description" content="BEYBLADE X 對戰系統：即時戰況、對戰紀錄與賽事管理。">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://rock197136-web.github.io/BX/?share=v4">
+<meta property="og:url" content="https://rock197136-web.github.io/BX/?share=v5">
 <meta property="og:title" content="BEYBLADE X 對戰系統">
 <meta property="og:description" content="即時戰況、對戰紀錄與賽事管理。">
-<meta property="og:image" content="https://rock197136-web.github.io/BX/beyblade-x-project-thumbnail-square-v4.png">
-<meta property="og:image:secure_url" content="https://rock197136-web.github.io/BX/beyblade-x-project-thumbnail-square-v4.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="1200">
+<meta property="og:image" content="https://rock197136-web.github.io/BX/beyblade-x-preview-v5.png">
+<meta property="og:image:secure_url" content="https://rock197136-web.github.io/BX/beyblade-x-preview-v5.png">
+<meta property="og:image:width" content="1730">
+<meta property="og:image:height" content="909">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:alt" content="BEYBLADE X 對戰系統">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="BEYBLADE X 對戰系統">
 <meta name="twitter:description" content="即時戰況、對戰紀錄與賽事管理。">
-<meta name="twitter:image" content="https://rock197136-web.github.io/BX/beyblade-x-project-thumbnail-square-v4.png">
-<meta name="twitter:image:src" content="https://rock197136-web.github.io/BX/beyblade-x-project-thumbnail-square-v4.png">
+<meta name="twitter:image" content="https://rock197136-web.github.io/BX/beyblade-x-preview-v5.png">
+<meta name="twitter:image:src" content="https://rock197136-web.github.io/BX/beyblade-x-preview-v5.png">
 <meta name="twitter:image:alt" content="BEYBLADE X 對戰系統">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -2556,7 +2556,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-off
 /* V3.8 portrait header: editorial alignment with a restrained competition frame. */
 .header-release-row{display:flex;align-items:center;justify-content:flex-end;border-top:1px solid #ffffff0d;padding-top:3px;}
 .header-release-row .version-info{margin:0;min-height:44px;display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#d0c2a9;}
-.version-arrow{font-size:15px;color:#e9bb68;line-height:1;}
+.version-announcement{width:16px;height:16px;color:#e9bb68;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0;}
 #customModalMessage{line-height:1.75;text-align:left;max-height:65vh;overflow-y:auto;}
 @media(max-width:700px){
  .header{padding:14px 16px 14px;background:radial-gradient(ellipse at 50% -30%,#e9bb6812,transparent 75%),#111316;}
@@ -2613,7 +2613,7 @@ body::before{content:'';position:fixed;inset:-64px;z-index:-1;pointer-events:non
 .header .identity-frame-detail{stroke:#ffd34d;}
 .header .identity-frame-flow{stroke:#fff0bd;filter:drop-shadow(0 0 4px #ff9f2499);}
 .header .identity-copy{background:radial-gradient(ellipse,#10100f 30%,#10100fe0 58%,transparent 78%);}
-.header-release-row .version-info{color:#b7ada0;}.version-arrow{color:#ff9f24;}
+.header-release-row .version-info{color:#b7ada0;}.version-announcement{color:#ff9f24;}
 .card{background:linear-gradient(130deg,#201c16,#111110 65%);border:1px solid #4b3c27;border-radius:4px 16px 4px 16px;box-shadow:inset 0 1px #ffffff06,0 8px 30px #00000024;transition:border-color .22s ease,box-shadow .22s ease;}
 .card-title{color:#fff6e9;}.card-sub,.field-label{color:#b7ada0;}
 .tabs{padding-top:4px;padding-bottom:7px;}
@@ -2753,6 +2753,26 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
 @media(prefers-reduced-motion:reduce){
   .bracket-match.is-next,
   .bracket-match.final-match.is-next{animation:none !important;}
+}
+
+/* 已完成場次與其晉級線使用同一個主題色：讓勝者所在的對戰框也被點亮。
+   狀態框（進行中／即將上場）與決賽金框仍由下方更具體的規則優先。 */
+.bracket-match.done:not(.final-match){
+  border-color:rgb(var(--theme-rgb));
+  box-shadow:
+    0 0 0 1px rgba(var(--theme-rgb),.20),
+    0 0 12px rgba(var(--theme-rgb),.28),
+    inset 0 0 12px rgba(var(--theme-rgb),.045);
+}
+/* 季軍戰保留原有青銅識別，不被一般晉級色覆蓋。 */
+.bracket-bronze-body .bracket-match.done{
+  border-color:var(--bronze);
+  box-shadow:
+    0 0 0 1px rgba(211,138,82,.18),
+    0 0 14px rgba(211,138,82,.26);
+}
+@media(prefers-reduced-motion:reduce){
+  .bracket-match.done:not(.final-match){ transition:none; }
 }
 @media print{body::before{display:none;}}
 
@@ -2912,7 +2932,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
       </div>
     </div>
     <div class="header-release-row">
-      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.8 <span aria-hidden="true">·</span> 更新日期 26/9/16 <span class="version-arrow" aria-hidden="true">↗</span></button>
+      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.8 <span aria-hidden="true">·</span> 更新日期 26/9/16 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
     </div>
     <div class="header-meta">
       <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.8</span></div>
@@ -7719,7 +7739,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.8\n更新日期：2026/09/16\n\n近期更新公告\n\n• 重新設計手機直式頁首，加入更新公告。\n• 手機底部固定導覽，裁判台使用精簡頁首。\n• 統一炭黑與香檳金，優化字體、面板及按鈕層級。\n• 裁判台停用雙擊放大，保留捲動與雙指縮放。\n• 裁判雙方加入辨識細線，移除 PLAYER 編號。\n• 調整計分英文對齊，保留綠色同步狀態。\n• 滿分使用金色呼吸光，完成畫面強化下一場操作。\n• 新增尚未開賽引導，精簡戰況進度資訊。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.8\n更新日期：2026/09/16\n\n近期更新公告\n\n• 已完成場次的勝者框會與晉級線同步點亮。\n• 重新設計手機直式頁首，加入更新公告。\n• 手機底部固定導覽，裁判台使用精簡頁首。\n• 統一炭黑與香檳金，優化字體、面板及按鈕層級。\n• 裁判台停用雙擊放大，保留捲動與雙指縮放。\n• 裁判雙方加入辨識細線，移除 PLAYER 編號。\n• 調整計分英文對齊，保留綠色同步狀態。\n• 滿分使用金色呼吸光，完成畫面強化下一場操作。\n• 新增尚未開賽引導，精簡戰況進度資訊。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
