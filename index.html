@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>BEYBLADE X 對戰系統 V3.8</title>
+<title>BEYBLADE X 對戰系統 V3.9</title>
 <meta name="description" content="BEYBLADE X 對戰系統：即時戰況、對戰紀錄與賽事管理。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rock197136-web.github.io/BX/?share=v5">
@@ -131,13 +131,6 @@ button{ cursor:pointer; }
 }
 .header .identity-kicker{ margin-bottom:4px; color:#89818d; font:700 9px/1 'IBM Plex Mono',monospace; letter-spacing:.22em; }
 .header .identity-name{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff8ef; font:900 clamp(30px,5vw,58px)/1.05 'Rajdhani','Noto Sans TC',sans-serif; letter-spacing:.025em; text-shadow:0 0 18px rgba(255,143,73,.17); }
-.header .header-meta{ display:grid; grid-template-columns:auto auto; justify-content:end; align-items:stretch; border-top:1px solid rgba(255,255,255,.07); font-family:'IBM Plex Mono','Noto Sans TC',monospace; }
-.header .meta-item{ min-width:0; display:flex; align-items:center; gap:9px; padding:9px 18px; border-right:1px solid rgba(255,255,255,.08); }
-.header .meta-item:first-child{ padding-left:0; }
-.header .meta-item:last-child{ padding-right:0; border-right:0; }
-.header .meta-label{ color:#817b88; font-size:9px; letter-spacing:.17em; white-space:nowrap; }
-.header .meta-value{ color:#fff; font-size:12px; font-weight:700; letter-spacing:.03em; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.header .meta-value.accent{ color:var(--hdr-blue-soft); }
 .header .status-dot{ width:5px; height:5px; border-radius:50%; background:var(--hdr-blue); box-shadow:0 0 8px rgba(255,157,66,.55); }
 /* One closed route: top L→R, right turn, bottom R→L, left turn, repeat. */
 @keyframes identityFlowLoop{
@@ -156,18 +149,11 @@ button{ cursor:pointer; }
     overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere;
     font-size:clamp(20px,5.8vw,27px); line-height:1.14;
   }
-  .header .meta-item{ gap:6px; padding:7px 9px; }
-  .header .meta-item:first-child{ padding-left:0; }
-  .header .meta-item:last-child{ padding-right:0; }
-  .header .meta-label{ font-size:7px; letter-spacing:.12em; }
-  .header .meta-value{ font-size:9.5px; }
 }
 @media(max-width:390px){
   .header .sys-tag{ font-size:8px; }
   .header .logo{ font-size:24px; }
   .header .identity-copy{ width:86%; padding-inline:12px; }
-  .header .meta-item{ padding-inline:7px; }
-  .header .meta-value{ font-size:9px; }
 }
 @media(prefers-reduced-motion:reduce){ .header .status-dot{ box-shadow:none; } .header .identity-frame-flow{ animation:none; } }
 
@@ -445,8 +431,6 @@ button{ cursor:pointer; }
 @media(max-width:390px){
   .header .sys-tag{font-size:9px;letter-spacing:.07em;}
   .header .logo{font-size:26px;}
-  .header .header-meta .meta-item{padding:7px;}
-  .header .meta-value{font-size:10.5px;}
   .attendance-action{font-size:10.5px;gap:2px;}
 }
 
@@ -822,9 +806,15 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .match.expanded .match-toggle-icon{ transform:rotate(180deg); }
 .match-collapsible{ overflow:hidden; }
 .match-collapsible.hidden{ display:none; }
-.mr-name.match-winner{ color:var(--hdr-blue-soft); font-weight:900; }
+.mr-name.match-winner{ display:inline-flex; align-items:center; gap:5px; color:var(--hdr-blue-soft); font-weight:900; }
 .mr-name.match-loser{ color:#aaaeb7; font-weight:600; }
 .winner-check{ display:inline-grid; place-items:center; width:19px; height:19px; border-radius:6px; margin-right:2px; background:var(--hdr-blue); color:#201000; font-size:12px; }
+.match-winner-label{
+  display:inline-flex; align-items:center; min-height:18px; padding:1px 6px; border-radius:999px;
+  background:rgba(255,157,66,.12); border:1px solid rgba(255,157,66,.32);
+  color:var(--hdr-blue-soft); font-family:'Inter','Noto Sans TC',sans-serif;
+  font-size:11px; font-weight:800; line-height:1; letter-spacing:.08em; white-space:nowrap;
+}
 .match-more{ position:relative; flex:1; max-width:160px; }
 .match-more > summary{ list-style:none; }
 .match-more > summary{ display:flex; align-items:center; justify-content:center; width:100%; }
@@ -1677,7 +1667,6 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 @media (max-width:700px){
   .container{ padding:0 12px 50px; }
-  .header-meta .meta-item{ padding:7px 10px; }
   .cloud-status-actions{ align-items:flex-start; }
   .cloud-status-hint{ text-align:left; }
   .match-result{ font-size:16px; }
@@ -1828,7 +1817,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   .bracket-search-wrap{ width:100%; max-width:none; order:-1; }
   .match-record-head{ align-items:stretch; flex-direction:column; }
   .match-record-actions{ width:100%; flex-wrap:wrap; justify-content:stretch; }
-  .match-record-actions .bracket-search-wrap{ flex:1 1 100%; }
+  .match-record-actions .bracket-search-wrap{ width:100%; min-width:0; max-width:none; flex:1 1 100%; }
   .match-status-filter{ flex:1 1 100%; width:100%; }
   .match-record-actions .btn{ flex:1 1 auto; }
 }
@@ -2429,7 +2418,7 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e9bb680a,transparent 
 }
 @media(prefers-reduced-motion:reduce){.score-console .battery-body.battery-full{animation:none;filter:drop-shadow(0 0 4px #e9bb6877);}}
 
-/* V3.8: mobile hierarchy, accessible controls and restrained champagne. */
+/* Mobile hierarchy, accessible controls and restrained champagne. */
 :root{--bg:#090a0c;--panel:#121417;--panel-2:#1b1e22;--border:#303339;--muted:#a1a3aa;--side-a:#829cb5;--side-b:#bc8e8a;}
 body{background:radial-gradient(900px 440px at 100% 0,#e9bb6807,transparent 65%),var(--bg);}
 .card{border-radius:14px;border-color:#ffffff0c;box-shadow:none;}
@@ -2449,7 +2438,6 @@ button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-off
 .header .identity-frame-flow{stroke:#f0d7a8;filter:drop-shadow(0 0 3px #e9bb6860);}
 .header .identity-copy{left:53.5%;width:68%;background:radial-gradient(ellipse,#111316f5 50%,transparent 80%);}
 .header .identity-kicker{font-size:10px;color:#aaa69f;}
-.header .header-meta{display:none;}
 .version-info{display:block;margin:3px 0 0 auto;background:transparent;border:0;color:#aaa69f;font-size:11px;min-height:32px;padding:6px 8px;}
 .tabs .tab{box-shadow:none;font-size:14px;min-height:46px;}
 .tab.active{background:#e9bb6818;color:#f0d7a8;border-color:#e9bb6860;box-shadow:none;}
@@ -2553,7 +2541,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-off
 @media(prefers-reduced-motion:reduce){.tabs{scroll-behavior:auto;}}
 
 
-/* V3.8 portrait header: editorial alignment with a restrained competition frame. */
+/* Portrait header: editorial alignment with a restrained competition frame. */
 .header-release-row{display:flex;align-items:center;justify-content:flex-end;border-top:1px solid #ffffff0d;padding-top:3px;}
 .header-release-row .version-info{margin:0;min-height:44px;display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#d0c2a9;}
 .version-announcement{width:16px;height:16px;color:#e9bb68;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;flex-shrink:0;}
@@ -2603,7 +2591,7 @@ body{isolation:isolate;background:radial-gradient(ellipse at 0 0,#5532074d,trans
 body::before{content:'';position:fixed;inset:-64px;z-index:-1;pointer-events:none;background-image:linear-gradient(#ff9f2409 1px,transparent 1px),linear-gradient(90deg,#ff9f2409 1px,transparent 1px);background-size:64px 64px;animation:gamingGridDrift 32s linear infinite;}
 @keyframes gamingGridDrift{to{transform:translate3d(64px,64px,0);}}
 .header{background:radial-gradient(ellipse at 20% 0,#ff9f2413,transparent 65%),linear-gradient(120deg,#1b1711,#0b0b0b 65%,#241b0d);border-bottom:1px solid #ff9f2445;}
-.header .sys-tag,.header .meta-value.accent{color:#ffda91;}
+.header .sys-tag{color:#ffda91;}
 .header .sys-dot,.header .status-dot{background:#ff9f24;box-shadow:0 0 10px #ff9f2480;}
 .header .logo-x{color:#ffd34d;text-shadow:0 0 16px #ffc23d55;}
 .header .identity-name{color:#fff6e9;text-shadow:0 0 24px #ff9f2422;}
@@ -2774,6 +2762,112 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
 @media(prefers-reduced-motion:reduce){
   .bracket-match.done:not(.final-match){ transition:none; }
 }
+
+/* ===== V3.9：現場操作性、資訊層級與視覺降噪 ===== */
+.bracket-title-row{position:relative;align-items:flex-start;gap:16px;}
+#bracketSection{overflow:visible;}
+.bracket-title-row>div:first-child{min-width:0;}
+.bracket-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:9px;color:#aaa69f;font-size:12px;line-height:1.4;}
+.bracket-legend span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#777;}
+.legend-dot.live{background:#ff4652;box-shadow:0 0 7px rgba(255,47,61,.55);}
+.legend-dot.next{background:#ffd34d;box-shadow:0 0 7px rgba(255,193,40,.5);}
+.legend-dot.advanced{background:rgb(var(--theme-rgb));box-shadow:0 0 7px rgba(var(--theme-rgb),.5);}
+.bracket-more{position:relative;flex-shrink:0;z-index:50;}
+.bracket-more>summary{list-style:none;}
+.bracket-more>summary::-webkit-details-marker{display:none;}
+.bracket-more-btn,.bracket-current-btn{
+  min-height:44px;padding:0 14px;border:1px solid #51422e;border-radius:9px;
+  background:#181613;color:#e8ddca;font-size:13px;font-weight:800;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+}
+.bracket-more[open] .bracket-more-btn,.bracket-more-btn:active,.bracket-current-btn:active{border-color:#ff9f24;color:#ffda91;background:#251b10;}
+.bracket-more-menu{
+  position:absolute;top:calc(100% + 8px);right:0;width:min(310px,calc(100vw - 48px));
+  padding:14px;border:1px solid #5b472d;border-radius:12px;background:#121212;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);z-index:70;
+}
+.bracket-more-menu .bracket-theme-row{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;margin:0 0 12px;}
+.bracket-more-menu .bracket-theme-row.hidden{display:none;}
+.bracket-more-menu .theme-swatch{grid-row:1;align-self:center;}
+.bracket-more-menu .field-label{grid-row:1;margin:0;align-self:center;font-size:12px;}
+.bracket-more-menu .theme-dropdown{grid-column:1/-1;max-width:none;width:100%;}
+.bracket-more-menu #shuffleScheduleBtn{width:100%;min-height:46px;margin:2px 0 0;font-size:14px;}
+.bracket-danger-note{margin:8px 2px 0;color:#a89b88;font-size:12px;line-height:1.5;}
+.viewer-mode .bracket-danger-note{display:none;}
+.bracket-header-actions{justify-content:stretch;margin-top:14px;}
+.bracket-header-actions>.bracket-search-wrap{width:100%;max-width:none;}
+.match-record-actions .bracket-search-wrap{
+  width:auto; min-width:220px; max-width:420px; flex:1 1 320px;
+}
+@media(max-width:640px){
+  .match-record-actions .bracket-search-wrap{width:100%;min-width:0;max-width:none;flex:1 1 100%;}
+}
+.bracket-search-box{min-height:46px;padding:10px 12px;}
+.bracket-search-input{font-size:14px;}
+.bracket-search-clear{width:40px;height:40px;padding:0;display:grid;place-items:center;}
+.bracket-zoom-toolbar{gap:8px;margin:12px 0 8px;}
+.bracket-zoom-btn{width:44px;height:44px;font-size:20px;}
+.bracket-zoom-reset,.bracket-current-btn{height:44px;min-height:44px;padding:0 14px;font-size:13px;}
+.bracket-zoom-hint{font-size:12px;line-height:1.5;flex:1 1 220px;}
+
+/* 非必要卡片不發光；亮色集中在目前場次、晉級、滿分與主要完成回饋。 */
+body::before{opacity:.42;}
+.card{background:#15130f;box-shadow:none;}
+@media(hover:hover) and (pointer:fine){
+  .card:hover,.match:hover{box-shadow:none;filter:none;}
+}
+
+/* 計分防誤觸：每場獨立鎖定 360ms，回饋僅使用小型數字提示。 */
+.score-console{position:relative;}
+.score-tap-feedback{
+  position:absolute;top:48px;z-index:8;min-width:48px;padding:5px 10px;border-radius:999px;
+  background:#211a10;border:1px solid #e9bb6870;color:#f5ce7b;text-align:center;
+  font:800 16px/1 'Space Mono',monospace;box-shadow:0 5px 18px rgba(0,0,0,.32);
+  pointer-events:none;animation:scoreFeedbackIn .16s ease-out both;
+}
+.score-tap-feedback.side-a{left:23%;transform:translateX(-50%);}
+.score-tap-feedback.side-b{right:23%;transform:translateX(50%);}
+.score-tap-feedback.is-leaving{opacity:0;transition:opacity .14s ease;}
+@keyframes scoreFeedbackIn{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
+
+/* 粗略指標不應以縮小字體換取密度；主控模式改為隱藏次要英文。 */
+.master-mode .finish-sub,.master-mode .next-match-kicker{display:none!important;}
+.master-mode .ref-footer .btn{font-size:13px!important;min-height:44px;}
+
+@media(any-pointer:coarse){
+  button,.icon-btn,summary[role="button"]{min-height:44px;}
+  .btn,.cloud-status-btn,.draw-text-btn,.draw-copy-btn,.bracket-more-btn,.bracket-current-btn{font-size:14px;}
+  .tabs .tab{font-size:12px;}
+  .bracket-zoom-btn,.bracket-zoom-reset,.bracket-current-btn,.match-filter-btn,
+  .draw-copy-btn,.cloud-share-btn,.attendance-action,.attendance-next-pending,.chip-remove{min-height:44px;}
+  .attendance-action,.attendance-next-pending,.draw-copy-btn,.cloud-share-btn{font-size:13px!important;}
+  .bracket-zoom-btn{width:48px;height:48px;}
+  .bracket-zoom-reset,.bracket-current-btn{height:48px;}
+  .match-filter-btn{font-size:14px;}
+  .header .sys-tag,.header .identity-kicker,.version-info,.card-sub,.field-label,
+  .bracket-zoom-hint,.status-pill,.draw-hint,.cloud-code-tag,.attendance-toggle-kicker{font-size:12px!important;}
+  .score-console .finish-label,.master-mode .score-console .finish-label{font-size:14px!important;}
+  .score-console .finish-sub{font-size:12px!important;}
+  .score-console .next-match-kicker,.quick-console .quick-vs-mark,.master-mode .quick-console .quick-vs-mark{font-size:12px!important;}
+  .score-console .finish-btn,.master-mode .score-console .finish-btn{min-height:56px;}
+  .score-console .ref-footer>.btn{min-height:48px;font-size:14px;}
+  .match-winner-label{min-height:22px;font-size:12px;}
+}
+@media(max-width:560px){
+  .bracket-title-row{align-items:flex-start;}
+  .bracket-more-btn{min-width:78px;padding-inline:10px;}
+  .bracket-legend{gap:9px 12px;}
+  .bracket-zoom-toolbar{display:grid;grid-template-columns:48px auto 48px 1fr;}
+  .bracket-zoom-label{min-width:46px;}
+  .bracket-zoom-reset{grid-column:1/3;width:100%;}
+  .bracket-current-btn{grid-column:3/5;width:100%;}
+  .bracket-zoom-hint{grid-column:1/-1;}
+  .score-tap-feedback{top:42px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .score-tap-feedback{animation:none;}
+}
 @media print{body::before{display:none;}}
 
 </style>
@@ -2932,11 +3026,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
       </div>
     </div>
     <div class="header-release-row">
-      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.8 <span aria-hidden="true">·</span> 更新日期 26/9/16 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
-    </div>
-    <div class="header-meta">
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.8</span></div>
-      <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/15</span></div>
+      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.9 <span aria-hidden="true">·</span> 更新日期 26/9/17 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
     </div>
   </div>
 </header>
@@ -2986,8 +3076,32 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
         <div>
           <div class="card-title">對戰樹狀圖</div>
           <div class="card-sub" id="bracketRulesSummary">單淘汰賽</div>
+          <div class="bracket-legend" aria-label="樹狀圖狀態說明">
+            <span><i class="legend-dot live"></i>進行中</span>
+            <span><i class="legend-dot next"></i>即將上場</span>
+            <span><i class="legend-dot advanced"></i>已晉級</span>
+          </div>
         </div>
-        <button class="btn btn-warning undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">隨機刷新賽程</button>
+        <details class="bracket-more" id="bracketMoreMenu">
+          <summary class="bracket-more-btn" aria-label="開啟樹狀圖更多設定">更多 ⋯</summary>
+          <div class="bracket-more-menu">
+            <div class="bracket-theme-row hidden" id="bracketThemeRow">
+              <span class="theme-swatch" aria-hidden="true"></span>
+              <span class="field-label">顏色主題</span>
+              <div class="theme-dropdown" id="bracketThemeDropdown">
+                <button type="button" class="theme-dropdown-btn text-input theme-select" id="bracketThemeBtn"
+                        aria-haspopup="listbox" aria-expanded="false" onclick="toggleThemeDropdown()">
+                  <span class="theme-dropdown-dot" id="bracketThemeBtnDot"></span>
+                  <span class="theme-dropdown-label" id="bracketThemeBtnLabel"></span>
+                  <span class="theme-dropdown-arrow" aria-hidden="true">▾</span>
+                </button>
+                <ul class="theme-dropdown-list hidden" id="bracketThemeList" role="listbox" tabindex="-1"></ul>
+              </div>
+            </div>
+            <button class="btn btn-warning undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">隨機刷新賽程</button>
+            <p class="bracket-danger-note">會重新產生整份賽程，開賽後請謹慎使用。</p>
+          </div>
+        </details>
       </div>
       <div class="bracket-header-actions">
         <div class="bracket-search-wrap hidden" id="bracketSearchWrap">
@@ -3010,6 +3124,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
         <span class="bracket-zoom-label" id="bracketZoomLabel">100%</span>
         <button class="bracket-zoom-btn" onclick="bracketZoomIn()" aria-label="放大">＋</button>
         <button class="bracket-zoom-reset" onclick="bracketZoomReset()">還原</button>
+        <button class="bracket-current-btn" onclick="jumpToCurrentBracketMatch()">目前場次</button>
         <span class="bracket-zoom-hint" id="bracketZoomHint">可用手指縮放、左右滑動查看對戰樹</span>
       </div>
 
@@ -3019,20 +3134,6 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
         </div>
       </div>
       <div class="bracket-watermark" id="bracketWatermark"></div>
-    </div>
-
-    <div class="bracket-theme-row hidden" id="bracketThemeRow" style="margin:14px 0 18px;">
-      <span class="theme-swatch" aria-hidden="true"></span>
-      <span class="field-label" style="margin:0;">顏色主題</span>
-      <div class="theme-dropdown" id="bracketThemeDropdown">
-        <button type="button" class="theme-dropdown-btn text-input theme-select" id="bracketThemeBtn"
-                aria-haspopup="listbox" aria-expanded="false" onclick="toggleThemeDropdown()">
-          <span class="theme-dropdown-dot" id="bracketThemeBtnDot"></span>
-          <span class="theme-dropdown-label" id="bracketThemeBtnLabel"></span>
-          <span class="theme-dropdown-arrow" aria-hidden="true">▾</span>
-        </button>
-        <ul class="theme-dropdown-list hidden" id="bracketThemeList" role="listbox" tabindex="-1"></ul>
-      </div>
     </div>
 
     <div class="card" id="standingsSection" style="margin-top:18px;">
@@ -3621,10 +3722,16 @@ function closeThemeDropdownOnOutsideClick(e){
   if(wrap && !wrap.contains(e.target)) toggleThemeDropdown(false);
 }
 document.addEventListener('click', closeThemeDropdownOnOutsideClick);
+document.addEventListener('click', (e) => {
+  const more = document.getElementById('bracketMoreMenu');
+  if(more && more.open && !more.contains(e.target)) more.removeAttribute('open');
+});
 
 function selectBracketTheme(key){
   applyBracketTheme(key, true);
   toggleThemeDropdown(false);
+  const more = document.getElementById('bracketMoreMenu');
+  if(more) more.removeAttribute('open');
 }
 
 function applyBracketTheme(key, persist){
@@ -3854,6 +3961,25 @@ function bracketZoomReset(){
   applyBracketZoom();
   const scroll = document.getElementById('bracketScroll');
   if(scroll) scroll.scrollLeft = 0;
+}
+
+function jumpToCurrentBracketMatch(){
+  const tree = document.getElementById('bracketTree');
+  if(!tree) return;
+  let target = tree.querySelector('.bracket-match.is-live') || tree.querySelector('.bracket-match.is-next');
+  if(!target){
+    const next = nextPlayableMatch();
+    if(next) target = tree.querySelector(`.bracket-match[data-match-id="${next.id}"]`);
+  }
+  if(!target){
+    showToast('目前沒有可進行的場次');
+    return;
+  }
+  target.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
+  target.classList.remove('search-hit');
+  void target.offsetWidth;
+  target.classList.add('search-hit');
+  setTimeout(() => target.classList.remove('search-hit'), 2000);
 }
 
 function initBracketPanZoom(){
@@ -6130,6 +6256,35 @@ function propagateKnockoutWinner(match, matchList){
 /* =========================================================
    MATCH SCORING
 ========================================================= */
+const SCORE_INPUT_LOCK_MS = 360;
+const SCORE_FEEDBACK_MS = 720;
+const scoreInputLockedUntil = new Map();
+const scoreTapFeedback = new Map();
+
+function beginScoreInput(matchId, side, points){
+  const now = Date.now();
+  if((scoreInputLockedUntil.get(matchId) || 0) > now) return false;
+  scoreInputLockedUntil.set(matchId, now + SCORE_INPUT_LOCK_MS);
+
+  if(points){
+    const token = `${now}-${Math.random()}`;
+    scoreTapFeedback.set(matchId, { side, points, token, until:now + SCORE_FEEDBACK_MS });
+    setTimeout(() => {
+      document.querySelectorAll('.score-tap-feedback').forEach(el => {
+        if(el.dataset.matchId === String(matchId)) el.classList.add('is-leaving');
+      });
+    }, SCORE_FEEDBACK_MS - 140);
+    setTimeout(() => {
+      const current = scoreTapFeedback.get(matchId);
+      if(current && current.token === token) scoreTapFeedback.delete(matchId);
+      document.querySelectorAll('.score-tap-feedback').forEach(el => {
+        if(el.dataset.matchId === String(matchId)) el.remove();
+      });
+    }, SCORE_FEEDBACK_MS);
+  }
+  return true;
+}
+
 function recomputeMatch(match){
   match.pointsA = match.log.filter(l=>l.side==='A').reduce((s,l)=>s+l.points,0);
   match.pointsB = match.log.filter(l=>l.side==='B').reduce((s,l)=>s+l.points,0);
@@ -6149,7 +6304,9 @@ function recordFinish(matchId, side, finishKey){
   const match = state.matches.find(m=>m.id===matchId);
   if(!match || match.status==='completed') return;
   if(!match.playerA || !match.playerB) return;
-  match.log.push({ side, finish:finishKey, points:FINISH[finishKey].points });
+  const finish = FINISH[finishKey];
+  if(!finish || !beginScoreInput(matchId, side, finish.points)) return;
+  match.log.push({ side, finish:finishKey, points:finish.points });
   recomputeMatch(match);
   markDirty(match.id);
   let structural = false;
@@ -6186,6 +6343,7 @@ function recordQuickWin(matchId, side){
   const match = state.matches.find(m=>m.id===matchId);
   if(!match || match.status==='completed') return;
   if(!match.playerA || !match.playerB) return;
+  if(!beginScoreInput(matchId, side, null)) return;
   match.pointsA = 0;
   match.pointsB = 0;
   match.quickWin = true;
@@ -6281,8 +6439,10 @@ function shuffleArray(arr){
 }
 
 function randomizeSchedule(){
+  const more = document.getElementById('bracketMoreMenu');
+  if(more) more.removeAttribute('open');
   if(state.matches.length === 0){
-    showAlert('尚未產生對戰紀錄，請先於「賽事設定」開始比賽。');
+    showAlert('尚未產生對戰紀錄，請先前往「賽事設定」開始比賽。');
     return;
   }
   if(state.players.length < 2){
@@ -6694,7 +6854,7 @@ function renderBracket(){
   const watermarkEl = document.getElementById('bracketWatermark');
   if(watermarkEl) watermarkEl.textContent = (state.tournament && state.tournament.name) || '';
   if(state.matches.length === 0){
-    wrap.innerHTML = `<div class="bracket-empty">尚未產生賽事，請於先於「賽事設定」建立賽事。</div>`;
+    wrap.innerHTML = `<div class="bracket-empty">尚未產生賽事，請先前往「賽事設定」建立賽事。</div>`;
     return;
   }
 
@@ -7171,7 +7331,7 @@ function renderMatches(){
   const realMatches = state.matches.filter(m => !m.isBye && !m.inactive);
 
   if(realMatches.length === 0){
-    matchList.innerHTML = `<div class="referee-empty">尚未產生對戰紀錄，請先於「賽事設定」開始比賽。</div>`;
+    matchList.innerHTML = `<div class="referee-empty">尚未產生對戰紀錄，請先前往「賽事設定」開始比賽。</div>`;
     return;
   }
 
@@ -7203,7 +7363,7 @@ function renderMatches(){
     const logAHtml = m.log.filter(l=>l.side==='A').map(chip).join('');
     const logBHtml = m.log.filter(l=>l.side==='B').map(chip).join('');
     const playerName = (id, name) => completed
-      ? `<span class="mr-name ${m.winner === id ? 'match-winner' : 'match-loser'}" data-player-id="${escapeHtml(id || '')}">${m.winner === id ? '<span class="winner-check">✓</span>' : ''}${escapeHtml(name)}</span>`
+      ? `<span class="mr-name ${m.winner === id ? 'match-winner' : 'match-loser'}" data-player-id="${escapeHtml(id || '')}">${m.winner === id ? '<span class="winner-check">✓</span>' : ''}${escapeHtml(name)}${m.winner === id ? '<span class="match-winner-label">勝利</span>' : ''}</span>`
       : `<span class="mr-name" data-player-id="${escapeHtml(id || '')}">${escapeHtml(name)}</span>`;
     const scoreHtml = completed && !m.quickWin && !m.forfeited
       ? `<span class="mr-score">${m.pointsA} : ${m.pointsB}</span>`
@@ -7368,7 +7528,7 @@ function renderReferee(){
   if(masterCb) masterCb.checked = masterModeOn;
 
   if(state.matches.length === 0){
-    wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事，</div>請於先於「賽事設定」建立賽事。</div></div>`;
+    wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事</div>請先前往「賽事設定」建立賽事。</div></div>`;
     return;
   }
   if(refereePanels.length === 0) refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
@@ -7592,6 +7752,10 @@ function renderRefereeMatch(match, panelId){
   const target = state.tournament.pointsToWin;
   const pa = nameOf(match.playerA), pb = nameOf(match.playerB);
   const completed = match.status === 'completed';
+  const activeFeedback = scoreTapFeedback.get(match.id);
+  const scoreFeedbackHtml = activeFeedback && activeFeedback.until > Date.now()
+    ? `<div class="score-tap-feedback side-${activeFeedback.side.toLowerCase()}" data-match-id="${escapeAttr(match.id)}" aria-live="polite">＋${activeFeedback.points}</div>`
+    : '';
 
   const nextMatchPreview = completed ? computeNextMatchForPanel(panelId) : null;
   const nextMatchHtml = nextMatchPreview
@@ -7659,6 +7823,7 @@ function renderRefereeMatch(match, panelId){
   body.classList.toggle("completed-console", completed);
   body.innerHTML = `
     <div class="referee-title">${refTitleLabel}</div>
+    ${scoreFeedbackHtml}
     ${ringRowHtml}
     ${mainHtml}
 
@@ -7739,7 +7904,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.8\n更新日期：2026/09/16\n\n近期更新公告\n\n• 已完成場次的勝者框會與晉級線同步點亮。\n• 重新設計手機直式頁首，加入更新公告。\n• 手機底部固定導覽，裁判台使用精簡頁首。\n• 統一炭黑與香檳金，優化字體、面板及按鈕層級。\n• 裁判台停用雙擊放大，保留捲動與雙指縮放。\n• 裁判雙方加入辨識細線，移除 PLAYER 編號。\n• 調整計分英文對齊，保留綠色同步狀態。\n• 滿分使用金色呼吸光，完成畫面強化下一場操作。\n• 新增尚未開賽引導，精簡戰況進度資訊。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.9\n更新日期：2026/09/17\n\n更新摘要\n\n• 放大手機觸控區域並提升小字可讀性。\n• 重整樹狀圖工具列，新增狀態圖例與目前場次定位。\n• 隨機刷新與主題選擇移入更多設定。\n• 計分加入 360ms 防連點及短暫加分回饋。\n• 降低非必要光效，修正文案並清理舊版頁首結構。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
