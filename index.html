@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>BEYBLADE X 對戰系統</title>
+<title>BEYBLADE X 對戰系統 V3.8</title>
 <meta name="description" content="BEYBLADE X 對戰系統：即時戰況、對戰紀錄與賽事管理。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rock197136-web.github.io/BX/?share=v4">
@@ -1773,7 +1773,9 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket-zoom-hint{ font-size:11.5px; color:var(--muted); margin-left:2px; }
 
 /* ===== Bracket player search ===== */
-.bracket-header-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.bracket-title-row{ align-items:flex-start; flex-wrap:nowrap; }
+.bracket-title-row #shuffleScheduleBtn{ flex-shrink:0; margin-left:auto; }
+.bracket-header-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
 .bracket-search-wrap{ position:relative; width:230px; max-width:60vw; flex-shrink:0; }
 .bracket-search-box{
   display:flex; align-items:center; gap:8px;
@@ -1820,6 +1822,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .match-filter-btn.active{ background:var(--hdr-blue); color:#251200; }
 @media (max-width:640px){
+  .bracket-title-row{ gap:12px; }
+  .bracket-title-row #shuffleScheduleBtn{ min-height:42px; padding:9px 12px; font-size:12px; }
   .bracket-header-actions{ width:100%; justify-content:stretch; }
   .bracket-search-wrap{ width:100%; max-width:none; order:-1; }
   .match-record-head{ align-items:stretch; flex-direction:column; }
@@ -2424,6 +2428,334 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e9bb680a,transparent 
   color:#f5ce7b!important;text-shadow:0 0 8px #e9bb6866!important;
 }
 @media(prefers-reduced-motion:reduce){.score-console .battery-body.battery-full{animation:none;filter:drop-shadow(0 0 4px #e9bb6877);}}
+
+/* V3.8: mobile hierarchy, accessible controls and restrained champagne. */
+:root{--bg:#090a0c;--panel:#121417;--panel-2:#1b1e22;--border:#303339;--muted:#a1a3aa;--side-a:#829cb5;--side-b:#bc8e8a;}
+body{background:radial-gradient(900px 440px at 100% 0,#e9bb6807,transparent 65%),var(--bg);}
+.card{border-radius:14px;border-color:#ffffff0c;box-shadow:none;}
+.card-title{font-family:'Noto Sans TC',sans-serif;font-size:20px;font-weight:700;letter-spacing:0;}
+.card-sub{line-height:1.6;color:#a1a3aa;}
+.btn,.text-input,.icon-btn{border-radius:10px;}
+.btn{min-height:44px;}
+.btn-primary{background:linear-gradient(120deg,#f0cd8b,#d9ad60);color:#211a0f;}
+.btn-success{background:#202b25;color:#a6dfbd;border-color:#496754;box-shadow:none;}
+.btn-danger{background:#322022;color:#f2b5b5;border:1px solid #7e494c;box-shadow:none;}
+.btn-dark,.btn-ghost{background:#1b1e22;border-color:#393c43;color:#d0d1d5;box-shadow:none;}
+button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-offset:3px;}
+.header{background:radial-gradient(ellipse at 50% 30%,#e9bb680b,transparent 60%),#111316;border-bottom-color:#e9bb6826;}
+.header .identity-frame-main{stroke:#c6a16a;}
+.header .identity-frame-echo{stroke:#62533e;opacity:.4;}
+.header .identity-frame-detail{stroke:#c6a16a;opacity:.55;}
+.header .identity-frame-flow{stroke:#f0d7a8;filter:drop-shadow(0 0 3px #e9bb6860);}
+.header .identity-copy{left:53.5%;width:68%;background:radial-gradient(ellipse,#111316f5 50%,transparent 80%);}
+.header .identity-kicker{font-size:10px;color:#aaa69f;}
+.header .header-meta{display:none;}
+.version-info{display:block;margin:3px 0 0 auto;background:transparent;border:0;color:#aaa69f;font-size:11px;min-height:32px;padding:6px 8px;}
+.tabs .tab{box-shadow:none;font-size:14px;min-height:46px;}
+.tab.active{background:#e9bb6818;color:#f0d7a8;border-color:#e9bb6860;box-shadow:none;}
+.cloud-status-hint{display:none;}
+.cloud-status-btn{min-height:44px;font-size:12px;}
+.cloud-status{border-color:#ffffff12;box-shadow:none;}
+.stats-bar{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:14px 16px 0;border-radius:14px;overflow:hidden;background:var(--panel);border:1px solid #ffffff0c;}
+.stats-bar .stats-bar-item{border:0;padding:0 0 12px;min-width:0;background:none;}
+.stats-bar .stats-bar-item:nth-child(2){text-align:right;}
+.stats-bar .sb-value{font-size:25px;color:#f2f2f2;line-height:1.3;}
+.stats-bar .sb-value small{font:500 12px 'Noto Sans TC',sans-serif;color:#a9abb0;}
+.stats-bar .stats-bar-progress{grid-column:1/-1;position:relative;height:3px;min-height:3px;margin:0 -16px;padding:0;background:#282a2e;overflow:hidden;}
+.stats-bar .sb-progress-fill{position:absolute;inset:0 auto 0 0;height:3px;background:#e9bb68;opacity:1;}
+.welcome-card{text-align:center;padding:32px 20px;margin-top:18px;background:radial-gradient(ellipse at top,#e9bb680c,transparent 70%),var(--panel);}
+.welcome-mark{color:#e9bb68;font:900 italic 30px 'Rajdhani',sans-serif;margin-bottom:14px;}
+.welcome-card p{font-size:14px;color:#a9abb0;line-height:1.6;margin:0 0 22px;}
+.referee-panel{border-color:#ffffff12;box-shadow:none;border-radius:14px;}
+.score-console,.score-console.quick-console,.score-console.completed-console{border-color:transparent;background:#121417;box-shadow:none;}
+.score-console .ring-wrap{border-color:#ffffff12!important;border-top:3px solid var(--side-a)!important;}
+.score-console .ring-wrap:last-child{border-top-color:var(--side-b)!important;}
+.score-console .ring-name{min-height:2.8em;display:flex;align-items:center;justify-content:center;line-height:1.4;}
+.score-console .finish-col.side-a{border-top:2px solid #829cb560;padding-top:8px;}
+.score-console .finish-col.side-b{border-top:2px solid #bc8e8a60;padding-top:8px;}
+.score-console .finish-btn{border-color:#393c43!important;background:#1b1e22;}
+.score-console .finish-pts{color:#f0d7a8!important;background:transparent!important;}
+.score-console .finish-sub,.master-mode .score-console .finish-sub{font-size:10px!important;color:#bdb5a6;opacity:1;}
+.score-console .quick-win-btn.side-blue{box-shadow:inset 3px 0 var(--side-a);border-color:#829cb540;}
+.score-console .quick-win-btn.side-red{box-shadow:inset 3px 0 var(--side-b);border-color:#bc8e8a40;}
+.score-console.completed-console .ref-footer{display:flex;flex-wrap:wrap;}
+.score-console.completed-console .ref-footer>.btn-ghost{order:5;flex:0 0 100%;background:transparent;border:0;color:#c99e9e;box-shadow:none;}
+.bracket-match.done{border-color:#45484e;box-shadow:none;}
+/* 狀態框只維持一層：進行中用紅框、即將上場用橘黃框。
+   不再疊加主題色外圈與光暈，避免場次卡片看起來有雙重框線。 */
+.bracket-match.is-live{
+  border-color:#ff4d4d;
+  box-shadow:none;
+  animation:none;
+}
+.bracket-match.is-next{
+  border-color:#ffb12b;
+  box-shadow:none;
+}
+.bracket-match.final-match,.bracket-match.final-match.done{border-color:#e9bb6870;box-shadow:none;}
+/* 決賽與季軍戰同樣服從目前狀態色，避免金／銅框覆蓋進行中提示。 */
+.bracket-match.final-match.is-live,
+.bracket-bronze-body .bracket-match.is-live{
+  border-color:#ff4d4d;
+  box-shadow:none;
+  animation:none;
+}
+.bracket-match.final-match.is-next{
+  border-color:#ffb12b;
+  box-shadow:none;
+}
+.final-sparkle{display:none;}
+.bracket-match.final-match .bslot-name{text-shadow:none!important;}
+.bracket-round-label{letter-spacing:0;font-size:13px;color:#b3b4b8;}
+.single-match-tag{font-size:12px;color:#b3b4b8;}
+.bracket-watermark{opacity:.12;}
+.conn-path.active{filter:none;}
+.text-input,select.text-input,.chip-input-wrap{background:#1b1e22;}
+.field-label{font-size:13px;color:#b5b7bd;}
+.chip-remove{width:36px;height:36px;}
+.player-chip{padding:2px 3px 2px 10px;}
+.attendance-action{min-height:44px;}
+.attendance-toggle{background:linear-gradient(105deg,#e9bb6810,#16181b);border-color:#e9bb6850;box-shadow:inset 3px 0 #e9bb68;}
+.attendance-toggle-kicker{font-size:10px;}
+.attendance-toggle-icon{box-shadow:none;border-color:#e9bb6850;background:#e9bb6810;}
+@media(max-width:700px){
+ .container{padding:0 12px calc(94px + env(safe-area-inset-bottom));}
+ .tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;gap:4px;margin:0;padding:7px 8px calc(7px + env(safe-area-inset-bottom));background:#121417f5;border-top:1px solid #ffffff15;backdrop-filter:blur(16px);overflow:visible;}
+ .tabs .tab{flex:1 1 0;min-width:0;min-height:54px;flex-direction:column;gap:5px;font-size:11px;padding:6px 2px;background:transparent;border:1px solid transparent;border-radius:10px;transform:none;}
+ .tabs .tab.active{background:#e9bb6812;color:#f0d7a8;border-color:#e9bb682c;}
+ .tabs .tab svg{width:20px;height:20px;}
+ .cloud-status-wrap{margin-bottom:16px;}
+ .header .identity-card{min-height:94px;}
+ .header .identity-copy{width:70%;padding:8px 4px;}
+ .header .identity-kicker{font-size:9px;}
+ .header .identity-name{font-size:clamp(20px,5.5vw,26px);}
+ .header .sys-tag{font-size:10px;}
+ .referee-view .header .header-top,.referee-view .header .identity-bg,.referee-view .header .identity-kicker,.referee-view .version-info{display:none;}
+ .referee-view .header{padding:12px 15px;}
+ .referee-view .header .identity-card{min-height:0;margin:0;display:block;}
+ .referee-view .header .identity-copy{position:static;transform:none;width:100%;max-width:none;padding:0;background:none;text-align:left;}
+ .referee-view .header .identity-name{font-size:18px;line-height:1.4;}
+ .card{padding:16px;margin-bottom:14px;}
+ .score-console .ring-wrap .ring-name,.master-mode .score-console .ring-wrap .ring-name{font-size:18px!important;min-height:2.8em;}
+ .score-console .ring-wrap .battery-value{font-size:30px!important;}
+ .score-console .finish-btn,.master-mode .score-console .finish-btn{min-height:54px;padding:8px 6px;}
+ .score-console .finish-label,.master-mode .score-console .finish-label{font-size:14px!important;}
+ .score-console .fin-badge{width:18px;flex-shrink:0;}
+ .score-console .fin-badge-svg{width:18px;}
+ .score-console .finish-pts{min-width:20px!important;padding:2px;}
+ .score-console.completed-console .ref-footer,.master-mode .score-console.completed-console .ref-footer{display:flex;gap:8px;flex-wrap:wrap;}
+ .score-console.completed-console .ref-footer>.btn{flex:1 1 42%;min-height:46px;font-size:13px;white-space:normal;}
+ .score-console.completed-console .ref-footer>.btn-ghost{flex:0 0 100%;width:100%;min-height:44px;order:5;}
+ .score-console .ref-footer>.btn{min-height:44px;}
+ .text-input,.chip-text-input,.chip-edit-input{font-size:16px;}
+ .row2{grid-template-columns:1fr;gap:16px;}
+}
+@media(prefers-reduced-motion:reduce){.tabs{scroll-behavior:auto;}}
+
+
+/* V3.8 portrait header: editorial alignment with a restrained competition frame. */
+.header-release-row{display:flex;align-items:center;justify-content:flex-end;border-top:1px solid #ffffff0d;padding-top:3px;}
+.header-release-row .version-info{margin:0;min-height:44px;display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#d0c2a9;}
+.version-arrow{font-size:15px;color:#e9bb68;line-height:1;}
+#customModalMessage{line-height:1.75;text-align:left;max-height:65vh;overflow-y:auto;}
+@media(max-width:700px){
+ .header{padding:14px 16px 14px;background:radial-gradient(ellipse at 50% -30%,#e9bb6812,transparent 75%),#111316;}
+ .header::before{opacity:.35;background-size:36px 36px,36px 36px,auto;}
+ .header::after{inset:9px;opacity:.35;}
+ .header .header-top{min-height:28px;gap:8px;margin-bottom:13px;}
+ .header .sys-tag{font-size:9px;letter-spacing:.08em;color:#a6a198;}
+ .header .sys-dot{width:4px;height:4px;background:#e9bb68;box-shadow:none;}
+ .header .logo{font-size:23px;letter-spacing:.4px;}
+ .header .logo-x{color:#e9bb68;}
+ .header .identity-card{display:grid;place-items:center;position:relative;min-height:112px;margin:0 0 10px;padding:21px 16px;border:1px solid #e9bb682b;border-radius:12px;background:linear-gradient(135deg,#e9bb6808,transparent 55%),#15171a;overflow:hidden;}
+ .header .identity-bg{display:none;}
+ .header .identity-card::before{content:'';position:absolute;inset:7px;pointer-events:none;background:linear-gradient(#d5b47a,#d5b47a) left top/17px 1px no-repeat,linear-gradient(#d5b47a,#d5b47a) left top/1px 8px no-repeat,linear-gradient(#d5b47a,#d5b47a) right bottom/17px 1px no-repeat,linear-gradient(#d5b47a,#d5b47a) right bottom/1px 8px no-repeat;opacity:.65;}
+ .header .identity-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#e9bb68,transparent);opacity:.65;}
+ .header .identity-copy{position:relative;left:auto;top:auto;transform:none;width:100%;max-width:none;padding:0;background:none;text-align:center;}
+ .header .identity-kicker{font:600 10px/1.4 'Inter',sans-serif;letter-spacing:.18em;color:#b6a17e;margin-bottom:9px;}
+ .header .identity-name{font-family:'Noto Sans TC',sans-serif;font-weight:800;font-size:clamp(22px,6vw,28px);line-height:1.4;letter-spacing:.03em;color:#f5f0e7;text-shadow:none;overflow-wrap:anywhere;}
+ .header-release-row .version-info{font-size:11px;gap:6px;padding:6px 0;}
+ .referee-view .header{padding:10px 16px 12px;}
+ .referee-view .header .identity-card{display:block;min-height:0;margin:0 0 4px;padding:0;border:0;border-radius:0;background:none;}
+ .referee-view .header .identity-card::before,.referee-view .header .identity-card::after{display:none;}
+ .referee-view .header .identity-copy{text-align:left;}
+ .referee-view .header-release-row .version-info{display:inline-flex;}
+ .referee-view .header .identity-name{font-size:18px;}
+ #customModalMessage{font-size:14px;max-height:60vh;}
+}
+
+
+/* Referee gestures: disable double-tap zoom while retaining pan and pinch.
+   Scoped to this section so dynamic scoring / quick-win controls are covered. */
+#tab-referee,
+#tab-referee button,
+#tab-referee input,
+#tab-referee select,
+#tab-referee [role="button"]{
+  touch-action:manipulation;
+}
+
+</style>
+<style id="gaming-aesthetics">
+/* Gaming visual layer: scoped effects preserve tournament layout and controls. */
+:root{--bg:#070707;--panel:#121212;--panel-2:#1c1b19;--border:#40372b;--text:#fff6e9;--muted:#b7ada0;--cyan:#ff9f24;--cyan-soft:#ffda91;--teal:#ffd34d;--violet:#ffc23d;--hdr-blue:#ff9f24;--hdr-blue-soft:#ffda91;--hdr-red:#ffc23d;--side-a:#ff9f24;--side-b:#ffd34d;--gaming-glow:255,159,36;}
+body{isolation:isolate;background:radial-gradient(ellipse at 0 0,#5532074d,transparent 55%),radial-gradient(ellipse at 100% 65%,#73471924,transparent 55%),var(--bg);}
+body::before{content:'';position:fixed;inset:-64px;z-index:-1;pointer-events:none;background-image:linear-gradient(#ff9f2409 1px,transparent 1px),linear-gradient(90deg,#ff9f2409 1px,transparent 1px);background-size:64px 64px;animation:gamingGridDrift 32s linear infinite;}
+@keyframes gamingGridDrift{to{transform:translate3d(64px,64px,0);}}
+.header{background:radial-gradient(ellipse at 20% 0,#ff9f2413,transparent 65%),linear-gradient(120deg,#1b1711,#0b0b0b 65%,#241b0d);border-bottom:1px solid #ff9f2445;}
+.header .sys-tag,.header .meta-value.accent{color:#ffda91;}
+.header .sys-dot,.header .status-dot{background:#ff9f24;box-shadow:0 0 10px #ff9f2480;}
+.header .logo-x{color:#ffd34d;text-shadow:0 0 16px #ffc23d55;}
+.header .identity-name{color:#fff6e9;text-shadow:0 0 24px #ff9f2422;}
+.header .identity-kicker{color:#c6ad84;}
+.header .identity-frame-main{stroke:#ff9f24;}
+.header .identity-frame-echo{stroke:#675134;}
+.header .identity-frame-detail{stroke:#ffd34d;}
+.header .identity-frame-flow{stroke:#fff0bd;filter:drop-shadow(0 0 4px #ff9f2499);}
+.header .identity-copy{background:radial-gradient(ellipse,#10100f 30%,#10100fe0 58%,transparent 78%);}
+.header-release-row .version-info{color:#b7ada0;}.version-arrow{color:#ff9f24;}
+.card{background:linear-gradient(130deg,#201c16,#111110 65%);border:1px solid #4b3c27;border-radius:4px 16px 4px 16px;box-shadow:inset 0 1px #ffffff06,0 8px 30px #00000024;transition:border-color .22s ease,box-shadow .22s ease;}
+.card-title{color:#fff6e9;}.card-sub,.field-label{color:#b7ada0;}
+.tabs{padding-top:4px;padding-bottom:7px;}
+.tabs .tab{background:#121212;border-color:#493b28;border-radius:3px 10px 3px 10px;color:#c5b8a5;}
+.tabs .tab.active{color:#ffe0a2;background:linear-gradient(120deg,#4c3213,#251e14);border-color:#ff9f2499;box-shadow:inset 0 -2px #ff9f24,0 0 14px #ff9f2415;}
+.btn,.tab,.icon-btn,.attendance-toggle{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease,filter .18s ease;}
+.btn{border-radius:3px 10px 3px 10px;}
+.btn-primary,.match .btn-primary{background:linear-gradient(115deg,#ff9f24,#ffd34d);color:#1a1003;border:1px solid #ffe5a6;box-shadow:0 3px 0 #94520b,0 0 18px #ff9f2418;}
+.btn-dark,.btn-ghost{background:#201c16;color:#eee0ca;border-color:#57432b;}
+.btn-danger{--gaming-glow:255,100,90;background:#341827;color:#ffc2d8;border-color:#93415f;}
+.btn-success{--gaming-glow:91,236,176;background:#12382e;color:#b2f6d7;border:1px solid #397c65;}
+.btn-warning{--gaming-glow:233,187,104;}
+.match .btn-ghost{color:#ffda91;border-color:#ff9f2455;}
+.text-input,select.text-input,.chip-input-wrap{background:#0c0c0b;border-color:#51422e;color:#fff6e9;}
+.text-input:focus,.chip-input-wrap:focus-within{outline:2px solid #ff9f24;outline-offset:2px;box-shadow:0 0 14px #ff9f2418;}
+button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-offset:3px;}
+.attendance-toggle{background:linear-gradient(110deg,#3e2a12,#17140f 75%);border-color:#ff9f2466;box-shadow:inset 3px 0 #ff9f24;}
+.attendance-toggle-icon{background:#ff9f2412;color:#ffdc8d;border-color:#ff9f2455;}
+.attendance-toggle-note{color:#c6b9a7;}
+.stats-bar{background:#121212;border-color:#4b3c27;border-radius:4px 14px 4px 14px;}.stats-bar .sb-progress-fill{background:linear-gradient(90deg,#ff9f24,#ffd34d);}
+.match{background:linear-gradient(120deg,#211b13,#111110);border-color:#4b3c27;transition:border-color .2s ease,box-shadow .2s ease;}
+.match.completed{border-color:#ff9f2444;border-left-color:#ff9f24;}
+.status-pill.done{background:#ff9f2415;color:#ffda91;}
+.match-filter-btn.active{background:#ff9f24;color:#1a1003;}
+@media(hover:hover) and (pointer:fine){
+ .btn:not(:disabled):hover,.tabs .tab:hover,.icon-btn:not(:disabled):hover{transform:translateY(-2px) scale(1.015);border-color:rgb(var(--gaming-glow));box-shadow:0 0 0 1px rgba(var(--gaming-glow),.18),0 0 22px rgba(var(--gaming-glow),.26);filter:brightness(1.08);}
+ .card:hover,.match:hover{border-color:#ff9f2488;box-shadow:inset 0 1px #ff9f2415,0 0 24px #ff9f2412;transform:none;}
+ .attendance-toggle:hover{border-color:#ffe3a0;box-shadow:inset 3px 0 #ff9f24,0 0 20px #ff9f2422;}
+}
+.btn:not(:disabled):active,.tabs .tab:active,.icon-btn:not(:disabled):active{transform:scale(.985);filter:brightness(1.12);}
+@media(hover:none){.match:hover{transform:none;}.btn,.tab,.icon-btn{touch-action:manipulation;}}
+@media(max-width:700px){
+ .header .identity-card{background:linear-gradient(120deg,#ff9f2408,#ffc23d06),#121212;border-color:#ff9f2450;border-radius:3px 14px 3px 14px;}
+ .header .identity-card::before{background:linear-gradient(#ff9f24,#ff9f24) left top/20px 1px no-repeat,linear-gradient(#ff9f24,#ff9f24) left top/1px 10px no-repeat,linear-gradient(#ffd34d,#ffd34d) right bottom/20px 1px no-repeat,linear-gradient(#ffd34d,#ffd34d) right bottom/1px 10px no-repeat;}
+ .header .identity-card::after{background:linear-gradient(90deg,transparent,#ff9f24,#ffd34d,transparent);}
+ .header .identity-copy{background:none;}.card{padding:16px;}
+ .referee-view .header .identity-card{background:none;border:0;}
+}
+@media(prefers-reduced-motion:reduce){
+ body::before{animation:none;}.btn,.tab,.icon-btn,.attendance-toggle,.card,.match{transition:none;}
+ .btn:not(:disabled):hover,.tabs .tab:hover,.icon-btn:not(:disabled):hover,.btn:not(:disabled):active,.tabs .tab:active{transform:none;}
+}
+/* ===== 賽程狀態：最後優先規則 =====
+   進行中僅使用紅色外框；不繼承賽事主題的橘黃外框或光暈。 */
+.bracket-match.is-live,
+.bracket-match.final-match.is-live,
+.bracket-bronze-body .bracket-match.is-live{
+  border:2px solid #ff2f3d !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:none !important;
+}
+/* 即將上場改成單一 2px 亮黃框；以框色呼吸提升辨識，不建立第二層外框。 */
+.bracket-match.is-next,
+.bracket-match.final-match.is-next{
+  border:2px solid #ffc128 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  animation:nextMatchBorder 1.7s ease-in-out infinite !important;
+}
+.bracket-match.is-next::before{
+  content:none !important;
+}
+.bracket-status-badge.next{
+  padding:5px 13px 6px;
+  color:#fff4c7;
+  border:2px solid #ffc128;
+  border-bottom:0;
+  background:linear-gradient(180deg,#4a3107,#261b08);
+  box-shadow:0 -3px 12px rgba(255,193,40,.2);
+}
+.bracket-status-badge.next .bracket-status-dot{
+  width:7px;
+  height:7px;
+  background:#ffd34d;
+  box-shadow:0 0 8px #ffd34d;
+}
+/* 進行中／即將上場固定於對戰框右上角，避開左側場次與選手姓名。 */
+.bracket-match .bracket-status-badge,
+.bracket-match.final-match .bracket-status-badge.with-final{
+  top:0 !important;
+  right:10px !important;
+  bottom:auto !important;
+  left:auto !important;
+  min-height:31px;
+  border-radius:10px 10px 0 0;
+  transform:translateY(-100%) !important;
+}
+.bracket-match .bracket-status-badge.live{
+  padding:5px 13px 6px;
+  color:#ff8b91;
+  border:2px solid #ff2f3d;
+  border-bottom:0;
+  background:linear-gradient(180deg,#3b1015,#210b0e);
+  box-shadow:0 -3px 12px rgba(255,47,61,.2);
+}
+.bracket-match .bracket-status-badge::after{
+  content:none;
+}
+/* 狀態文字簡化：右上方顯示發光圓點與文字，不使用標籤框或底色。 */
+.bracket-match .bracket-status-badge.live,
+.bracket-match.final-match .bracket-status-badge.live.with-final,
+.bracket-match .bracket-status-badge.next,
+.bracket-match.final-match .bracket-status-badge.next.with-final{
+  top:0 !important;
+  right:8px !important;
+  min-height:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  transform:translateY(calc(-100% - 8px)) !important;
+  color:#ff5863;
+  font-size:12px;
+  line-height:1;
+  letter-spacing:.08em;
+  text-shadow:0 0 8px rgba(255,47,61,.32);
+}
+.bracket-match .bracket-status-badge.next,
+.bracket-match.final-match .bracket-status-badge.next.with-final{
+  color:#ffd34d;
+  text-shadow:0 0 8px rgba(255,193,40,.34);
+}
+.bracket-status-badge.live .bracket-status-dot{
+  display:block;
+}
+.bracket-status-badge.next .bracket-status-dot{
+  display:block;
+}
+@keyframes nextMatchBorder{
+  0%,100%{border-color:#e99d10;}
+  50%{border-color:#ffe36a;}
+}
+@media(prefers-reduced-motion:reduce){
+  .bracket-match.is-next,
+  .bracket-match.final-match.is-next{animation:none !important;}
+}
+@media print{body::before{display:none;}}
+
 </style>
 </head>
 <body>
@@ -2579,8 +2911,11 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e9bb680a,transparent 
         <strong class="identity-name" id="headerTName">尚未設定賽事</strong>
       </div>
     </div>
+    <div class="header-release-row">
+      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.8 <span aria-hidden="true">·</span> 更新日期 26/9/16 <span class="version-arrow" aria-hidden="true">↗</span></button>
+    </div>
     <div class="header-meta">
-      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.7</span></div>
+      <div class="meta-item"><span class="meta-label">VER</span><span class="meta-value">V3.8</span></div>
       <div class="meta-item"><span class="meta-label">UPDATED</span><span class="meta-value">26/9/15</span></div>
     </div>
   </div>
@@ -2599,34 +2934,26 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e9bb680a,transparent 
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="standings" onclick="switchTab('standings')"><span id="tabIconStandings" class="btn-icon-slot"></span> 即時戰況</button>
-    <button class="tab" data-tab="matches" onclick="switchTab('matches')"><span id="tabIconMatches" class="btn-icon-slot"></span> 對戰紀錄</button>
-    <button class="tab" data-tab="referee" onclick="switchTab('referee')"><span id="tabIconReferee" class="btn-icon-slot"></span> 裁判台</button>
-    <button class="tab" data-tab="setup" onclick="switchTab('setup')"><span id="tabIconSetup" class="btn-icon-slot"></span> 賽事設定</button>
-    <button class="tab" data-tab="tools" onclick="switchTab('tools')"><span id="tabIconTools" class="btn-icon-slot"></span> 小工具</button>
-  </div>
+  <nav class="tabs" aria-label="主要功能">
+    <button class="tab active" data-tab="standings" onclick="switchTab('standings')"><span id="tabIconStandings" class="btn-icon-slot"></span> <span class="tab-label">戰況</span></button>
+    <button class="tab" data-tab="matches" onclick="switchTab('matches')"><span id="tabIconMatches" class="btn-icon-slot"></span> <span class="tab-label">紀錄</span></button>
+    <button class="tab" data-tab="referee" onclick="switchTab('referee')"><span id="tabIconReferee" class="btn-icon-slot"></span> <span class="tab-label">裁判</span></button>
+    <button class="tab" data-tab="setup" onclick="switchTab('setup')"><span id="tabIconSetup" class="btn-icon-slot"></span> <span class="tab-label">設定</span></button>
+    <button class="tab" data-tab="tools" onclick="switchTab('tools')"><span id="tabIconTools" class="btn-icon-slot"></span> <span class="tab-label">工具</span></button>
+  </nav>
 
   <!-- STANDINGS -->
   <section id="tab-standings">
-    <div class="stats-bar">
-      <div class="stats-bar-item">
-        <div class="sb-value" id="statPlayers">0</div>
-        <div class="sb-label">參賽人數</div>
-      </div>
-      <div class="stats-bar-item">
-        <div class="sb-value" id="statTotal">0</div>
-        <div class="sb-label">總場次</div>
-      </div>
-      <div class="stats-bar-item">
-        <div class="sb-value" id="statCompleted">0</div>
-        <div class="sb-label">已完成</div>
-      </div>
-      <div class="stats-bar-item stats-bar-progress">
-        <div class="sb-progress-fill" id="statProgressFill" style="width:0%"></div>
-        <div class="sb-value" id="statProgress">0%</div>
-        <div class="sb-label">完成率</div>
-      </div>
+    <div id="welcomeV38" class="card welcome-card hidden">
+      <div class="welcome-mark" aria-hidden="true">BX</div>
+      <div class="card-title">尚未建立賽事</div>
+      <p>設定賽制並加入選手，即可產生對戰表。</p>
+      <button class="btn btn-primary" onclick="switchTab('setup')">建立賽事 <span aria-hidden="true">→</span></button>
+    </div>
+    <div class="stats-bar" id="statsBarV38">
+      <div class="stats-bar-item"><div class="sb-value"><span id="statPlayers">0</span><small> 位選手</small></div></div>
+      <div class="stats-bar-item"><div class="sb-value"><small>已完成 </small><span id="statCompleted">0</span><small>／<span id="statTotal">0</span> 場</small></div></div>
+      <div class="stats-bar-item stats-bar-progress"><div class="sb-progress-fill" id="statProgressFill" style="width:0%"></div><span class="hidden" id="statProgress">0%</span></div>
     </div>
     <div id="podiumContainer" class="hidden" style="margin-top:22px;"></div>
     <div id="awardButtonWrap" class="hidden" style="display:flex; justify-content:flex-end; margin:-6px 0 18px;">
@@ -2635,26 +2962,26 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e9bb680a,transparent 
 
     <!-- Knockout bracket tree view -->
     <div class="card hidden" id="bracketSection" style="margin-top:18px;">
-      <div class="space-between">
+      <div class="space-between bracket-title-row">
         <div>
           <div class="card-title">對戰樹狀圖</div>
           <div class="card-sub" id="bracketRulesSummary">單淘汰賽</div>
         </div>
-        <div class="bracket-header-actions">
-          <div class="bracket-search-wrap hidden" id="bracketSearchWrap">
-            <div class="bracket-search-box">
-              <span class="bracket-search-icon" id="bracketSearchIconSlot"></span>
-              <input type="text" class="bracket-search-input" id="bracketSearchInput"
-                     placeholder="搜尋選手姓名..." autocomplete="off" aria-label="搜尋選手姓名"
-                     oninput="onBracketSearchInput(this.value)"
-                     onkeydown="onBracketSearchKeydown(event)"
-                     onfocus="onBracketSearchInput(this.value)">
-              <button type="button" class="bracket-search-clear hidden" id="bracketSearchClearBtn"
-                      aria-label="清除搜尋" onclick="clearBracketSearch()"><span id="bracketSearchClearIcon"></span></button>
-            </div>
-            <ul class="bracket-search-list hidden" id="bracketSearchList" role="listbox"></ul>
+        <button class="btn btn-warning undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">隨機刷新賽程</button>
+      </div>
+      <div class="bracket-header-actions">
+        <div class="bracket-search-wrap hidden" id="bracketSearchWrap">
+          <div class="bracket-search-box">
+            <span class="bracket-search-icon" id="bracketSearchIconSlot"></span>
+            <input type="text" class="bracket-search-input" id="bracketSearchInput"
+                   placeholder="搜尋選手姓名..." autocomplete="off" aria-label="搜尋選手姓名"
+                   oninput="onBracketSearchInput(this.value)"
+                   onkeydown="onBracketSearchKeydown(event)"
+                   onfocus="onBracketSearchInput(this.value)">
+            <button type="button" class="bracket-search-clear hidden" id="bracketSearchClearBtn"
+                    aria-label="清除搜尋" onclick="clearBracketSearch()"><span id="bracketSearchClearIcon"></span></button>
           </div>
-          <button class="btn btn-warning undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule()">隨機刷新賽程</button>
+          <ul class="bracket-search-list hidden" id="bracketSearchList" role="listbox"></ul>
         </div>
       </div>
 
@@ -4603,6 +4930,15 @@ function onCloudMeta(data){
     && data.shuffleAt
     && data.shuffleAt !== lastAppliedShuffleAt
     && data.shuffleAt !== lastLocalShuffleAt; // ignore the echo of our own broadcast — that device is already spinning
+  // Hosted/Firebase mode immediately echoes this device's own shuffleAt write.
+  // Re-rendering on that echo replaces every name node captured by
+  // startScheduleSpin(), making the flicker appear to vanish online even
+  // though it works offline. The echo contains no new tournament content,
+  // so retain the current DOM until finalizeScheduleShuffle() renders the
+  // completed draw.
+  const isOwnShuffleEcho = scheduleSpinTimer !== null
+    && !!data.shuffleAt
+    && data.shuffleAt === lastLocalShuffleAt;
   metaInitialized = true;
   if(data.shuffleAt) lastAppliedShuffleAt = data.shuffleAt;
 
@@ -4628,7 +4964,7 @@ function onCloudMeta(data){
     try{ localStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
   }
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-  renderAll();
+  if(!isOwnShuffleEcho) renderAll();
   updateCloudStatusUI();
   applyingRemote = false;
 
@@ -6466,13 +6802,11 @@ function randomizeSparklePosition(el){
 
 /* =========================================================
    BRACKET: PLAYER SEARCH
-   Only surfaced for large single-elimination brackets (>32
-   players), where manually scanning the tree for one's own
-   name gets tedious. The whole point isn't the dropdown list —
+   Surfaced for every elimination bracket so players can quickly
+   locate themselves without manually scanning the tree. The point isn't the dropdown list —
    it's landing the user on their current match card as fast as
    possible: type → pick → tree scrolls & centers → card glows.
 ========================================================= */
-const BRACKET_SEARCH_MIN_PLAYERS = 16;
 let bracketSearchActiveIndex = -1;
 let bracketSearchResults = [];
 let bracketSearchHighlightTimer = null;
@@ -6482,7 +6816,7 @@ function updateBracketSearchVisibility(){
   if(!wrap) return;
   const isKnockout = state.tournament && isElimination(state.tournament.format);
   const playerCount = Array.isArray(state.players) ? state.players.length : 0;
-  const show = isKnockout && playerCount >= BRACKET_SEARCH_MIN_PLAYERS && state.matches.length > 0;
+  const show = isKnockout && playerCount > 0 && state.matches.length > 0;
   wrap.classList.toggle('hidden', !show);
   if(!show) clearBracketSearch();
 }
@@ -7312,8 +7646,8 @@ function renderRefereeMatch(match, panelId){
       ${quickMode ? '' : `<button class="btn btn-dark" onclick="undoLastPoint('${match.id}')" ${match.log.length===0?'disabled':''}>撤銷上一分</button>`}
       ${(!quickMode || completed) ? `<button class="btn btn-ghost" onclick="resetMatch('${match.id}')" ${(!quickMode && match.log.length===0) ? 'disabled':''}>勝負重置</button>` : ''}
       ${completed ? (nextMatchPreview
-          ? `<button class="btn btn-switch-match ${nextMatchSwitchingPanels.has(panelId) ? 'is-switching' : ''}" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) && !nextMatchSwitchingPanels.has(panelId) ? '' : 'disabled'}>轉換他場對戰 ${icon('shuffle',15)}</button>
-             <button class="btn btn-primary btn-next-match" onclick="advanceReferee('${panelId}')" ${nextMatchSwitchingPanels.has(panelId) ? 'disabled' : ''}>下一場對戰 ${icon('arrow-right',16)}</button>`
+          ? `<button class="btn btn-switch-match ${nextMatchSwitchingPanels.has(panelId) ? 'is-switching' : ''}" onclick="switchToOtherPendingMatch('${panelId}')" ${hasAlternativeNextMatch(panelId) && !nextMatchSwitchingPanels.has(panelId) ? '' : 'disabled'}>切換場次 ${icon('shuffle',15)}</button>
+             <button class="btn btn-primary btn-next-match" onclick="advanceReferee('${panelId}')" ${nextMatchSwitchingPanels.has(panelId) ? 'disabled' : ''}>下一場 ${icon('arrow-right',16)}</button>`
           : (hasPendingMatches()
               ? `<button class="btn btn-dark" disabled>目前無可分配場次</button>`
               : `<button class="btn btn-primary" onclick="showFinalResults()">戰績結算</button>`)
@@ -7383,6 +7717,11 @@ function hideModal(){
   document.getElementById('customModal').classList.remove('show');
 }
 
+
+function openUpdateNotes(){
+  showModal('目前版本：V3.8\n更新日期：2026/09/16\n\n近期更新公告\n\n• 重新設計手機直式頁首，加入更新公告。\n• 手機底部固定導覽，裁判台使用精簡頁首。\n• 統一炭黑與香檳金，優化字體、面板及按鈕層級。\n• 裁判台停用雙擊放大，保留捲動與雙指縮放。\n• 裁判雙方加入辨識細線，移除 PLAYER 編號。\n• 調整計分英文對齊，保留綠色同步狀態。\n• 滿分使用金色呼吸光，完成畫面強化下一場操作。\n• 新增尚未開賽引導，精簡戰況進度資訊。', [{label:'知道了',className:'btn-primary'}]);
+}
+
 function showAlert(message){
   showModal(message, [{ label:'知道了', className:'btn-primary' }]);
 }
@@ -7390,7 +7729,7 @@ function showAlert(message){
 function showConfirm(message, onConfirm){
   showModal(message, [
     { label:'取消', className:'btn-dark' },
-    { label:'確定', className:'btn-danger', action:onConfirm }
+    { label: /清除|刪除|撤銷|重置|重新開始/.test(message) ? '確定變更' : '繼續', className: /清除|刪除|撤銷|重置|重新開始/.test(message) ? 'btn-danger' : 'btn-primary', action:onConfirm }
   ]);
 }
 
@@ -7440,6 +7779,9 @@ function showFinalResults(){
    STATS + SETUP SYNC
 ========================================================= */
 function renderStats(){
+  const empty = state.matches.length === 0;
+  document.getElementById("welcomeV38").classList.toggle("hidden", !empty);
+  document.getElementById("statsBarV38").classList.toggle("hidden", empty);
   const realMatches = state.matches.filter(m => !m.isBye && !m.inactive);
   const total = realMatches.length;
   const completed = realMatches.filter(m=>m.status==='completed').length;
@@ -7568,6 +7910,10 @@ function switchTab(tab){
   });
   document.querySelectorAll('.tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.body.classList.toggle('referee-view', tab === 'referee');
+  document.querySelectorAll('.tab').forEach(btn => {
+    if(btn.dataset.tab === tab) btn.setAttribute('aria-current','page'); else btn.removeAttribute('aria-current');
   });
   if(tab === 'referee') renderReferee();
   if(tab === 'standings' && standingsDirty){ renderStandings(); standingsDirty = false; }
