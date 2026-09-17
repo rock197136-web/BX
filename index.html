@@ -7586,7 +7586,7 @@ function renderReferee(){
     <div class="card referee-panel">
       <div class="ref-panel-head">
         <input class="text-input ref-panel-label" value="${escapeAttr(panel.label || '')}"
-               placeholder="裁判 ${i+1}／桌次名稱（選填）" onchange="renamePanel('${panel.id}', this.value)">
+               placeholder="裁判 ${i+1}（選填）" onchange="renamePanel('${panel.id}', this.value)">
         ${refereePanels.length > 1 ? `<button class="icon-btn focus-btn ${focusedPanelId===panel.id ? 'active':''}" title="${focusedPanelId===panel.id ? '顯示所有面板' : '隱藏其他面板，避免誤按'}" onclick="toggleFocusPanel('${panel.id}')">${focusedPanelId===panel.id ? icon('layout-grid',14) : icon('eye',14)}</button>` : ''}
         ${refereePanels.length > 1 ? `<button class="icon-btn" title="移除此面板" onclick="removeRefereePanel('${panel.id}')">${icon('x',14)}</button>` : ''}
       </div>
