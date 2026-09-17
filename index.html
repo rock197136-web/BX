@@ -2876,6 +2876,31 @@ body::before{opacity:.42;}
 @keyframes teamMemberExit{0%{opacity:1;transform:translateX(0)}55%{background:#5a211f;color:#fff}100%{opacity:.18;transform:translateX(var(--exit-x,10px));filter:blur(2px)}}
 @keyframes teamMemberEnter{from{opacity:0;transform:translateY(8px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 .team-rule-note{padding:10px 12px;border-radius:9px;background:#e9bb680d;color:#c9bea9;font-size:12px;line-height:1.55;margin-bottom:10px;}
+.team-match-overview{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin:8px 0 10px;padding:9px 10px;border:1px solid #ffffff12;border-radius:11px;background:#181a1d;}
+.team-overview-side{display:flex;align-items:center;gap:7px;min-width:0;}
+.team-overview-side.side-b{flex-direction:row-reverse;text-align:right;}
+.team-overview-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f1eadf;font-size:13px;font-weight:800;}
+.team-alive-badge{flex:0 0 auto;padding:3px 6px;border-radius:999px;background:#829cb51a;color:#a9c3da;font:800 10px/1.2 'Space Mono',monospace;}
+.team-overview-side.side-b .team-alive-badge{background:#bc8e8a1a;color:#d5aaa6;}
+.team-overview-score{display:grid;place-items:center;min-width:64px;}
+.team-overview-score strong{font:900 22px/1 'Space Mono',monospace;color:#e9bb68;letter-spacing:.04em;}
+.team-overview-score span{margin-top:3px;color:#827d74;font-size:9px;letter-spacing:.12em;}
+.team-lineup-panel{margin:0 0 10px;border:1px solid #4c3e2b;border-radius:10px;background:#15130f;overflow:hidden;}
+.team-lineup-panel summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:5px 8px;min-height:44px;padding:7px 10px;cursor:pointer;list-style:none;color:#e9bb68;}
+.team-lineup-panel summary::-webkit-details-marker{display:none;}
+.team-lineup-panel[open] summary{border-bottom:1px solid #ffffff10;}
+.team-lineup-summary-title{font-size:12px;font-weight:900;white-space:nowrap;}
+.team-lineup-summary-note{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#aaa093;font-size:10px;}
+.team-lineup-summary-order{grid-column:1/-1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:5px;border-top:1px solid #ffffff0a;text-align:center;color:#aaa093;font-size:10px;}
+.team-lineup-panel[open] .team-lineup-summary-order{display:none;}
+.team-lineup-summary-action{font-size:10px;color:#c9bea9;}
+.team-lineup-summary-action .when-open{display:none;}
+.team-lineup-panel[open] .team-lineup-summary-action .when-open{display:inline;}
+.team-lineup-panel[open] .team-lineup-summary-action .when-closed{display:none;}
+.team-lineup-panel-body{padding:8px;}
+.team-lineup-panel .team-rule-note{margin-bottom:8px;}
+.team-lineup-locked{display:flex;align-items:center;justify-content:center;gap:6px;min-height:32px;margin:0 0 9px;padding:5px 8px;border-radius:8px;background:#e9bb6808;color:#968e81;font-size:10px;}
+.team-lineup-locked svg{width:12px;height:12px;color:#e9bb68;}
 @media(max-width:700px){
   .team-setup-head{align-items:stretch;flex-direction:column;}
   .team-members{grid-template-columns:1fr;}
@@ -2900,6 +2925,13 @@ body::before{opacity:.42;}
   .team-elimination-fx{top:70px;width:calc(50% - 20px);min-height:86px;padding:9px 4px;}
   .team-elimination-fx.side-a{left:8px}.team-elimination-fx.side-b{right:8px}
   .team-elimination-name{font-size:16px;}
+  .team-match-overview{margin-top:5px;padding:8px;gap:5px;}
+  .team-overview-name{font-size:12px;}
+  .team-overview-score{min-width:58px;}
+  .team-overview-score strong{font-size:20px;}
+  .team-lineup-panel-body{padding:6px;}
+  .team-lineup-panel .team-lineups{margin:7px 0 2px;}
+  .team-lineup-summary-note{font-size:9px;}
 }
 @media(prefers-reduced-motion:reduce){.team-member-status.is-eliminating,.team-active-name.is-entering,.team-elimination-fx,.team-elimination-name,.team-elimination-fx::after{animation:none!important}.team-elimination-fx{opacity:.94}.team-member-status.is-eliminating{opacity:.45}}
 
@@ -2966,6 +2998,53 @@ body::before{opacity:.42;}
   .score-tap-feedback{animation:none;}
 }
 @media print{body::before{display:none;}}
+
+/* Scoring controls: Chinese-only labels with a compact, touch-safe layout. */
+.score-console .finish-btn,
+.master-mode .score-console .finish-btn{
+  min-height:46px!important;
+  padding:7px 9px!important;
+  gap:6px!important;
+}
+.score-console .fin-text,
+.master-mode .score-console .fin-text{
+  align-items:center!important;
+}
+.score-console .finish-label,
+.master-mode .score-console .finish-label{
+  line-height:1.2!important;
+}
+.score-console .finish-sub,
+.master-mode .score-console .finish-sub{
+  display:none!important;
+}
+@media(max-width:700px){
+  .score-console .finish-btn,
+  .master-mode .score-console .finish-btn{
+    min-height:44px!important;
+    padding:6px 8px!important;
+  }
+  /* 團體賽裁判專注模式：首屏優先保留目前選手與全部判分操作。 */
+  .score-console .team-active-grid{margin:7px 0 9px;gap:6px;}
+  .score-console .team-active-card{padding:8px 6px 7px;border-top-width:3px;}
+  .score-console .team-active-card:first-child{border-top-color:#829cb5;}
+  .score-console .team-active-card:last-child{border-top-color:#bc8e8a;}
+  .score-console .team-active-kicker{font-size:9px;margin-bottom:2px;}
+  .score-console .team-active-name{font-size:19px;min-height:auto;line-height:1.15;}
+  .score-console .team-active-card>.team-hp-bar{display:none;}
+  .score-console .team-active-life{display:inline-flex;align-items:center;justify-content:center;min-height:24px;margin:5px 0 0;padding:3px 8px;border-radius:999px;background:#e9bb6812;color:#e9bb68;font:800 11px/1 'Space Mono',monospace;}
+  .score-console .team-roster-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin-top:7px;}
+  .score-console .team-member-status{display:grid;place-items:center;gap:3px;width:auto;min-width:0;padding:4px 2px;font-size:8.5px;}
+  .score-console .team-member-label{width:100%;text-align:center;}
+  .score-console .team-hp-bar.compact{width:26px;gap:2px;}
+  .score-console .team-hp-bar.compact .team-hp-cell{height:4px;}
+  .score-console .finish-col.side-a{border-top-color:#829cb5;}
+  .score-console .finish-col.side-b{border-top-color:#bc8e8a;}
+  .score-console .finish-btn{position:relative;overflow:hidden;}
+  .score-console .finish-col.side-a .finish-btn::before,
+  .score-console .finish-col.side-b .finish-btn::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 2px 2px 0;background:#829cb5;opacity:.7;}
+  .score-console .finish-col.side-b .finish-btn::before{background:#bc8e8a;}
+}
 
 </style>
 </head>
@@ -3776,10 +3855,10 @@ body::before{opacity:.42;}
    CONSTANTS
 ========================================================= */
 const FINISH = {
-  SPIN:   { label:'轉停勝利', en:'SPIN FINISH',   points:1, color:'var(--fin-spin)',   icon:'●', cls:'spin'   },
-  OVER:   { label:'擊飛勝利', en:'OVER FINISH',   points:2, color:'var(--fin-over)',   icon:'▲', cls:'over'   },
-  BURST:  { label:'爆裂勝利', en:'BURST FINISH',  points:2, color:'var(--fin-burst)',  icon:'✦', cls:'burst'  },
-  XTREME: { label:'極限勝利', en:'X-TREME FINISH',points:3, color:'var(--fin-xtreme)', icon:'◆', cls:'xtreme' }
+  SPIN:   { label:'轉停勝利', points:1, color:'var(--fin-spin)',   icon:'●', cls:'spin'   },
+  OVER:   { label:'擊飛勝利', points:2, color:'var(--fin-over)',   icon:'▲', cls:'over'   },
+  BURST:  { label:'爆裂勝利', points:2, color:'var(--fin-burst)',  icon:'✦', cls:'burst'  },
+  XTREME: { label:'極限勝利', points:3, color:'var(--fin-xtreme)', icon:'◆', cls:'xtreme' }
 };
 const TROPHY_ICONS = {
   1: `<img src="data:image/png;base64,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" alt="" draggable="false">`,
@@ -8148,9 +8227,23 @@ function renderTeamRefereeMatch(match, panelId){
     ? `<div class="score-tap-feedback side-${activeFeedback.side.toLowerCase()}" data-match-id="${escapeAttr(match.id)}" aria-live="polite">對手 −${activeFeedback.points} HP</div>` : '';
   const eliminationFxHtml = activeEliminationEffect ? `<div class="team-elimination-fx side-${activeEliminationEffect.side.toLowerCase()}" style="--exit-x:${activeEliminationEffect.side==='A'?'-16px':'16px'}" aria-live="polite"><div class="team-elimination-name">${escapeHtml(activeEliminationEffect.name)}</div><div class="team-elimination-label">淘汰</div></div>` : '';
 
+  const aliveA = teamA.members.filter(member => !battle.eliminated.includes(member.id)).length;
+  const aliveB = teamB.members.filter(member => !battle.eliminated.includes(member.id)).length;
+  const eliminatedA = teamA.members.length - aliveA;
+  const eliminatedB = teamB.members.length - aliveB;
+  const orderNamesA = battle.orderA.map(id => teamMemberName(id)).join(' › ');
+  const orderNamesB = battle.orderB.map(id => teamMemberName(id)).join(' › ');
+  const matchOverview = `<div class="team-match-overview" aria-label="團體賽進度">
+    <div class="team-overview-side side-a"><span class="team-overview-name">${escapeHtml(teamA.name)}</span><span class="team-alive-badge">${aliveA} 人存活</span></div>
+    <div class="team-overview-score"><strong>${eliminatedB}：${eliminatedA}</strong><span>淘汰進度</span></div>
+    <div class="team-overview-side side-b"><span class="team-overview-name">${escapeHtml(teamB.name)}</span><span class="team-alive-badge">${aliveB} 人存活</span></div>
+  </div>`;
+
   const lineup = !battle.started && !completed ? `
-    <div class="team-rule-note">請裁判先確認雙方出戰順序，再用下拉式選單調整；從第一局記分後即鎖定順序。</div>
-    <div class="team-lineups">${teamOrderControls(match,'A',battle)}<div class="team-versus">VS</div>${teamOrderControls(match,'B',battle)}</div>` : '';
+    <details class="team-lineup-panel">
+      <summary><span class="team-lineup-summary-title">出戰順序</span><span class="team-lineup-summary-note">確認順序後即可記分；第一局後自動鎖定</span><span class="team-lineup-summary-action"><span class="when-closed">調整</span><span class="when-open">收合</span></span><span class="team-lineup-summary-order">${escapeHtml(orderNamesA)} ｜ ${escapeHtml(orderNamesB)}</span></summary>
+      <div class="team-lineup-panel-body"><div class="team-lineups">${teamOrderControls(match,'A',battle)}<div class="team-versus">VS</div>${teamOrderControls(match,'B',battle)}</div></div>
+    </details>` : (battle.started && !completed ? `<div class="team-lineup-locked">${icon('check-circle',12)} 出戰順序已鎖定</div>` : '');
   const activeArea = completed ? `
     <div class="winner-banner"><div class="wname"><span class="winner-check">✓</span>${escapeHtml(nameOf(match.winner))} <span class="winner-word">獲勝</span></div>
       ${nextMatch ? `<div class="text-muted next-match-preview"><span class="next-match-kicker">下一場・第 ${realMatchNumber(nextMatch)} 場</span><span class="next-match-names">${escapeHtml(nameOf(nextMatch.playerA))} <span class="versus-word">VS</span> ${escapeHtml(nameOf(nextMatch.playerB))}</span></div>` : `<div class="text-muted">目前沒有下一場對戰了</div>`}
@@ -8165,7 +8258,7 @@ function renderTeamRefereeMatch(match, panelId){
   body.classList.add('score-console');
   body.classList.remove('quick-console');
   body.classList.toggle('completed-console',completed);
-  body.innerHTML = `<div class="referee-title">${roundLabel}・3v3 團體賽</div>${feedback}${eliminationFxHtml}${lineup}${activeArea}
+  body.innerHTML = `<div class="referee-title">${roundLabel}・3v3 團體賽</div>${feedback}${eliminationFxHtml}${completed?'':matchOverview}${lineup}${activeArea}
     <div class="ref-footer">
       <button class="btn btn-dark" onclick="undoLastPoint('${match.id}')" ${match.log.length===0?'disabled':''}>撤銷上一分</button>
       <button class="btn btn-ghost btn-reset-match" onclick="resetMatch('${match.id}')" ${match.log.length===0?'disabled':''}>勝負重置</button>
@@ -8305,7 +8398,6 @@ function finishButtons(matchId, side, teamMode){
     <button class="finish-btn ${f.cls}" onclick="${teamMode?'recordTeamFinish':'recordFinish'}('${matchId}','${side}','${key}')">
       <span class="fin-text">
         <span class="finish-label">${f.label}</span>
-        <span class="finish-sub" aria-label="${key}">${[...key].map(letter => `<span aria-hidden="true">${letter}</span>`).join('')}</span>
       </span>
       <span class="fin-ticks"></span>
       <span class="finish-pts">+${f.points}</span>
