@@ -2833,6 +2833,9 @@ body::before{opacity:.42;}
   .tabs .tab{font-size:12px;}
   .bracket-zoom-btn,.bracket-zoom-reset,.bracket-current-btn,.match-filter-btn,
   .draw-copy-btn,.cloud-share-btn,.attendance-action,.attendance-next-pending,.chip-remove{min-height:44px;}
+  /* 主控模式的裁判面板頭部按鈕平常只有 24px 寬，min-height:44px 只補了高度；
+     觸控裝置上寬度太窄仍容易誤觸，這裡補上最小寬度，讓熱區接近 44×44。 */
+  .master-mode .referee-panel > .ref-panel-head .icon-btn{min-width:40px;}
   .attendance-action,.attendance-next-pending,.draw-copy-btn,.cloud-share-btn{font-size:13px!important;}
   .bracket-zoom-btn{width:48px;height:48px;}
   .bracket-zoom-reset,.bracket-current-btn{height:48px;}
@@ -5293,7 +5296,7 @@ function addPlayerChip(name, attendance){
   chip.innerHTML = `
     <span class="chip-index">${String(idx).padStart(2,'0')}</span>
     <span class="chip-name" ondblclick="editChip(this)" title="雙擊可重新命名">${escapeHtml(displayName)}</span>
-    <button type="button" class="chip-remove" onclick="removePlayerChip(this)" title="移除">×</button>
+    <button type="button" class="chip-remove" onclick="removePlayerChip(this)" title="移除" aria-label="移除">×</button>
   `;
   const chipInput = document.getElementById('playerChipInput');
   container.insertBefore(chip, chipInput);
@@ -7587,8 +7590,8 @@ function renderReferee(){
       <div class="ref-panel-head">
         <input class="text-input ref-panel-label" value="${escapeAttr(panel.label || '')}"
                placeholder="裁判 ${i+1}（選填）" onchange="renamePanel('${panel.id}', this.value)">
-        ${refereePanels.length > 1 ? `<button class="icon-btn focus-btn ${focusedPanelId===panel.id ? 'active':''}" title="${focusedPanelId===panel.id ? '顯示所有面板' : '隱藏其他面板，避免誤按'}" onclick="toggleFocusPanel('${panel.id}')">${focusedPanelId===panel.id ? icon('layout-grid',14) : icon('eye',14)}</button>` : ''}
-        ${refereePanels.length > 1 ? `<button class="icon-btn" title="移除此面板" onclick="removeRefereePanel('${panel.id}')">${icon('x',14)}</button>` : ''}
+        ${refereePanels.length > 1 ? `<button class="icon-btn focus-btn ${focusedPanelId===panel.id ? 'active':''}" title="${focusedPanelId===panel.id ? '顯示所有面板' : '隱藏其他面板，避免誤按'}" aria-label="${focusedPanelId===panel.id ? '顯示所有面板' : '隱藏其他面板，避免誤按'}" onclick="toggleFocusPanel('${panel.id}')">${focusedPanelId===panel.id ? icon('layout-grid',14) : icon('eye',14)}</button>` : ''}
+        ${refereePanels.length > 1 ? `<button class="icon-btn" title="移除此面板" aria-label="移除此面板" onclick="removeRefereePanel('${panel.id}')">${icon('x',14)}</button>` : ''}
       </div>
       <div class="ref-picker">
         <div class="field-label">選擇對戰</div>
