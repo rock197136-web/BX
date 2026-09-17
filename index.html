@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>BEYBLADE X 對戰系統 V3.10</title>
+<title>BEYBLADE X 對戰系統 V3.11</title>
 <meta name="description" content="BEYBLADE X 對戰系統：即時戰況、對戰紀錄與賽事管理。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rock197136-web.github.io/BX/?share=v5">
@@ -2891,7 +2891,11 @@ body::before{opacity:.42;}
 .team-lineup-panel[open] summary{border-bottom:1px solid #ffffff10;}
 .team-lineup-summary-title{font-size:12px;font-weight:900;white-space:nowrap;}
 .team-lineup-summary-note{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#aaa093;font-size:10px;}
-.team-lineup-summary-order{grid-column:1/-1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:5px;border-top:1px solid #ffffff0a;text-align:center;color:#aaa093;font-size:10px;}
+.team-lineup-summary-order{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);align-items:center;gap:5px;min-width:0;padding-top:6px;border-top:1px solid #ffffff0a;color:#aaa093;font-size:10px;}
+.team-lineup-order-side{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 7px;border:1px solid #ffffff0b;border-radius:7px;background:#101113;text-align:center;}
+.team-lineup-order-side.side-a{border-top:2px solid #829cb5;color:#b5c5d3;}
+.team-lineup-order-side.side-b{border-top:2px solid #bc8e8a;color:#d2b1ae;}
+.team-lineup-order-vs{text-align:center;color:#746f67;font:800 9px/1 'Space Mono',monospace;}
 .team-lineup-panel[open] .team-lineup-summary-order{display:none;}
 .team-lineup-summary-action{font-size:10px;color:#c9bea9;}
 .team-lineup-summary-action .when-open{display:none;}
@@ -3202,7 +3206,7 @@ body::before{opacity:.42;}
       </div>
     </div>
     <div class="header-release-row">
-      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.10 <span aria-hidden="true">·</span> 更新日期 26/9/17 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
+      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.11 <span aria-hidden="true">·</span> 更新日期 26/9/17 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
     </div>
   </div>
 </header>
@@ -8194,7 +8198,9 @@ function teamOrderControls(match, side, battle){
 function teamRosterStatus(team, battle, side, match){
   const activeId = side === 'A' ? battle.activeA : battle.activeB;
   const effect=teamEliminationEffects.get(match?.id);
-  return `<div class="team-roster-status">${team.members.map(member => {
+  const order = side === 'A' ? battle.orderA : battle.orderB;
+  const orderedMembers = (order && order.length ? order.map(id => team.members.find(member => member.id === id)).filter(Boolean) : team.members);
+  return `<div class="team-roster-status">${orderedMembers.map(member => {
     const damage = battle.damage[member.id] || 0;
     const out = battle.eliminated.includes(member.id);
     const eliminating=effect&&effect.memberId===member.id&&effect.until>Date.now();
@@ -8241,7 +8247,7 @@ function renderTeamRefereeMatch(match, panelId){
 
   const lineup = !battle.started && !completed ? `
     <details class="team-lineup-panel">
-      <summary><span class="team-lineup-summary-title">出戰順序</span><span class="team-lineup-summary-note">確認順序後即可記分；第一局後自動鎖定</span><span class="team-lineup-summary-action"><span class="when-closed">調整</span><span class="when-open">收合</span></span><span class="team-lineup-summary-order">${escapeHtml(orderNamesA)} ｜ ${escapeHtml(orderNamesB)}</span></summary>
+      <summary><span class="team-lineup-summary-title">出戰順序</span><span class="team-lineup-summary-note">確認順序後即可記分；第一局後自動鎖定</span><span class="team-lineup-summary-action"><span class="when-closed">調整</span><span class="when-open">收合</span></span><span class="team-lineup-summary-order"><span class="team-lineup-order-side side-a">${escapeHtml(orderNamesA)}</span><span class="team-lineup-order-vs">VS</span><span class="team-lineup-order-side side-b">${escapeHtml(orderNamesB)}</span></span></summary>
       <div class="team-lineup-panel-body"><div class="team-lineups">${teamOrderControls(match,'A',battle)}<div class="team-versus">VS</div>${teamOrderControls(match,'B',battle)}</div></div>
     </details>` : (battle.started && !completed ? `<div class="team-lineup-locked">${icon('check-circle',12)} 出戰順序已鎖定</div>` : '');
   const activeArea = completed ? `
@@ -8253,7 +8259,7 @@ function renderTeamRefereeMatch(match, panelId){
       <div class="team-versus">VS</div>
       <div class="team-active-card"><div class="team-active-kicker">${escapeHtml(teamB.name)}・目前上場</div><div class="team-active-name ${activeEliminationEffect&&activeEliminationEffect.side==='B'?'is-entering':''}">${escapeHtml(teamMemberName(battle.activeB))}</div>${teamHpBar(battle.activeB,battle,false)}<div class="team-active-life">${Math.max(0,2-(battle.damage[battle.activeB]||0))} / 2 HP</div>${teamRosterStatus(teamB,battle,'B',match)}</div>
     </div>
-    <div class="finish-grid"><div class="finish-col side-a">${finishButtons(match.id,'A',true)}</div><div class="finish-col side-b">${finishButtons(match.id,'B',true)}</div></div>`;
+    <div class="finish-grid team-finish-grid"><div class="finish-col side-a">${teamFinishButtons(match.id,'A')}</div><div class="finish-col side-b">${teamFinishButtons(match.id,'B')}</div></div>`;
 
   body.classList.add('score-console');
   body.classList.remove('quick-console');
@@ -8393,9 +8399,26 @@ function legacyFinBadgeIcon(key){
   // path, since a star polygon is easy to get subtly wrong in path form.
   return `<span class="fin-badge-star"></span>`;
 }
-function finishButtons(matchId, side, teamMode){
+function teamFinishButtons(matchId, side){
+  const teamFinishes = [
+    ['SPIN', '轉停勝利', 1, FINISH.SPIN.cls],
+    ['OVER', '擊飛/爆裂勝利', 2, FINISH.OVER.cls],
+    ['XTREME', '極限勝利', 3, FINISH.XTREME.cls]
+  ];
+  return teamFinishes.map(([key, label, points, cls]) => `
+    <button class="finish-btn ${cls}" data-team-points="${points}" onclick="recordTeamFinish('${matchId}','${side}','${key}')">
+      <span class="fin-text">
+        <span class="finish-label">${label}</span>
+      </span>
+      <span class="fin-ticks"></span>
+      <span class="finish-pts">+${points}</span>
+    </button>
+  `).join('');
+}
+
+function finishButtons(matchId, side){
   return Object.entries(FINISH).map(([key, f]) => `
-    <button class="finish-btn ${f.cls}" onclick="${teamMode?'recordTeamFinish':'recordFinish'}('${matchId}','${side}','${key}')">
+    <button class="finish-btn ${f.cls}" onclick="recordFinish('${matchId}','${side}','${key}')">
       <span class="fin-text">
         <span class="finish-label">${f.label}</span>
       </span>
@@ -8434,7 +8457,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.10\n更新日期：2026/09/17\n\n更新摘要\n\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• 轉停扣 1、擊飛／爆裂扣 2、極限扣 3。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.11\n更新日期：2026/09/17\n\n更新摘要\n\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
