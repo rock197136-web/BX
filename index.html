@@ -865,37 +865,94 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   font-size:11px; font-weight:700; padding:3px 9px; border-radius:16px; font-family:'Space Mono',monospace;
   white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis;
 }
-.team-record-summary{display:grid;gap:7px;width:min(100%,560px);margin:0 auto;}
-.team-record-outcome{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;flex-wrap:wrap;}
-.team-record-person{display:inline-flex;align-items:center;min-width:0;max-width:42%;padding:5px 9px;border:1px solid #ffffff12;border-radius:8px;background:#111214;color:#f2eadc;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.team-record-person.side-a{border-top:2px solid #829cb5;color:#c4d5e4;}
-.team-record-person.side-b{border-top:2px solid #bc8e8a;color:#e0c0bd;}
-.team-record-verb{flex:0 0 auto;color:#e9bb68;font-size:12px;font-weight:900;letter-spacing:.08em;}
-.team-record-team-score{color:#888178;font:700 10px/1.35 'Space Mono',monospace;text-align:center;}
-.team-battle-history{position:relative;margin-top:13px;padding:2px 0 0;}
-.team-bout-group{position:relative;display:grid;gap:7px;}
-.team-bout-group+.team-bout-group{margin-top:13px;padding-top:16px;border-top:1px solid #ffffff12;}
-.team-bout-divider{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 2px;color:#8e877d;font-size:10px;font-weight:800;letter-spacing:.08em;}
-.team-bout-divider::before,.team-bout-divider::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,transparent,#5f574c);}
-.team-bout-divider::after{background:linear-gradient(90deg,#5f574c,transparent);}
-.team-bout-pair{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;color:#aaa296;font-size:10px;}
-.team-bout-pair span{min-width:0;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.team-bout-pair b{color:#68635c;font:800 9px/1 'Space Mono',monospace;}
-.team-history-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:7px;min-height:47px;padding:8px 10px;border:1px solid #ffffff0d;border-radius:10px;background:linear-gradient(110deg,#17191c,#111210);}
-.team-history-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:900;}
-.team-history-name.winner{text-align:right;color:#f1eadf;}
-.team-history-name.loser{color:#99948c;font-weight:700;}
-.team-history-result{display:grid;place-items:center;gap:3px;min-width:72px;}
-.team-history-result strong{color:#e9bb68;font-size:10px;letter-spacing:.06em;white-space:nowrap;}
-.team-history-result small{color:#817a70;font:700 9px/1.2 'Space Mono',monospace;white-space:nowrap;}
-.team-history-row.is-elimination{border-color:#e9bb682b;background:linear-gradient(110deg,#1d1a14,#121311);}
-.team-history-row.is-elimination .team-history-result strong::after{content:'淘汰';display:inline-flex;margin-left:5px;padding:2px 4px;border-radius:4px;background:#c9655b22;color:#dc8a81;font-size:8px;letter-spacing:.04em;vertical-align:1px;}
+.team-record-summary{display:grid;gap:8px;width:min(100%,560px);margin:0 auto;}
+.team-record-board{display:grid;grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);align-items:stretch;gap:6px;}
+.team-record-side{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;min-width:0;padding:8px 9px;border:1px solid #ffffff12;background:#111315;}
+.team-record-side.side-a{border-left:4px solid #829cb5;background:linear-gradient(90deg,#829cb51c,#111315 55%);}
+.team-record-side.side-b{border-right:4px solid #bc8e8a;background:linear-gradient(270deg,#bc8e8a1c,#111315 55%);}
+.team-record-side-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e8e2d9;font-size:12px;font-weight:900;}
+.team-record-side-score{color:#f0c471;font:900 24px/1 'Rajdhani',sans-serif;}
+.team-record-side.side-b .team-record-side-name{order:2;text-align:right;}
+.team-record-side.side-b .team-record-side-score{order:1;}
+.team-record-state{display:grid;place-items:center;align-content:center;gap:3px;color:#79736b;font-size:8px;font-weight:900;letter-spacing:.08em;text-align:center;}
+.team-record-state strong{color:#aaa298;font:900 12px/1 'Space Mono',monospace;letter-spacing:0;}
+.team-record-final-versus{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;}
+.team-record-final-team{display:inline-flex;align-items:center;justify-content:center;min-width:0;max-width:42%;padding:7px 10px;border:1px solid #ffffff14;background:#121416;color:#eee8df;font-size:14px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.team-record-final-team.winner.side-a{border-top:2px solid #829cb5;color:#c4d5e4;background:linear-gradient(180deg,#829cb517,#121416);}
+.team-record-final-team.winner.side-b{border-top:2px solid #bc8e8a;color:#e0c0bd;background:linear-gradient(180deg,#bc8e8a17,#121416);}
+.team-record-final-team.loser{border-color:#77736c26;background:#101111;color:#77736c;filter:saturate(.15);}
+.team-record-final-verb{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;font-size:12px;font-weight:900;letter-spacing:.08em;}
+.team-record-final-verb b{color:#e9bb68;}
+.team-record-final-verb small{color:#6f6a63;font:900 9px/1 'Space Mono',monospace;letter-spacing:0;}
+.team-record-final-score{color:#8b847a;font:700 10px/1.45 'Space Mono',monospace;text-align:center;}
+.team-record-final-score .losing-team{color:#706c66;}
+.team-record-final{display:grid;gap:3px;padding:8px 10px;border:1px solid #e9bb6838;background:linear-gradient(90deg,#e9bb6812,#121311);text-align:center;}
+.team-record-final-title{color:#efc877;font-size:13px;font-weight:900;}
+.team-record-final-detail{color:#989087;font-size:10px;font-weight:700;line-height:1.45;}
+.team-record-current{color:#8e877e;font-size:10px;font-weight:800;text-align:center;}
+.team-record-current b{color:#e7dfd3;}
+.team-battle-history{position:relative;display:grid;gap:13px;margin-top:14px;padding-top:2px;}
+.team-timeline-group{display:grid;gap:8px;}
+.team-timeline-group+.team-timeline-group{padding-top:14px;border-top:1px solid #ffffff12;}
+.team-timeline-heading{display:flex;align-items:center;gap:8px;color:#928b81;font-size:10px;font-weight:900;letter-spacing:.08em;}
+.team-timeline-heading::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,#5e574c,transparent);}
+.team-timeline-matchup{display:grid;grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr);align-items:stretch;gap:5px;}
+.team-timeline-player{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:7px 8px;border:1px solid #ffffff10;background:#111315;}
+.team-timeline-player.side-a{border-left:4px solid #829cb5;background:linear-gradient(90deg,#829cb518,#111315 64%);}
+.team-timeline-player.side-b{align-items:flex-end;border-right:4px solid #bc8e8a;background:linear-gradient(270deg,#bc8e8a18,#111315 64%);text-align:right;}
+.team-timeline-player-team,.team-timeline-player-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.team-timeline-player-team{color:#8e9fac;font-size:8px;font-weight:900;letter-spacing:.04em;}
+.team-timeline-player.side-b .team-timeline-player-team{color:#bd9996;}
+.team-timeline-player-name{margin-top:2px;color:#eee8df;font-size:13px;font-weight:900;}
+.team-timeline-vs{display:grid;place-items:center;color:#666159;font:900 9px/1 'Space Mono',monospace;}
+.team-timeline-event{position:relative;display:grid;gap:6px;margin-left:9px;padding:9px 10px 9px 14px;border-left:2px solid #4a4640;background:#ffffff05;}
+.team-timeline-event::before{content:'';position:absolute;left:-5px;top:15px;width:8px;height:8px;border-radius:50%;background:#81796e;box-shadow:0 0 0 3px #171817;}
+.team-timeline-event.is-elimination{border-left-color:#d3a95f;background:linear-gradient(90deg,#e9bb680d,transparent);}
+.team-timeline-event.is-elimination::before{background:#e9bb68;}
+.team-timeline-line{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;}
+.team-timeline-event-head{display:flex;align-items:center;gap:6px;min-width:0;}
+.team-timeline-winner{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eee7dd;font-size:11px;font-weight:900;}
+.team-timeline-winner.side-a::before,.team-timeline-winner.side-b::before{content:'';display:inline-block;width:6px;height:10px;margin-right:5px;vertical-align:-1px;}
+.team-timeline-winner.side-a::before{background:#829cb5;}
+.team-timeline-winner.side-b::before{background:#bc8e8a;}
+.team-timeline-winner b{color:#e9bb68;}
+.team-timeline-method{flex:0 0 auto;margin-left:auto;padding:3px 6px;border:1px solid #e9bb6830;background:#e9bb680d;color:#d9b36e;font-size:9px;font-weight:900;white-space:nowrap;}
+.team-timeline-line .team-timeline-method{margin-left:0;}
+.team-timeline-arrow{color:#706a61;font-size:12px;font-weight:900;}
+.team-timeline-loser{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9a938a;font-size:10px;font-weight:800;}
+.team-timeline-loser b{color:#c9bfb2;font-family:'Space Mono',monospace;font-size:9px;}
+.team-timeline-detail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:#888178;font-size:9px;font-weight:700;line-height:1.45;}
+.team-timeline-detail b{color:#bbb2a7;}
+.team-timeline-hp{font-family:'Space Mono',monospace;color:#a39b91;}
+.team-timeline-change{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:3px 8px;margin:0 0 0 9px;padding:8px 10px;border:1px solid #c9655b24;background:#c9655b0a;}
+.team-timeline-change-tag{grid-row:1/3;padding:4px 6px;background:#c9655b1d;color:#dc8a81;font-size:9px;font-weight:900;letter-spacing:.06em;}
+.team-timeline-change strong{color:#ddd5cb;font-size:10px;}
+.team-timeline-change small{color:#8e877e;font-size:9px;font-weight:700;}
+.team-timeline-change .next-player{color:#aebfce;}
+.team-timeline-change.side-b .next-player{color:#d0aaa6;}
+.team-timeline-change.is-team-out{border-color:#e9bb6838;background:#e9bb680b;}
+.team-timeline-change.is-team-out .team-timeline-change-tag{background:#e9bb681b;color:#e9bb68;}
+.team-history-final{display:grid;gap:5px;margin-top:2px;padding:12px;border:1px solid #e9bb6850;background:linear-gradient(110deg,#221d13,#131411);text-align:center;}
+.team-history-final-label{color:#9e958a;font-size:9px;font-weight:900;letter-spacing:.12em;}
+.team-history-final .team-record-final-versus{margin:3px 0;}
+.team-history-final .team-record-final-team{font-size:15px;}
+.team-history-final-reason{color:#b4aba0;font-size:10px;font-weight:800;line-height:1.5;}
+.team-history-final-reason .losing-team{color:#77736c;}
+.team-history-final-detail{color:#aaa196;font-size:10px;font-weight:700;line-height:1.55;}
 @media(max-width:560px){
-  .team-record-person{max-width:40%;padding:5px 7px;font-size:14px;}
-  .team-record-verb{font-size:11px;}
-  .team-history-row{grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:5px;padding:8px 7px;}
-  .team-history-name{font-size:12px;}
-  .team-history-result{min-width:64px;}
+  .team-record-board{grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr);gap:4px;}
+  .team-record-side{padding:7px 6px;gap:4px;}
+  .team-record-side-name{font-size:11px;}
+  .team-record-side-score{font-size:21px;}
+  .team-record-state{font-size:7px;}
+  .team-record-state strong{font-size:10px;}
+  .team-record-final-team{max-width:40%;padding:6px 8px;font-size:13px;}
+  .team-record-final-verb{font-size:11px;}
+  .team-timeline-player{padding:6px;}
+  .team-timeline-player-name{font-size:12px;}
+  .team-timeline-event{padding-right:8px;}
+  .team-timeline-winner{font-size:10px;}
+  .team-timeline-loser{font-size:9px;}
 }
 .match-actions{ margin-top:14px; display:flex; justify-content:center; gap:8px; }
 .match-actions .btn{ flex:1; max-width:220px; }
@@ -3110,6 +3167,32 @@ body::before{opacity:.42;}
     max-width:76vw;
   }
 }
+
+/* 選手模式：頁首只呈現目前最接近的未完成場次。 */
+.player-next-match-card{
+  display:none;
+  width:100%; min-height:58px; margin:8px 0 10px; padding:10px 14px;
+  align-items:center; justify-content:space-between; gap:12px;
+  color:#f5f0e7; text-align:left; cursor:pointer;
+  border:1px solid rgba(233,187,104,.34); border-radius:10px;
+  background:linear-gradient(105deg,rgba(233,187,104,.12),rgba(233,187,104,.035) 58%,rgba(255,255,255,.02));
+  box-shadow:inset 3px 0 0 #e9bb68;
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+}
+.viewer-mode .player-next-match-card:not(.hidden){display:flex;}
+.player-next-match-card:active{transform:scale(.99);background-color:rgba(233,187,104,.08);}
+.player-next-match-card:focus-visible{outline:2px solid #e9bb68;outline-offset:2px;}
+.player-next-match-copy{display:flex;flex-direction:column;min-width:0;gap:4px;}
+.player-next-match-meta{color:#d8ba83;font:700 11px/1.2 'Noto Sans TC',sans-serif;letter-spacing:.06em;}
+.player-next-match-versus{
+  display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  color:#fff8ed; font:800 17px/1.25 'Noto Sans TC',sans-serif;
+}
+.player-next-match-arrow{flex:0 0 auto;color:#e9bb68;font:400 32px/1 sans-serif;transform:translateY(-1px);}
+@media(max-width:700px){
+  .player-next-match-card{min-height:56px;margin:7px 0 9px;padding:9px 12px;}
+  .player-next-match-versus{font-size:16px;}
+}
 </style>
 </head>
 <body>
@@ -3264,8 +3347,15 @@ body::before{opacity:.42;}
         <strong class="identity-name" id="headerTName">尚未設定賽事</strong>
       </div>
     </div>
+    <button class="player-next-match-card" id="playerNextMatchCard" type="button" onclick="openPlayerNextMatch()" aria-label="前往下一場對戰紀錄">
+      <span class="player-next-match-copy">
+        <span class="player-next-match-meta" id="playerNextMatchMeta"></span>
+        <strong class="player-next-match-versus" id="playerNextMatchVersus"></strong>
+      </span>
+      <span class="player-next-match-arrow" aria-hidden="true">›</span>
+    </button>
     <div class="header-release-row">
-      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.11 <span aria-hidden="true">·</span> 更新日期 26/9/17 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
+      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.11 <span aria-hidden="true">·</span> 更新日期 26/9/19 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
     </div>
   </div>
 </header>
@@ -6640,16 +6730,24 @@ function buildTeamBattleHistory(match){
     const winnerId = event.side === 'A' ? activeA : activeB;
     const loserId = event.side === 'A' ? activeB : activeA;
     const loserSide = event.side === 'A' ? 'B' : 'A';
+    const loserHpBefore = Math.max(0, 2 - (damage[loserId] || 0));
     damage[loserId] = (damage[loserId] || 0) + Number(event.points || 0);
+    const loserHpAfter = Math.max(0, 2 - damage[loserId]);
     const eliminated = damage[loserId] >= 2;
     const record = {
       eventIndex, bout, groupStart, activeA, activeB, winnerId, loserId,
       winnerSide:event.side, loserSide, finish:event.finish,
-      points:Number(event.points || 0), eliminated
+      points:Number(event.points || 0), loserHpBefore, loserHpAfter,
+      eliminated, nextMemberId:null
     };
     if(eliminated){
-      if(loserSide === 'A') activeA = orderA[++indexA] || null;
-      else activeB = orderB[++indexB] || null;
+      if(loserSide === 'A'){
+        activeA = orderA[++indexA] || null;
+        record.nextMemberId = activeA;
+      }else{
+        activeB = orderB[++indexB] || null;
+        record.nextMemberId = activeB;
+      }
     }
     return record;
   });
@@ -6658,42 +6756,90 @@ function buildTeamBattleHistory(match){
 function teamBattleHistoryHtml(match){
   const history = buildTeamBattleHistory(match);
   if(!history.length) return '';
+  const teamAName = teamById(match.playerA)?.name || nameOf(match.playerA) || '隊伍 A';
+  const teamBName = teamById(match.playerB)?.name || nameOf(match.playerB) || '隊伍 B';
+  const teamNameBySide = side => side === 'A' ? teamAName : teamBName;
   const groups = [];
   history.forEach(record => {
     if(record.groupStart) groups.push([]);
     groups[groups.length - 1].push(record);
   });
+  const isCompleted = match.status === 'completed' && Boolean(match.winner);
+  const winnerSide = match.winner === match.playerA ? 'A' : 'B';
+  const loserSide = winnerSide === 'A' ? 'B' : 'A';
+  const winnerTeamName = teamNameBySide(winnerSide);
+  const loserTeamName = teamNameBySide(loserSide);
+  const winnerEliminations = Number(winnerSide === 'A' ? match.pointsA : match.pointsB) || 0;
+  const loserEliminations = Number(winnerSide === 'A' ? match.pointsB : match.pointsA) || 0;
+  const finalHtml = isCompleted ? `<div class="team-history-final">
+    <span class="team-history-final-label">團體戰最終結果</span>
+    <div class="team-record-final-versus">
+      <span class="team-record-final-team winner side-${winnerSide.toLowerCase()}">${escapeHtml(winnerTeamName)}</span>
+      <span class="team-record-final-verb"><b>獲勝</b><small>VS</small></span>
+      <span class="team-record-final-team loser side-${loserSide.toLowerCase()}">${escapeHtml(loserTeamName)}</span>
+    </div>
+    <span class="team-history-final-reason"><span class="losing-team">${escapeHtml(loserTeamName)}</span> 3 名隊員全數淘汰，已無可上場隊員</span>
+    <span class="team-history-final-detail">${escapeHtml(winnerTeamName)} 淘汰 ${winnerEliminations} 人・${escapeHtml(loserTeamName)} 淘汰 ${loserEliminations} 人</span>
+  </div>` : '';
   return `<div class="team-battle-history">${groups.map((records,groupIndex) => {
     const first = records[0];
-    return `<section class="team-bout-group">
-      <div class="team-bout-divider">${groupIndex === 0 ? '首棒對決' : `換棒・第 ${groupIndex + 1} 組對決`}</div>
-      <div class="team-bout-pair"><span>${escapeHtml(teamMemberName(first.activeA))}</span><b>VS</b><span>${escapeHtml(teamMemberName(first.activeB))}</span></div>
+    return `<section class="team-timeline-group">
+      <div class="team-timeline-heading">第 ${groupIndex + 1} 組對決${groupIndex === 0 ? '・首棒' : '・換人後'}</div>
+      <div class="team-timeline-matchup">
+        <span class="team-timeline-player side-a"><small class="team-timeline-player-team">${escapeHtml(teamAName)}</small><strong class="team-timeline-player-name">${escapeHtml(teamMemberName(first.activeA))}</strong></span>
+        <b class="team-timeline-vs">VS</b>
+        <span class="team-timeline-player side-b"><small class="team-timeline-player-team">${escapeHtml(teamBName)}</small><strong class="team-timeline-player-name">${escapeHtml(teamMemberName(first.activeB))}</strong></span>
+      </div>
       ${records.map(record => {
         const finish = FINISH[record.finish] || {label:'勝利'};
-        return `<div class="team-history-row ${record.eliminated ? 'is-elimination' : ''}">
-          <span class="team-history-name winner">${escapeHtml(teamMemberName(record.winnerId))}</span>
-          <span class="team-history-result"><strong>獲勝</strong><small>${escapeHtml(finish.label)}・${record.points} HP</small></span>
-          <span class="team-history-name loser">${escapeHtml(teamMemberName(record.loserId))}</span>
-        </div>`;
+        const winnerSideClass = `side-${record.winnerSide.toLowerCase()}`;
+        const changeHtml = record.eliminated ? `<div class="team-timeline-change side-${record.loserSide.toLowerCase()} ${record.nextMemberId ? '' : 'is-team-out'}">
+          <span class="team-timeline-change-tag">${record.nextMemberId ? '換人' : '全隊淘汰'}</span>
+          <strong>${escapeHtml(teamNameBySide(record.loserSide))}・${escapeHtml(teamMemberName(record.loserId))} 已淘汰</strong>
+          <small>${record.nextMemberId ? `${escapeHtml(teamNameBySide(record.loserSide))} 換上 <span class="next-player">${escapeHtml(teamMemberName(record.nextMemberId))}</span>` : `${escapeHtml(teamNameBySide(record.loserSide))} 已無可上場隊員`}</small>
+        </div>` : '';
+        return `<div class="team-timeline-event ${record.eliminated ? 'is-elimination' : ''}">
+          <div class="team-timeline-line">
+            <span class="team-timeline-winner ${winnerSideClass}">${escapeHtml(teamNameBySide(record.winnerSide))}・${escapeHtml(teamMemberName(record.winnerId))}</span>
+            <span class="team-timeline-method">${escapeHtml(finish.label)}</span>
+            <span class="team-timeline-arrow">→</span>
+            <span class="team-timeline-loser">${escapeHtml(teamNameBySide(record.loserSide))}・${escapeHtml(teamMemberName(record.loserId))} 扣 <b>${record.points} HP</b></span>
+          </div>
+        </div>${changeHtml}`;
       }).join('')}
     </section>`;
-  }).join('')}</div>`;
+  }).join('')}${finalHtml}</div>`;
 }
 
 function teamRecordSummaryHtml(match, teamAName, teamBName){
   const history = buildTeamBattleHistory(match);
   const latest = history[history.length - 1];
-  if(!latest){
-    const battle = match.teamBattle;
-    return `<div class="mr-versus"><span class="mr-name">${escapeHtml(teamMemberName(battle?.activeA))}</span><span class="mr-vs">VS</span><span class="mr-name">${escapeHtml(teamMemberName(battle?.activeB))}</span></div>`;
+  const isCompleted = match.status === 'completed' && Boolean(match.winner);
+  const winnerSide = match.winner === match.playerA ? 'A' : 'B';
+  const loserSide = winnerSide === 'A' ? 'B' : 'A';
+  const winnerTeamName = winnerSide === 'A' ? teamAName : teamBName;
+  const loserTeamName = winnerSide === 'A' ? teamBName : teamAName;
+  const statusLabel = isCompleted ? '最終結果' : latest ? '進行中' : '準備對戰';
+  const currentText = latest
+    ? `最近結果：<b>${escapeHtml(latest.winnerSide === 'A' ? teamAName : teamBName)}・${escapeHtml(teamMemberName(latest.winnerId))}</b> ${escapeHtml((FINISH[latest.finish] || {label:'勝利'}).label)}`
+    : `<b>${escapeHtml(teamMemberName(match.teamBattle?.activeA))}</b> 對上 <b>${escapeHtml(teamMemberName(match.teamBattle?.activeB))}</b>`;
+  if(isCompleted){
+    return `<div class="team-record-summary">
+      <div class="team-record-final-versus">
+        <span class="team-record-final-team winner side-${winnerSide.toLowerCase()}">${escapeHtml(winnerTeamName)}</span>
+        <span class="team-record-final-verb"><b>獲勝</b><small>VS</small></span>
+        <span class="team-record-final-team loser side-${loserSide.toLowerCase()}">${escapeHtml(loserTeamName)}</span>
+      </div>
+      <div class="team-record-final-score">淘汰數 ${Number(match.pointsA || 0)}：${Number(match.pointsB || 0)}・<span class="losing-team">${escapeHtml(loserTeamName)} 3 名隊員全數淘汰</span></div>
+    </div>`;
   }
   return `<div class="team-record-summary">
-    <div class="team-record-outcome">
-      <span class="team-record-person side-${latest.winnerSide.toLowerCase()}">${escapeHtml(teamMemberName(latest.winnerId))}</span>
-      <span class="team-record-verb">獲勝</span>
-      <span class="team-record-person side-${latest.loserSide.toLowerCase()}">${escapeHtml(teamMemberName(latest.loserId))}</span>
+    <div class="team-record-board">
+      <span class="team-record-side side-a"><strong class="team-record-side-name">${escapeHtml(teamAName)}</strong><b class="team-record-side-score">${Number(match.pointsA || 0)}</b></span>
+      <span class="team-record-state">${statusLabel}<strong>淘汰數</strong></span>
+      <span class="team-record-side side-b"><strong class="team-record-side-name">${escapeHtml(teamBName)}</strong><b class="team-record-side-score">${Number(match.pointsB || 0)}</b></span>
     </div>
-    <div class="team-record-team-score">${escapeHtml(teamAName)} ${match.pointsA}：${match.pointsB} ${escapeHtml(teamBName)}</div>
+    <div class="team-record-current">${currentText}</div>
   </div>`;
 }
 
@@ -7478,7 +7624,7 @@ function renderBracket(){
       if(!m.isBye){
         const matchNumberLabel = formatMatchNumberLabel(singleMatchNumbers.get(m.id));
         html += isFinalRound
-          ? `<div class="single-match-tag final-match-heading" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${icon('trophy',14)}<span>決賽${matchNumberLabel ? `・${matchNumberLabel}` : ''}</span></div>`
+          ? `<div class="single-match-tag final-match-heading" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${icon('trophy',14)}<span>決賽</span></div>`
           : (matchNumberLabel ? `<div class="single-match-tag" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${matchNumberLabel}</div>` : '');
         html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound);
       }
@@ -8600,7 +8746,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.11\n更新日期：2026/09/17\n\n更新摘要\n\n• 團體戰對戰紀錄改為顯示「誰獲勝」，換棒後持續累積並分段。\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.11\n更新日期：2026/09/19\n\n更新摘要\n\n• 團體戰對戰紀錄改為顯示「誰獲勝」，換棒後持續累積並分段。\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
@@ -8798,6 +8944,52 @@ function resetTournament(){
 }
 
 /* =========================================================
+   PLAYER MODE — NEXT MATCH CARD
+========================================================= */
+function renderPlayerNextMatchCard(){
+  const card = document.getElementById('playerNextMatchCard');
+  const meta = document.getElementById('playerNextMatchMeta');
+  const versus = document.getElementById('playerNextMatchVersus');
+  if(!card || !meta || !versus) return;
+
+  const match = currentRole === 'viewer' ? nextPlayableMatch() : null;
+  card.classList.toggle('hidden', !match);
+  if(!match){
+    card.removeAttribute('data-match-id');
+    meta.textContent = '';
+    versus.textContent = '';
+    return;
+  }
+
+  const matchLabel = formatMatchNumberLabel(realMatchNumber(match));
+  meta.textContent = matchLabel ? `${matchLabel}・即將上場` : '即將上場';
+  versus.textContent = `${nameOf(match.playerA)} vs ${nameOf(match.playerB)}`;
+  card.dataset.matchId = match.id;
+  card.setAttribute('aria-label', `${meta.textContent}，${versus.textContent}，前往對戰紀錄`);
+}
+
+function openPlayerNextMatch(){
+  const card = document.getElementById('playerNextMatchCard');
+  const matchId = card && card.dataset.matchId;
+  if(!matchId) return;
+
+  matchStatusFilter = 'all';
+  switchTab('matches');
+  renderMatches();
+  matchesDirty = false;
+
+  requestAnimationFrame(() => {
+    const target = document.querySelector(`#matchList .match[data-match-id="${cssEscapeId(matchId)}"]`);
+    if(!target) return;
+    target.scrollIntoView({behavior:'smooth', block:'center'});
+    target.classList.remove('match-highlight');
+    void target.offsetWidth;
+    target.classList.add('match-highlight');
+    setTimeout(() => target.classList.remove('match-highlight'), 1600);
+  });
+}
+
+/* =========================================================
    TABS
 ========================================================= */
 function switchTab(tab){
@@ -8827,6 +9019,7 @@ function renderAll(){
   standingsDirty = false;
   matchesDirty = false;
   renderStats();
+  renderPlayerNextMatchCard();
   const setupHasFocus = applyingRemote && document.activeElement &&
     document.getElementById('tab-setup').contains(document.activeElement);
   if(!setupHasFocus) loadSetupInputs();
@@ -8859,6 +9052,7 @@ function updateRefereePanelsForMatch(matchId){
 // switchTab() once the user actually looks at them.
 function refreshAfterScoreChange(matchId){
   renderStats();
+  renderPlayerNextMatchCard();
   if(isTabVisible('standings')){ renderStandings(); standingsDirty = false; }
   else standingsDirty = true;
   if(isTabVisible('matches')){ renderMatches(); matchesDirty = false; }
