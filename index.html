@@ -865,6 +865,38 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   font-size:11px; font-weight:700; padding:3px 9px; border-radius:16px; font-family:'Space Mono',monospace;
   white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis;
 }
+.team-record-summary{display:grid;gap:7px;width:min(100%,560px);margin:0 auto;}
+.team-record-outcome{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;flex-wrap:wrap;}
+.team-record-person{display:inline-flex;align-items:center;min-width:0;max-width:42%;padding:5px 9px;border:1px solid #ffffff12;border-radius:8px;background:#111214;color:#f2eadc;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.team-record-person.side-a{border-top:2px solid #829cb5;color:#c4d5e4;}
+.team-record-person.side-b{border-top:2px solid #bc8e8a;color:#e0c0bd;}
+.team-record-verb{flex:0 0 auto;color:#e9bb68;font-size:12px;font-weight:900;letter-spacing:.08em;}
+.team-record-team-score{color:#888178;font:700 10px/1.35 'Space Mono',monospace;text-align:center;}
+.team-battle-history{position:relative;margin-top:13px;padding:2px 0 0;}
+.team-bout-group{position:relative;display:grid;gap:7px;}
+.team-bout-group+.team-bout-group{margin-top:13px;padding-top:16px;border-top:1px solid #ffffff12;}
+.team-bout-divider{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 2px;color:#8e877d;font-size:10px;font-weight:800;letter-spacing:.08em;}
+.team-bout-divider::before,.team-bout-divider::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,transparent,#5f574c);}
+.team-bout-divider::after{background:linear-gradient(90deg,#5f574c,transparent);}
+.team-bout-pair{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;color:#aaa296;font-size:10px;}
+.team-bout-pair span{min-width:0;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.team-bout-pair b{color:#68635c;font:800 9px/1 'Space Mono',monospace;}
+.team-history-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:7px;min-height:47px;padding:8px 10px;border:1px solid #ffffff0d;border-radius:10px;background:linear-gradient(110deg,#17191c,#111210);}
+.team-history-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:900;}
+.team-history-name.winner{text-align:right;color:#f1eadf;}
+.team-history-name.loser{color:#99948c;font-weight:700;}
+.team-history-result{display:grid;place-items:center;gap:3px;min-width:72px;}
+.team-history-result strong{color:#e9bb68;font-size:10px;letter-spacing:.06em;white-space:nowrap;}
+.team-history-result small{color:#817a70;font:700 9px/1.2 'Space Mono',monospace;white-space:nowrap;}
+.team-history-row.is-elimination{border-color:#e9bb682b;background:linear-gradient(110deg,#1d1a14,#121311);}
+.team-history-row.is-elimination .team-history-result strong::after{content:'淘汰';display:inline-flex;margin-left:5px;padding:2px 4px;border-radius:4px;background:#c9655b22;color:#dc8a81;font-size:8px;letter-spacing:.04em;vertical-align:1px;}
+@media(max-width:560px){
+  .team-record-person{max-width:40%;padding:5px 7px;font-size:14px;}
+  .team-record-verb{font-size:11px;}
+  .team-history-row{grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:5px;padding:8px 7px;}
+  .team-history-name{font-size:12px;}
+  .team-history-result{min-width:64px;}
+}
 .match-actions{ margin-top:14px; display:flex; justify-content:center; gap:8px; }
 .match-actions .btn{ flex:1; max-width:220px; }
 .match .btn-primary{ background:linear-gradient(90deg,var(--hdr-blue),var(--hdr-blue-soft)); color:#2a1400; }
@@ -6563,6 +6595,81 @@ function teamMemberById(id){
 }
 function teamMemberName(id){ return teamMemberById(id)?.name || '待定'; }
 
+function buildTeamBattleHistory(match){
+  const battle = match?.teamBattle;
+  if(!battle) return [];
+  const orderA = [...(battle.orderA || [])], orderB = [...(battle.orderB || [])];
+  const damage = {};
+  [...orderA,...orderB].forEach(id => damage[id] = 0);
+  let indexA = 0, indexB = 0;
+  let activeA = orderA[indexA] || null, activeB = orderB[indexB] || null;
+  let previousPair = '';
+  let bout = 0;
+
+  return (match.log || []).map((event, eventIndex) => {
+    const pairKey = `${activeA || ''}|${activeB || ''}`;
+    const groupStart = pairKey !== previousPair;
+    if(groupStart){ bout += 1; previousPair = pairKey; }
+    const winnerId = event.side === 'A' ? activeA : activeB;
+    const loserId = event.side === 'A' ? activeB : activeA;
+    const loserSide = event.side === 'A' ? 'B' : 'A';
+    damage[loserId] = (damage[loserId] || 0) + Number(event.points || 0);
+    const eliminated = damage[loserId] >= 2;
+    const record = {
+      eventIndex, bout, groupStart, activeA, activeB, winnerId, loserId,
+      winnerSide:event.side, loserSide, finish:event.finish,
+      points:Number(event.points || 0), eliminated
+    };
+    if(eliminated){
+      if(loserSide === 'A') activeA = orderA[++indexA] || null;
+      else activeB = orderB[++indexB] || null;
+    }
+    return record;
+  });
+}
+
+function teamBattleHistoryHtml(match){
+  const history = buildTeamBattleHistory(match);
+  if(!history.length) return '';
+  const groups = [];
+  history.forEach(record => {
+    if(record.groupStart) groups.push([]);
+    groups[groups.length - 1].push(record);
+  });
+  return `<div class="team-battle-history">${groups.map((records,groupIndex) => {
+    const first = records[0];
+    return `<section class="team-bout-group">
+      <div class="team-bout-divider">${groupIndex === 0 ? '首棒對決' : `換棒・第 ${groupIndex + 1} 組對決`}</div>
+      <div class="team-bout-pair"><span>${escapeHtml(teamMemberName(first.activeA))}</span><b>VS</b><span>${escapeHtml(teamMemberName(first.activeB))}</span></div>
+      ${records.map(record => {
+        const finish = FINISH[record.finish] || {label:'勝利'};
+        return `<div class="team-history-row ${record.eliminated ? 'is-elimination' : ''}">
+          <span class="team-history-name winner">${escapeHtml(teamMemberName(record.winnerId))}</span>
+          <span class="team-history-result"><strong>獲勝</strong><small>${escapeHtml(finish.label)}・${record.points} HP</small></span>
+          <span class="team-history-name loser">${escapeHtml(teamMemberName(record.loserId))}</span>
+        </div>`;
+      }).join('')}
+    </section>`;
+  }).join('')}</div>`;
+}
+
+function teamRecordSummaryHtml(match, teamAName, teamBName){
+  const history = buildTeamBattleHistory(match);
+  const latest = history[history.length - 1];
+  if(!latest){
+    const battle = match.teamBattle;
+    return `<div class="mr-versus"><span class="mr-name">${escapeHtml(teamMemberName(battle?.activeA))}</span><span class="mr-vs">VS</span><span class="mr-name">${escapeHtml(teamMemberName(battle?.activeB))}</span></div>`;
+  }
+  return `<div class="team-record-summary">
+    <div class="team-record-outcome">
+      <span class="team-record-person side-${latest.winnerSide.toLowerCase()}">${escapeHtml(teamMemberName(latest.winnerId))}</span>
+      <span class="team-record-verb">獲勝</span>
+      <span class="team-record-person side-${latest.loserSide.toLowerCase()}">${escapeHtml(teamMemberName(latest.loserId))}</span>
+    </div>
+    <div class="team-record-team-score">${escapeHtml(teamAName)} ${match.pointsA}：${match.pointsB} ${escapeHtml(teamBName)}</div>
+  </div>`;
+}
+
 function ensureTeamBattle(match){
   if(!match || state.tournament.format !== 'team3v3') return null;
   const teamA = teamById(match.playerA), teamB = teamById(match.playerB);
@@ -7342,9 +7449,10 @@ function renderBracket(){
     matches.forEach(m => {
       const centerY = pos[m.id];
       if(!m.isBye){
+        const matchNumberLabel = formatMatchNumberLabel(singleMatchNumbers.get(m.id));
         html += isFinalRound
-          ? `<div class="single-match-tag final-match-heading" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${icon('trophy',14)}<span>決賽・第 ${singleMatchNumbers.get(m.id)} 場</span></div>`
-          : `<div class="single-match-tag" style="top:${centerY - HALF - BRACKET_TAG_H}px;">第 ${singleMatchNumbers.get(m.id)} 場</div>`;
+          ? `<div class="single-match-tag final-match-heading" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${icon('trophy',14)}<span>決賽${matchNumberLabel ? `・${matchNumberLabel}` : ''}</span></div>`
+          : (matchNumberLabel ? `<div class="single-match-tag" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${matchNumberLabel}</div>` : '');
         html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound);
       }
     });
@@ -7354,9 +7462,10 @@ function renderBracket(){
     // column, rather than centered under the whole tree — so it always
     // lines up with the last (rightmost) column regardless of round count.
     if(isFinalRound && bronzeMatch){
+      const bronzeNumberLabel = formatMatchNumberLabel(singleMatchNumbers.get(bronzeMatch.id));
       html += `
         <div class="bracket-bronze">
-          <div class="bracket-round-label">${icon('medal',14)} 季軍戰・第 ${singleMatchNumbers.get(bronzeMatch.id)} 場</div>
+          <div class="bracket-round-label">${icon('medal',14)} 季軍戰${bronzeNumberLabel ? `・${bronzeNumberLabel}` : ''}</div>
           <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextIds)}</div>
         </div>`;
     }
@@ -7758,7 +7867,13 @@ function toggleMatchDetails(matchId, button){
 }
 
 function realMatchNumber(match){
-  return state.matches.filter(m => !m.isBye && !m.inactive).findIndex(m => m.id === match.id) + 1;
+  const index = state.matches.filter(m => !m.isBye && !m.inactive).findIndex(m => m.id === match?.id);
+  return index >= 0 ? index + 1 : null;
+}
+
+function formatMatchNumberLabel(value){
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? `第 ${number} 場` : '';
 }
 
 function renderMatches(){
@@ -7794,8 +7909,9 @@ function renderMatches(){
   const html = visibleMatches.map(m => {
     const pa = nameOf(m.playerA), pb = nameOf(m.playerB);
     const completed = m.status === 'completed';
+    const isTeamMatch = state.tournament.format === 'team3v3' && !!m.teamBattle;
     const expanded = !completed || expandedMatchIds.has(m.id);
-    const matchNo = realMatchNumber(m);
+    const matchNoLabel = formatMatchNumberLabel(realMatchNumber(m));
     const chip = (l) => {
       const f = FINISH[l.finish];
       const hex = resolveColor(f.color);
@@ -7814,13 +7930,13 @@ function renderMatches(){
       <div class="match ${completed?'completed':''} ${expanded?'expanded':''}" data-match-id="${escapeHtml(m.id)}">
         ${completed ? `<div class="match-summary-toggle" role="button" tabindex="0" onclick="toggleMatchDetails('${m.id}',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMatchDetails('${m.id}',this)}" aria-expanded="${expanded}">` : ''}
           <div class="match-header">
-            <span>第 ${matchNo} 場</span>
+            <span>${matchNoLabel}</span>
             <span><span class="status-pill ${completed?'done':'pending'}">${completed?'已完成':'尚未開始'}</span>${completed ? `<span class="match-toggle-icon">${icon('chevron-down',14)}</span>` : ''}</span>
           </div>
-          <div class="match-result"><div class="mr-versus">${playerName(m.playerA,pa)}<span class="mr-vs">VS</span>${playerName(m.playerB,pb)}${scoreHtml}</div></div>
+          <div class="match-result">${isTeamMatch ? teamRecordSummaryHtml(m,pa,pb) : `<div class="mr-versus">${playerName(m.playerA,pa)}<span class="mr-vs">VS</span>${playerName(m.playerB,pb)}${scoreHtml}</div>`}</div>
         ${completed ? '</div>' : ''}
         <div class="match-collapsible ${expanded ? '' : 'hidden'}">
-          ${(logAHtml || logBHtml) ? `
+          ${isTeamMatch ? teamBattleHistoryHtml(m) : (logAHtml || logBHtml) ? `
           <div class="match-log">
             <div class="match-log-side"><div class="match-log-name" data-player-id="${escapeHtml(m.playerA || '')}">${escapeHtml(pa)}</div>${logAHtml}</div>
             <div class="match-log-side"><div class="match-log-name" data-player-id="${escapeHtml(m.playerB || '')}">${escapeHtml(pb)}</div>${logBHtml}</div>
@@ -8252,7 +8368,7 @@ function renderTeamRefereeMatch(match, panelId){
     </details>` : (battle.started && !completed ? `<div class="team-lineup-locked">${icon('check-circle',12)} 出戰順序已鎖定</div>` : '');
   const activeArea = completed ? `
     <div class="winner-banner"><div class="wname"><span class="winner-check">✓</span>${escapeHtml(nameOf(match.winner))} <span class="winner-word">獲勝</span></div>
-      ${nextMatch ? `<div class="text-muted next-match-preview"><span class="next-match-kicker">下一場・第 ${realMatchNumber(nextMatch)} 場</span><span class="next-match-names">${escapeHtml(nameOf(nextMatch.playerA))} <span class="versus-word">VS</span> ${escapeHtml(nameOf(nextMatch.playerB))}</span></div>` : `<div class="text-muted">目前沒有下一場對戰了</div>`}
+      ${nextMatch ? `<div class="text-muted next-match-preview"><span class="next-match-kicker">下一場${formatMatchNumberLabel(realMatchNumber(nextMatch)) ? `・${formatMatchNumberLabel(realMatchNumber(nextMatch))}` : ''}</span><span class="next-match-names">${escapeHtml(nameOf(nextMatch.playerA))} <span class="versus-word">VS</span> ${escapeHtml(nameOf(nextMatch.playerB))}</span></div>` : `<div class="text-muted">目前沒有下一場對戰了</div>`}
     </div>` : `
     <div class="team-active-grid">
       <div class="team-active-card"><div class="team-active-kicker">${escapeHtml(teamA.name)}・目前上場</div><div class="team-active-name ${activeEliminationEffect&&activeEliminationEffect.side==='A'?'is-entering':''}">${escapeHtml(teamMemberName(battle.activeA))}</div>${teamHpBar(battle.activeA,battle,false)}<div class="team-active-life">${Math.max(0,2-(battle.damage[battle.activeA]||0))} / 2 HP</div>${teamRosterStatus(teamA,battle,'A',match)}</div>
@@ -8298,7 +8414,7 @@ function renderRefereeMatch(match, panelId){
   const nextMatchHtml = nextMatchPreview
     ? `<div class="text-muted next-match-preview ${nextMatchPreviewFlashPanels.has(panelId) ? 'is-switched' : ''}" aria-live="polite">
          <span class="next-match-refresh-mark">${icon('shuffle',13)}</span>
-         <span class="next-match-kicker">下一場・第 ${realMatchNumber(nextMatchPreview)} 場</span>
+         <span class="next-match-kicker">下一場${formatMatchNumberLabel(realMatchNumber(nextMatchPreview)) ? `・${formatMatchNumberLabel(realMatchNumber(nextMatchPreview))}` : ''}</span>
          <span class="next-match-names">${escapeHtml(nameOf(nextMatchPreview.playerA))} <span class="versus-word">VS</span> ${escapeHtml(nameOf(nextMatchPreview.playerB))}</span>
        </div>`
     : `<div class="text-muted">目前沒有下一場對戰了</div>`;
@@ -8457,7 +8573,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.11\n更新日期：2026/09/17\n\n更新摘要\n\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.11\n更新日期：2026/09/17\n\n更新摘要\n\n• 團體戰對戰紀錄改為顯示「誰獲勝」，換棒後持續累積並分段。\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
