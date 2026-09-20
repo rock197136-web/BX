@@ -1762,7 +1762,9 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .viewer-mode .tab[data-tab="tools"],
 .viewer-mode .goto-referee-btn,
 .viewer-mode .referee-only-btn,
+.viewer-mode .referee-only-note,
 .viewer-mode .undo-btn{ display:none !important; }
+.viewer-mode .viewer-only-note{ display:block !important; }
 
 @media (max-width:700px){
   .container{ padding:0 12px 50px; }
@@ -3400,8 +3402,9 @@ body::before{opacity:.42;}
   <section id="tab-standings">
     <div id="welcomeV38" class="card welcome-card hidden">
       <div class="card-title">尚未建立賽事</div>
-      <p>設定賽制並加入選手，即可產生對戰表。</p>
-      <button class="btn btn-primary" onclick="switchTab('setup')">建立賽事 <span aria-hidden="true">→</span></button>
+      <p class="referee-only-note">設定賽制並加入選手，即可產生對戰表。</p>
+      <p class="viewer-only-note hidden">正在等待裁判建立賽事中...</p>
+      <button class="btn btn-primary referee-only-btn" onclick="switchTab('setup')">建立賽事 <span aria-hidden="true">→</span></button>
     </div>
     <div class="stats-bar" id="statsBarV38">
       <div class="stats-bar-item"><div class="sb-value"><span id="statPlayers">0</span><small id="statParticipantUnit"> 位選手</small></div></div>
@@ -7693,7 +7696,9 @@ function renderBracket(){
   const wrap = document.getElementById('bracketTree');
   wrap.classList.remove('double-tree');
   if(state.matches.length === 0){
-    wrap.innerHTML = `<div class="bracket-empty">尚未產生賽事，請先前往「賽事設定」建立賽事。</div>`;
+    wrap.innerHTML = currentRole === 'viewer'
+      ? `<div class="bracket-empty">正在等待裁判建立賽事中...</div>`
+      : `<div class="bracket-empty">尚未產生賽事，請先前往「賽事設定」建立賽事。</div>`;
     return;
   }
 
@@ -8178,7 +8183,9 @@ function renderMatches(){
   const realMatches = state.matches.filter(m => !m.isBye && !m.inactive);
 
   if(realMatches.length === 0){
-    matchList.innerHTML = `<div class="referee-empty">尚未產生對戰紀錄，請先前往「賽事設定」開始比賽。</div>`;
+    matchList.innerHTML = currentRole === 'viewer'
+      ? `<div class="referee-empty">正在等待裁判建立賽事中...</div>`
+      : `<div class="referee-empty">尚未產生對戰紀錄，請先前往「賽事設定」開始比賽。</div>`;
     return;
   }
 
@@ -8376,7 +8383,9 @@ function renderReferee(){
   if(masterCb) masterCb.checked = masterModeOn;
 
   if(state.matches.length === 0){
-    wrap.innerHTML = `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事</div>請先前往「賽事設定」建立賽事。</div></div>`;
+    wrap.innerHTML = currentRole === 'viewer'
+      ? `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事</div>正在等待裁判建立賽事中...</div></div>`
+      : `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事</div>請先前往「賽事設定」建立賽事。</div></div>`;
     return;
   }
   if(refereePanels.length === 0) refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
