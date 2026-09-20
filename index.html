@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>BEYBLADE X 對戰系統 V3.11</title>
+<title>BEYBLADE X 對戰系統 V3.12</title>
 <meta name="description" content="BEYBLADE X 對戰系統：即時戰況、對戰紀錄與賽事管理。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rock197136-web.github.io/BX/?share=v5">
@@ -1747,7 +1747,9 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   background:#fff; border-radius:12px; padding:14px; display:inline-flex;
   align-items:center; justify-content:center; margin:6px 0 14px;
 }
-.qr-code-wrap img{ display:block; width:220px; height:220px; }
+.qr-code-render{ display:grid; place-items:center; width:220px; height:220px; }
+.qr-code-render canvas,.qr-code-render img{ display:block; width:220px!important; height:220px!important; image-rendering:pixelated; }
+.qr-code-render-status{ display:grid; place-items:center; width:220px; height:220px; padding:18px; color:#3c4148; font-size:12px; font-weight:800; line-height:1.5; }
 .qr-code-link{
   font-family:'Space Mono',monospace; font-size:12px; color:var(--muted);
   word-break:break-all; background:var(--panel-2); border:1px solid var(--border);
@@ -3368,7 +3370,7 @@ body::before{opacity:.42;}
       <span class="player-next-match-arrow" aria-hidden="true">›</span>
     </button>
     <div class="header-release-row">
-      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.11 <span aria-hidden="true">·</span> 更新日期 26/9/19 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
+      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.12 <span aria-hidden="true">·</span> 更新日期 26/9/20 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
     </div>
   </div>
 </header>
@@ -3796,7 +3798,7 @@ body::before{opacity:.42;}
 
     <div id="cloudNotConfigured" class="hidden">
       <div class="text-muted" style="font-size:13px; line-height:1.75;">
-        這個部署還沒有連上雲端資料庫，資料目前只會保存在<b>這台裝置的瀏覽器</b>裡，換裝置或清除瀏覽器資料會遺失。
+        這個部署還沒有連上雲端資料庫，賽事資料只會保留在<b>本次瀏覽工作階段</b>；重新整理仍可繼續，但關閉網站後，下次開啟不會自動帶入舊資料。
         <br><br>
         如果需要跨裝置即時同步（例如多位裁判在不同手機上分頭替不同桌次計分），請參考程式碼最上方
         <code>FIREBASE_CONFIG</code> 的設定說明，接上你自己的 Firebase 專案（免費）即可。
@@ -3863,7 +3865,7 @@ body::before{opacity:.42;}
   <div class="modal-box qr-modal-box" style="max-width:320px;">
     <div class="modal-title"><span id="qrModalIcon"></span> 選手／觀眾連結 QR 碼</div>
     <div class="qr-code-wrap">
-      <img id="qrCodeImg" src="" alt="QR Code">
+      <div class="qr-code-render" id="qrCodeRender" role="img" aria-label="選手／觀眾連結 QR 碼"></div>
     </div>
     <div class="qr-code-link" id="qrCodeLink"></div>
     <button class="btn btn-primary btn-block" id="qrCopyBtn" onclick="copyShareLink(currentQRCode, this)">複製連結</button>
@@ -4426,9 +4428,10 @@ function initBracketPanZoom(){
 }
 
 /* =========================================================
-   STORAGE — local cache (works everywhere: artifact preview
-   AND a plain static host like GitHub Pages) + optional
-   Firebase cloud sync layered on top for cross-device use.
+   STORAGE — active tournament data is session-only.
+   Reloading the same tab keeps the event, but a later visit
+   never silently restores an old tournament. Explicit roster
+   drafts remain the only opt-in persistent event data.
 ========================================================= */
 const EVENT_CODE_KEY = 'beyblade-x-event-code';
 const EVENT_ROLE_KEY = 'beyblade-x-event-role';
@@ -4441,32 +4444,34 @@ function markDirty(id){ if(id) dirtyMatchIds.add(id); }
 function markAllDirty(){ state.matches.forEach(m => markDirty(m.id)); }
 
 async function loadLocalCache(){
+  // Remove data written persistently by older builds. Display preferences
+  // are intentionally left untouched; only event/tool state is cleared.
+  try{
+    [STORAGE_KEY, EVENT_CODE_KEY, EVENT_ROLE_KEY, EVENT_VIEWER_KEY,
+      DRAW_TOOL_STORAGE_KEY, PRIZE_DRAW_STORAGE_KEY, PANELS_KEY]
+      .forEach(key => localStorage.removeItem(key));
+    const legacyDraft = JSON.parse(localStorage.getItem(ROSTER_DRAFT_KEY) || 'null');
+    if(legacyDraft && legacyDraft.consented !== true) localStorage.removeItem(ROSTER_DRAFT_KEY);
+  }catch(e){}
   try{
     if(window.storage){
-      const res = await window.storage.get(STORAGE_KEY, false);
-      if(res && res.value){
-        state = Object.assign(state, JSON.parse(res.value));
-        return;
-      }
+      await window.storage.delete(STORAGE_KEY, false);
     }
   }catch(e){}
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     if(raw) state = Object.assign(state, JSON.parse(raw));
   }catch(e){
-    console.log('沒有已儲存的資料，使用預設值。', e);
+    console.log('沒有本次瀏覽的暫存資料，使用預設值。', e);
   }
 }
 
 async function saveState(silent){
   const json = JSON.stringify(state);
   let localSaved = false;
-  try{ localStorage.setItem(STORAGE_KEY, json); localSaved = true; }catch(e){}
-  if(window.storage){
-    try{ await window.storage.set(STORAGE_KEY, json, false); localSaved = true; }catch(e){}
-  }
+  try{ sessionStorage.setItem(STORAGE_KEY, json); localSaved = true; }catch(e){}
   const hasCloud = !!(window.cloudSync && window.cloudSync.ready && currentEventCode);
-  if(!silent) flashSaved(localSaved ? (hasCloud ? '同步中…' : '本機已保存') : '本機保存失敗', localSaved ? (hasCloud ? 'syncing' : '') : 'error', hasCloud ? 0 : 1300);
+  if(!silent) flashSaved(localSaved ? (hasCloud ? '同步中…' : '本次瀏覽已暫存') : '暫存失敗', localSaved ? (hasCloud ? 'syncing' : '') : 'error', hasCloud ? 0 : 1300);
   const synced = await pushToCloud();
   if(!silent && hasCloud) flashSaved(synced ? '雲端已同步' : '同步失敗，待重試', synced ? 'synced' : 'error', synced ? 1300 : 2600);
 }
@@ -4557,7 +4562,7 @@ function saveDrawTool(){
   const countInput = document.getElementById('drawCountInput');
   if(!namesInput || !countInput) return;
   try{
-    localStorage.setItem(DRAW_TOOL_STORAGE_KEY, JSON.stringify({
+    sessionStorage.setItem(DRAW_TOOL_STORAGE_KEY, JSON.stringify({
       names:namesInput.value,
       count:countInput.value
     }));
@@ -4569,7 +4574,7 @@ function initDrawTool(){
   const countInput = document.getElementById('drawCountInput');
   if(!namesInput || !countInput) return;
   try{
-    const saved = JSON.parse(localStorage.getItem(DRAW_TOOL_STORAGE_KEY) || 'null');
+    const saved = JSON.parse(sessionStorage.getItem(DRAW_TOOL_STORAGE_KEY) || 'null');
     if(saved && typeof saved.names === 'string') namesInput.value = saved.names;
     if(saved && Number(saved.count) >= 1) countInput.value = String(Math.floor(Number(saved.count)));
   }catch(e){}
@@ -4814,7 +4819,7 @@ function getPrizeParticipants(){
 function savePrizeDraw(){
   const countInput = document.getElementById('prizeDrawCountInput');
   try{
-    localStorage.setItem(PRIZE_DRAW_STORAGE_KEY, JSON.stringify({
+    sessionStorage.setItem(PRIZE_DRAW_STORAGE_KEY, JSON.stringify({
       winners:prizeDrawWinners,
       count:countInput ? countInput.value : '1'
     }));
@@ -4824,7 +4829,7 @@ function savePrizeDraw(){
 function initPrizeDraw(){
   const countInput = document.getElementById('prizeDrawCountInput');
   try{
-    const saved = JSON.parse(localStorage.getItem(PRIZE_DRAW_STORAGE_KEY) || 'null');
+    const saved = JSON.parse(sessionStorage.getItem(PRIZE_DRAW_STORAGE_KEY) || 'null');
     if(saved && Array.isArray(saved.winners)) prizeDrawWinners = saved.winners.map(String);
     if(countInput && saved && Number(saved.count) >= 1) countInput.value = String(Math.floor(Number(saved.count)));
   }catch(e){}
@@ -5013,16 +5018,85 @@ function buildShareLink(code){
 }
 
 let currentQRCode = null;
+let qrLibraryPromise = null;
 
-function showQRCode(code){
+function ensureQRCodeLibrary(){
+  if(window.QRCode) return Promise.resolve(window.QRCode);
+  if(qrLibraryPromise) return qrLibraryPromise;
+  qrLibraryPromise = new Promise((resolve,reject) => {
+    const script = document.createElement('script');
+    const timeout = window.setTimeout(() => {
+      script.remove();
+      qrLibraryPromise = null;
+      reject(new Error('QR library load timeout'));
+    },5000);
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.async = true;
+    script.onload = () => {
+      window.clearTimeout(timeout);
+      if(window.QRCode) resolve(window.QRCode);
+      else { qrLibraryPromise = null; reject(new Error('QR library unavailable')); }
+    };
+    script.onerror = () => {
+      window.clearTimeout(timeout);
+      script.remove();
+      qrLibraryPromise = null;
+      reject(new Error('QR library load failed'));
+    };
+    document.head.appendChild(script);
+  });
+  return qrLibraryPromise;
+}
+
+function setQRCodeRenderStatus(message){
+  const host = document.getElementById('qrCodeRender');
+  if(!host) return;
+  host.innerHTML = '';
+  const status = document.createElement('div');
+  status.className = 'qr-code-render-status';
+  status.textContent = message;
+  host.appendChild(status);
+}
+
+function renderQRCodeFallback(link){
+  const host = document.getElementById('qrCodeRender');
+  if(!host) return;
+  host.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = '選手／觀眾連結 QR 碼';
+  img.width = 220;
+  img.height = 220;
+  img.decoding = 'async';
+  img.onload = () => showToast('已使用備援方式產生 QR 碼');
+  img.onerror = () => setQRCodeRenderStatus('目前無法產生 QR 碼，請改用下方「複製連結」。');
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(link)}`;
+  host.appendChild(img);
+}
+
+async function showQRCode(code){
   code = (code || '').trim().toUpperCase();
   if(code.length !== 3) return;
   currentQRCode = code;
   const link = buildShareLink(code);
-  const img = document.getElementById('qrCodeImg');
-  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(link)}`;
   document.getElementById('qrCodeLink').innerText = link;
   document.getElementById('qrModal').classList.add('show');
+  setQRCodeRenderStatus('正在產生 QR 碼…');
+  try{
+    await ensureQRCodeLibrary();
+    const host = document.getElementById('qrCodeRender');
+    if(!host || currentQRCode !== code) return;
+    host.innerHTML = '';
+    new window.QRCode(host, {
+      text:link,
+      width:220,
+      height:220,
+      colorDark:'#000000',
+      colorLight:'#ffffff',
+      correctLevel:window.QRCode.CorrectLevel.M
+    });
+  }catch(e){
+    if(currentQRCode === code) renderQRCodeFallback(link);
+  }
 }
 
 function hideQRModal(){
@@ -5222,9 +5296,9 @@ function initCloud(){
       return;
     }
 
-    const savedCode = localStorage.getItem(EVENT_CODE_KEY);
-    const savedRole = localStorage.getItem(EVENT_ROLE_KEY) || 'referee';
-    const savedViewerCode = localStorage.getItem(EVENT_VIEWER_KEY) || null;
+    const savedCode = sessionStorage.getItem(EVENT_CODE_KEY);
+    const savedRole = sessionStorage.getItem(EVENT_ROLE_KEY) || 'referee';
+    const savedViewerCode = sessionStorage.getItem(EVENT_VIEWER_KEY) || null;
     if(savedCode){
       joinCloudEvent(savedCode, savedRole, savedViewerCode);
     } else if(state.tournament.status === 'running' || playerSetupExpanded){
@@ -5251,9 +5325,9 @@ async function joinEventByCode(code){
     const result = await window.cloudSync.resolveCode(code);
     if(!result) return false;
     const viewerCode = result.role === 'viewer' ? code : (result.data && result.data.viewerCode) || null;
-    localStorage.setItem(EVENT_CODE_KEY, result.eventCode);
-    localStorage.setItem(EVENT_ROLE_KEY, result.role);
-    localStorage.setItem(EVENT_VIEWER_KEY, viewerCode || '');
+    sessionStorage.setItem(EVENT_CODE_KEY, result.eventCode);
+    sessionStorage.setItem(EVENT_ROLE_KEY, result.role);
+    sessionStorage.setItem(EVENT_VIEWER_KEY, viewerCode || '');
     joinCloudEvent(result.eventCode, result.role, viewerCode);
     return true;
   }catch(e){
@@ -5359,9 +5433,9 @@ async function handleCreateEvent(){
     });
     if(state.matches.length) await window.cloudSync.pushMatches(state.matches);
 
-    localStorage.setItem(EVENT_CODE_KEY, refCode);
-    localStorage.setItem(EVENT_ROLE_KEY, 'referee');
-    localStorage.setItem(EVENT_VIEWER_KEY, viewerCode);
+    sessionStorage.setItem(EVENT_CODE_KEY, refCode);
+    sessionStorage.setItem(EVENT_ROLE_KEY, 'referee');
+    sessionStorage.setItem(EVENT_VIEWER_KEY, viewerCode);
     joinCloudEvent(refCode, 'referee', viewerCode);
 
     document.getElementById('cloudResultRefCode').innerText = refCode;
@@ -5415,9 +5489,9 @@ function leaveCloudEvent(){
     currentEventCode = null;
     currentRole = 'referee';
     currentViewerCode = null;
-    localStorage.removeItem(EVENT_CODE_KEY);
-    localStorage.removeItem(EVENT_ROLE_KEY);
-    localStorage.removeItem(EVENT_VIEWER_KEY);
+    sessionStorage.removeItem(EVENT_CODE_KEY);
+    sessionStorage.removeItem(EVENT_ROLE_KEY);
+    sessionStorage.removeItem(EVENT_VIEWER_KEY);
     document.body.classList.remove('viewer-mode');
     updateCloudStatusUI();
     hideCloudModal();
@@ -5460,7 +5534,7 @@ function onCloudMeta(data){
   state.currentRound = data.currentRound ?? state.currentRound;
   if(data.viewerCode && currentRole === 'referee'){
     currentViewerCode = data.viewerCode;
-    localStorage.setItem(EVENT_VIEWER_KEY, data.viewerCode);
+    sessionStorage.setItem(EVENT_VIEWER_KEY, data.viewerCode);
   }
   // Referee-table assignments ("進行中" vs "即將上場" on the bracket) live in
   // refereePanels. This used to be localStorage-only, so any device other
@@ -5470,9 +5544,9 @@ function onCloudMeta(data){
   // Apply the synced copy here so every device agrees.
   if(Array.isArray(data.refereePanels) && data.refereePanels.length){
     refereePanels = data.refereePanels;
-    try{ localStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
+    try{ sessionStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
   }
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   if(!isOwnShuffleEcho) renderAll();
   updateCloudStatusUI();
   applyingRemote = false;
@@ -5526,7 +5600,7 @@ function onCloudMatches(list){
   });
 
   state.matches = incoming;
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 
   // The real reshuffled bracket has arrived — stop any slot-machine spin
   // this device kicked off in response to the shuffleAt broadcast (or its
@@ -5546,6 +5620,8 @@ function onCloudMatches(list){
 ========================================================= */
 let restoringRosterDraft = false;
 let rosterDraftPrompted = false;
+let rosterDraftSavePrompted = false;
+let rosterDraftEnabled = false;
 
 function normalizePlayerName(name){
   return String(name || '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('zh-Hant');
@@ -5562,16 +5638,34 @@ function saveRosterDraft(){
   const players = Array.from(document.querySelectorAll('#playerInputs .player-chip')).map(chip => ({
     name: chip.dataset.name || '', attendance: chip.dataset.attendance || 'pending'
   })).filter(p => p.name.trim());
+  if(!rosterDraftEnabled) return;
   try{
-    if(players.length) localStorage.setItem(ROSTER_DRAFT_KEY, JSON.stringify({ players, updatedAt:Date.now() }));
+    if(players.length) localStorage.setItem(ROSTER_DRAFT_KEY, JSON.stringify({ consented:true, players, updatedAt:Date.now() }));
     else localStorage.removeItem(ROSTER_DRAFT_KEY);
   }catch(e){}
+}
+
+function offerRosterDraftSave(prefixMessage){
+  if(rosterDraftEnabled || rosterDraftSavePrompted || restoringRosterDraft || state.tournament.status === 'running') return false;
+  const count = document.querySelectorAll('#playerInputs .player-chip').length;
+  if(count === 0) return false;
+  rosterDraftSavePrompted = true;
+  const prefix = prefixMessage ? `${prefixMessage}\n\n` : '';
+  showModal(`${prefix}是否將目前 ${count} 位玩家名單儲存為草稿？只有選擇儲存後，下次開啟網站才會保留這份名單。`, [
+    { label:'不要儲存', className:'btn-dark' },
+    { label:'儲存草稿', className:'btn-primary', action:() => {
+      rosterDraftEnabled = true;
+      saveRosterDraft();
+      showToast('名單草稿已儲存');
+    }}
+  ]);
+  return true;
 }
 
 function readRosterDraft(){
   try{
     const draft = JSON.parse(localStorage.getItem(ROSTER_DRAFT_KEY) || 'null');
-    return draft && Array.isArray(draft.players) && draft.players.length ? draft : null;
+    return draft && draft.consented === true && Array.isArray(draft.players) && draft.players.length ? draft : null;
   }catch(e){ return null; }
 }
 
@@ -5581,6 +5675,8 @@ function restoreRosterDraft(draft){
   createPlayerInputs(0);
   draft.players.forEach(p => addPlayerChip(p.name, p.attendance));
   restoringRosterDraft = false;
+  rosterDraftEnabled = true;
+  rosterDraftSavePrompted = true;
   renumberPlayerRows();
   renderAttendanceManager();
   showToast(`已恢復 ${draft.players.length} 位選手與點名狀態`);
@@ -5610,8 +5706,9 @@ function onChipInputKeydown(e){
     e.preventDefault();
     const name = input.value.trim();
     if(name){
-      addPlayerChip(name);
+      const added = addPlayerChip(name);
       input.value = '';
+      if(added) offerRosterDraftSave();
     }
   } else if(e.key === 'Backspace' && input.value === ''){
     const container = document.getElementById('playerInputs');
@@ -5814,7 +5911,8 @@ function applyBulkNames(){
   const duplicateMessage = duplicateCount > 0
     ? `，已自動忽略 ${duplicateCount} 筆重複姓名`
     : '';
-  showAlert(`已新增 ${addedNames.length} 位玩家${duplicateMessage}。目前參賽名單共 ${totalPlayers} 位。`);
+  const resultMessage = `已新增 ${addedNames.length} 位玩家${duplicateMessage}。目前參賽名單共 ${totalPlayers} 位。`;
+  if(!offerRosterDraftSave(resultMessage)) showAlert(resultMessage);
 }
 
 function removePlayerChip(btn){
@@ -8188,7 +8286,7 @@ function toggleMasterMode(on){
 
 function loadRefereePanels(){
   try{
-    const raw = localStorage.getItem(PANELS_KEY);
+    const raw = sessionStorage.getItem(PANELS_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
       if(Array.isArray(parsed) && parsed.length) { refereePanels = parsed; return; }
@@ -8197,7 +8295,7 @@ function loadRefereePanels(){
   refereePanels = [{ id: genPanelId(), matchId:null, label:'' }];
 }
 function savePanels(){
-  try{ localStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
+  try{ sessionStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
   pushPanelsToCloud();
 }
 
@@ -8766,7 +8864,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.11\n更新日期：2026/09/19\n\n更新摘要\n\n• 團體戰對戰紀錄改為顯示「誰獲勝」，換棒後持續累積並分段。\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.12\n更新日期：2026/09/20\n\n更新摘要\n\n• QR 碼改為瀏覽器端直接產生，減少等待並避免一般情況下將賽事連結送往圖片服務。\n• QR 元件採首次使用才載入，失敗時自動切換備援產生方式。\n• 賽事與比分改為本次瀏覽暫存，下次開啟不會自動套用舊資料。\n• 玩家名單改為詢問後才儲存草稿，載入草稿前也會再次確認。\n• 團體戰對戰紀錄改為顯示「誰獲勝」，換棒後持續累積並分段。\n• 團體賽判分固定為三個按鈕：轉停 +1、擊飛/爆裂 +2、極限 +3。\n• 新增 3v3 團體單淘汰賽、三人建隊與賽前出戰排序。\n• 手機裁判台改為左右雙方同畫面對抗，不再上下堆疊。\n• 每位團員加入兩格 HP 視覺條，名單同步顯示剩餘血量。\n• HP 未歸零時由原團員繼續；歸零才淘汰並換下一位。\n• 全隊三名團員淘汰後判定隊伍落敗並推進賽程。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
@@ -8876,7 +8974,10 @@ function loadSetupInputs(){
     const draft = readRosterDraft();
     if(draft){
       rosterDraftPrompted = true;
-      showConfirm(`發現尚未開賽的名單草稿（${draft.players.length} 位），是否恢復姓名與點名狀態？`, () => restoreRosterDraft(draft));
+      showModal(`發現尚未開賽的名單草稿（${draft.players.length} 位），是否載入姓名與點名狀態？`, [
+        { label:'暫不載入', className:'btn-dark' },
+        { label:'載入草稿', className:'btn-primary', action:() => restoreRosterDraft(draft) }
+      ]);
     }
   }
   updatePlayerSetupVisibility();
@@ -8943,7 +9044,8 @@ function togglePlayerSetupSection(){
 ========================================================= */
 function resetTournament(){
   showConfirm('確定要刪除目前所有比賽資料嗎？此動作無法復原。', async () => {
-    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    try{ sessionStorage.removeItem(STORAGE_KEY); }catch(e){}
+    try{ sessionStorage.removeItem(PANELS_KEY); }catch(e){}
     try{ localStorage.removeItem(ROSTER_DRAFT_KEY); }catch(e){}
     if(window.storage){ try{ await window.storage.delete(STORAGE_KEY, false); }catch(e){} }
     if(window.cloudSync && window.cloudSync.ready && currentEventCode){
@@ -8957,6 +9059,9 @@ function resetTournament(){
     savePanels();
     playerSetupExpanded = false;
     attendanceManagerOpen = false;
+    rosterDraftEnabled = false;
+    rosterDraftSavePrompted = false;
+    rosterDraftPrompted = false;
     createPlayerInputs(2);
     renderAll();
     if(currentEventCode) saveState();
