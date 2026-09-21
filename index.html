@@ -3354,6 +3354,10 @@ body::before{opacity:.42;}
 .arc-sub{ margin-top:2px; display:flex; align-items:center; gap:2px; font-size:12.5px; color:var(--muted); min-width:0; }
 .arc-sub .arc-who{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .arc-sub .arc-link{ padding:6px 8px; min-height:0; margin:-6px 0; }
+.arc-account-status{min-width:0;display:flex;align-items:center;gap:6px;}
+.arc-google-g{flex:0 0 20px;width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:#fff;font:800 14px/1 Arial,sans-serif;box-shadow:0 0 0 1px rgba(255,255,255,.18);}
+.arc-google-g span{background:conic-gradient(from -35deg,#4285f4 0 28%,#34a853 28% 48%,#fbbc05 48% 66%,#ea4335 66% 82%,#4285f4 82%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.arc-login-state{flex:0 0 auto;color:#82d99b;font-weight:700;}
 .arc-icon-btn{
   flex:0 0 46px; width:46px; height:46px; display:grid; place-items:center;
   background:transparent; border:0; border-radius:12px; color:var(--text);
@@ -3508,6 +3512,18 @@ body::before{opacity:.42;}
 .arc-kv span{ color:var(--muted); }
 .arc-kv b{ font:700 15px 'Noto Sans TC',sans-serif; font-variant-numeric:tabular-nums; text-align:right; }
 .arc-save-hint{ margin:10px 0 0; font-size:12.5px; color:var(--muted); text-align:center; }
+.arc-auto-save{margin:14px 16px 4px;padding:12px 14px;display:flex;align-items:center;gap:12px;border:1px solid rgba(130,217,155,.3);border-radius:14px;background:rgba(130,217,155,.055);}
+.arc-auto-save-icon{flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:rgba(130,217,155,.1);color:#82d99b;}
+.arc-auto-save-copy{flex:1;min-width:0;}
+.arc-auto-save-copy b{display:block;font-size:14px;line-height:1.4;}
+.arc-auto-save-copy small{display:block;margin-top:2px;color:var(--muted);font-size:12px;line-height:1.45;}
+.arc-auto-switch{position:relative;flex:0 0 48px;width:48px;height:30px;cursor:pointer;}
+.arc-auto-switch input{position:absolute;opacity:0;pointer-events:none;}
+.arc-auto-track{position:absolute;inset:0;border:1px solid var(--border);border-radius:99px;background:var(--panel-2);transition:background .18s,border-color .18s;}
+.arc-auto-track::after{content:'';position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#aaa39a;transition:transform .18s,background .18s;}
+.arc-auto-switch input:checked + .arc-auto-track{border-color:#82d99b;background:rgba(130,217,155,.18);}
+.arc-auto-switch input:checked + .arc-auto-track::after{transform:translateX(18px);background:#82d99b;}
+.arc-auto-switch input:focus-visible + .arc-auto-track{outline:2px solid var(--cyan-soft);outline-offset:2px;}
 
 /* --- 賽事詳情：賽程（依輪次分組、可收合） --- */
 .arc-grp-h{
@@ -3810,10 +3826,18 @@ body::before{opacity:.42;}
           //   archives/{id}/detail/main   → 「完整對戰資料」（players / matches），點進詳情才讀
           // 若 Firestore 規則還沒開放 detail 這個子集合（permission-denied），
           // 會自動退回舊的單一文件寫法，功能照常運作，只是列表還是比較重。
-          async archiveEvent(payload){
+          async archiveEvent(payload, options = {}){
             if(!currentUser) throw new Error('尚未登入');
             const { players, matches, ...summary } = payload;
-            const ref = doc(collection(db, 'archives'));
+            const source = payload.originalEventCode || payload.archiveSourceKey || `${payload.title}|${payload.format}|${payload.champion}`;
+            let hash = 2166136261;
+            for(let i = 0; i < source.length; i++){
+              hash ^= source.charCodeAt(i);
+              hash = Math.imul(hash, 16777619);
+            }
+            const ref = options.autoSave
+              ? doc(db, 'archives', `auto_${currentUser.uid}_${(hash >>> 0).toString(36)}`)
+              : doc(collection(db, 'archives'));
             const head = {
               ...summary,
               ownerId: currentUser.uid,
@@ -4487,6 +4511,17 @@ body::before{opacity:.42;}
         </div>
 
         <div id="archiveSignedIn" class="hidden">
+          <section class="arc-auto-save" aria-labelledby="archiveAutoSaveTitle">
+            <span class="arc-auto-save-icon" id="archiveAutoSaveIcon"></span>
+            <span class="arc-auto-save-copy">
+              <b id="archiveAutoSaveTitle">自動儲存賽事</b>
+              <small id="archiveAutoSaveStatus">賽事完成後自動存入典藏</small>
+            </span>
+            <label class="arc-auto-switch" aria-label="自動儲存賽事">
+              <input type="checkbox" id="archiveAutoSaveToggle" role="switch" onchange="setArchiveAutoSave(this.checked)">
+              <span class="arc-auto-track" aria-hidden="true"></span>
+            </label>
+          </section>
           <section class="arc-save hidden" id="archiveSaveSection">
             <div class="arc-save-title">儲存目前這場賽事</div>
             <div id="archiveSaveForm">
@@ -5173,7 +5208,8 @@ function initStaticIcons(){
     archiveImportIcon: 'download',
     archiveModalIcon: 'clock',
     archiveDetailIcon: 'medal',
-    archiveSignInIcon: 'user'
+    archiveSignInIcon: 'user',
+    archiveAutoSaveIcon: 'cloud'
   };
   Object.entries(map).forEach(([id, name]) => {
     const el = document.getElementById(id);
@@ -5392,6 +5428,7 @@ async function saveState(silent){
   if(!silent) flashSaved(localSaved ? (hasCloud ? '同步中…' : '本次瀏覽已暫存') : '暫存失敗', localSaved ? (hasCloud ? 'syncing' : '') : 'error', hasCloud ? 0 : 1300);
   const synced = await pushToCloud();
   if(!silent && hasCloud) flashSaved(synced ? '雲端已同步' : '同步失敗，待重試', synced ? 'synced' : 'error', synced ? 1300 : 2600);
+  void maybeAutoArchiveTournament();
 }
 
 async function pushToCloud(){
@@ -6101,12 +6138,73 @@ function hideQRModal(){
 ========================================================= */
 let archiveModalSaveMode = false;
 const ARCHIVE_REDIRECT_INTENT_KEY = 'beyblade-x-archive-redirect-intent';
+const ARCHIVE_AUTO_SAVE_KEY = 'beyblade-x-archive-auto-save-v1';
+let archiveAutoSaveBusy = false;
+let archiveAutoSaveLastSignature = '';
+let archiveAutoSaveError = '';
+
+function isArchiveAutoSaveEnabled(){
+  try{ return localStorage.getItem(ARCHIVE_AUTO_SAVE_KEY) !== '0'; }catch(e){ return true; }
+}
+
+function setArchiveAutoSave(enabled){
+  try{ localStorage.setItem(ARCHIVE_AUTO_SAVE_KEY, enabled ? '1' : '0'); }catch(e){}
+  archiveAutoSaveError = '';
+  renderArchiveAutoSaveStatus();
+  if(enabled) maybeAutoArchiveTournament();
+}
+
+function renderArchiveAutoSaveStatus(){
+  const toggle = document.getElementById('archiveAutoSaveToggle');
+  const status = document.getElementById('archiveAutoSaveStatus');
+  if(!toggle || !status) return;
+  const enabled = isArchiveAutoSaveEnabled();
+  toggle.checked = enabled;
+  if(!enabled){ status.textContent = '已關閉，仍可手動儲存賽事'; return; }
+  if(archiveAutoSaveBusy){ status.textContent = '正在安全儲存本場賽事…'; return; }
+  if(archiveAutoSaveError){ status.textContent = archiveAutoSaveError; return; }
+  const data = getAwardPodiumData();
+  status.textContent = data.ready && archiveAutoSaveLastSignature
+    ? '本場賽事已自動儲存'
+    : '決出冠軍後自動存入典藏';
+}
+
+async function maybeAutoArchiveTournament(){
+  if(!isArchiveAutoSaveEnabled() || archiveAutoSaveBusy) return;
+  const sync = window.cloudSync;
+  const user = sync && sync.ready && sync.auth ? sync.auth.getUser() : null;
+  if(!user || !sync.archiveEvent) return;
+  const data = getAwardPodiumData();
+  if(!data.ready || !data.champion){ renderArchiveAutoSaveStatus(); return; }
+  const payload = buildArchivePayload();
+  const source = payload.originalEventCode || payload.archiveSourceKey || payload.title;
+  const signature = [user.uid, source, payload.champion, payload.completedAt, payload.matchCount].join('|');
+  if(signature === archiveAutoSaveLastSignature){ renderArchiveAutoSaveStatus(); return; }
+
+  archiveAutoSaveBusy = true;
+  archiveAutoSaveError = '';
+  renderArchiveAutoSaveStatus();
+  try{
+    await sync.archiveEvent(payload, { autoSave:true });
+    archiveAutoSaveLastSignature = signature;
+    showToast('賽事已自動儲存至我的典藏');
+    if(arcIsShown('archiveModal')) refreshArchiveList();
+  }catch(err){
+    archiveAutoSaveError = '自動儲存失敗，稍後會再嘗試';
+    console.error('賽事自動儲存失敗', err);
+  }finally{
+    archiveAutoSaveBusy = false;
+    renderArchiveAutoSaveStatus();
+  }
+}
 
 // signInWithRedirect leaves the page entirely, so if the referee tapped
 // "儲存到我的賽事典藏" (save mode) right before signing in, that intent has
 // to survive the round trip. sessionStorage does — it's tied to the tab,
 // not the page — so we stash it here and pick it up once auth resolves.
 window.addEventListener('cloudauth-changed', () => {
+  renderArchiveAutoSaveStatus();
+  maybeAutoArchiveTournament();
   let intent = null;
   try{ intent = sessionStorage.getItem(ARCHIVE_REDIRECT_INTENT_KEY); }catch(e){}
   if(intent === null) return;
@@ -6226,9 +6324,10 @@ function renderArchiveModal(){
     return;
   }
   const who = user.displayName || user.email || '已登入';
-  acct.innerHTML = `<span class="arc-who">${escapeHtml(who)}</span><button type="button" class="arc-link" onclick="handleArchiveSignOut()">登出</button>`;
+  acct.innerHTML = `<span class="arc-account-status"><span class="arc-google-g" aria-hidden="true"><span>G</span></span><span class="arc-login-state">已登入</span><span aria-hidden="true">・</span><span class="arc-who">${escapeHtml(who)}</span></span><button type="button" class="arc-link" onclick="handleArchiveSignOut()">登出</button>`;
   acct.classList.remove('hidden');
 
+  renderArchiveAutoSaveStatus();
   arcRenderSaveSection();
   refreshArchiveList();
 }
@@ -6439,15 +6538,26 @@ function handleArchiveSignIn(){
 
 function handleArchiveSignOut(){
   window.cloudSync.auth.signOut().then(() => {
+    archiveAutoSaveLastSignature = '';
+    archiveAutoSaveError = '';
     renderArchiveModal();
   });
+}
+
+function ensureArchiveSourceKey(){
+  if(!state.tournament.archiveSourceKey){
+    state.tournament.archiveSourceKey = globalThis.crypto?.randomUUID?.()
+      || `event-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
+  }
+  return state.tournament.archiveSourceKey;
 }
 
 function buildArchivePayload(title){
   const awardData = getAwardPodiumData();
   const realMatches = state.matches.filter(m => !m.isBye && !m.inactive);
+  const completedAt = Math.max(0, ...realMatches.map(m => Number(m.completedAt) || 0)) || Date.now();
   return {
-    title: title || state.tournament.name || '未命名賽事',
+    title: title || state.tournament.archiveTitle || state.tournament.name || '未命名賽事',
     format: state.tournament.format,
     playerCount: state.players.filter(p => !p.withdrawn).length,
     matchCount: realMatches.length,
@@ -6459,7 +6569,8 @@ function buildArchivePayload(title){
     players: state.players,
     matches: state.matches,
     originalEventCode: (typeof currentEventCode !== 'undefined' && currentEventCode) ? currentEventCode : null,
-    completedAt: Date.now()
+    archiveSourceKey: ensureArchiveSourceKey(),
+    completedAt
   };
 }
 
@@ -6470,12 +6581,15 @@ function confirmSaveArchive(){
     return;
   }
   const title = document.getElementById('archiveTitleInput').value.trim();
+  if(title) state.tournament.archiveTitle = title;
   const btn = document.getElementById('archiveSaveBtn');
   btn.disabled = true;
   btn.innerText = '儲存中...';
-  window.cloudSync.archiveEvent(buildArchivePayload(title)).then(() => {
+  window.cloudSync.archiveEvent(buildArchivePayload(title), { autoSave:isArchiveAutoSaveEnabled() }).then(() => {
     showToast('已儲存到我的賽事典藏');
+    archiveAutoSaveError = '';
     document.getElementById('archiveSaveSection').classList.add('hidden');
+    renderArchiveAutoSaveStatus();
     refreshArchiveList();
   }).catch(err => {
     document.getElementById('archiveError').innerText = '儲存失敗，請稍後再試。';
@@ -10911,8 +11025,8 @@ function openUpdateNotes(){
       <section class="update-notes-section">
         <h4 class="update-notes-heading">連線與典藏</h4>
         <ul class="update-notes-list">
+          <li>Google 登入後顯示帳號狀態，賽事決出冠軍時可自動儲存至典藏。</li>
           <li>建立／加入賽事新增「裁判」「選手」標籤，並統一為「加入現有賽事」。</li>
-          <li>精簡賽事代碼匯入說明，可快速找回賽事並補存至典藏。</li>
         </ul>
       </section>
     </div>`;
