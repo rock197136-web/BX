@@ -3277,6 +3277,37 @@ body::before{opacity:.42;}
 .arc-note{ margin:0 0 16px; font-size:14px; line-height:1.75; color:var(--muted); }
 .arc-error{ padding:0 18px; margin-top:12px; font-size:13px; line-height:1.6; color:#ff8f8f; }
 .arc-error:empty{ display:none; }
+.arc-import{ margin:14px 16px 0; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.arc-import-toggle{ width:100%; min-height:60px; padding:10px 14px; display:flex; align-items:center; gap:12px; text-align:left; background:transparent; border:0; color:var(--text); }
+.arc-imp-ico{ flex:0 0 38px; width:38px; height:38px; display:grid; place-items:center; border-radius:10px; border:1px solid rgba(255,159,36,.45); background:rgba(255,159,36,.08); color:var(--cyan); }
+.arc-imp-txt{ flex:1; min-width:0; }
+.arc-imp-txt b{ display:block; font:700 15px 'Noto Sans TC',sans-serif; }
+.arc-imp-txt small{ display:block; margin-top:2px; font-size:12.5px; line-height:1.5; color:var(--muted); }
+.arc-imp-chev{ flex:0 0 auto; color:var(--muted); transition:transform .2s; }
+.arc-import.open .arc-imp-chev{ transform:rotate(180deg); }
+.arc-import-panel{ padding:14px 14px 16px; border-top:1px solid var(--border); }
+.arc-imp-help{ margin:0 0 12px; font-size:14px; line-height:1.7; color:var(--muted); }
+.arc-imp-row{ display:flex; gap:10px; }
+.arc-imp-row input{
+  flex:1; min-width:0; height:50px; padding:0 8px 0 14px; border-radius:12px; border:1px solid var(--border);
+  background:var(--panel-2); color:var(--text); text-align:center; text-transform:uppercase;
+  font:800 22px 'Space Mono','Rajdhani',monospace; letter-spacing:.4em;
+}
+.arc-imp-row input::placeholder{ font:500 15px 'Noto Sans TC',sans-serif; letter-spacing:0; color:var(--muted); }
+.arc-imp-row .btn{ flex:0 0 88px; min-height:50px; }
+.arc-imp-err{ margin-top:10px; font-size:13.5px; line-height:1.65; color:#ff8f8f; }
+.arc-imp-err:empty{ display:none; }
+.arc-imp-card{ margin-top:14px; padding:14px; border:1px solid var(--border); border-radius:12px; background:var(--panel-2); }
+.arc-imp-name{ font:700 17px/1.4 'Noto Sans TC',sans-serif; overflow-wrap:anywhere; }
+.arc-imp-meta{ margin-top:4px; font-size:13px; line-height:1.7; color:var(--muted); }
+.arc-imp-pod{ margin:10px 0 12px; display:grid; gap:4px; font-size:14.5px; }
+.arc-imp-pod span{ color:var(--muted); display:inline-block; min-width:2.6em; }
+.arc-imp-pod b{ font-weight:700; }
+.arc-imp-pod .g{ color:var(--champ-gold-soft); }
+.arc-imp-card .field-label{ margin-top:4px; }
+.arc-imp-card .text-input{ font-size:16px; }
+.arc-imp-note{ margin:10px 0 0; font-size:12.5px; line-height:1.65; color:var(--muted); }
+.arc-imp-bad{ margin-top:14px; padding:12px 14px; border:1px solid rgba(255,143,143,.5); border-radius:12px; font-size:14px; line-height:1.7; color:#ff8f8f; }
 .arc-warn{ margin:16px 0 0; font-size:14px; line-height:1.75; color:#ff8f8f; }
 .arc-link{
   background:none; border:0; padding:8px 6px; min-height:36px;
@@ -3531,6 +3562,17 @@ body::before{opacity:.42;}
 
           async createEvent(refCode, viewerCode, metaData){
             await setDoc(doc(db, 'events', refCode), { ...metaData, viewerCode, updatedAt: serverTimestamp() });
+          },
+
+          // 一次性讀取某場賽事（不加入、不訂閱）：給「用代碼匯入典藏」使用。
+          // 裁判代碼或選手代碼皆可；回傳 { role, eventCode, meta, matches }，找不到回傳 null。
+          async fetchEvent(codeEntered){
+            const found = await window.cloudSync.resolveCode(codeEntered);
+            if(!found) return null;
+            const snap = await getDocs(collection(db, 'events', found.eventCode, 'matches'));
+            const matches = [];
+            snap.forEach(d => matches.push(d.data()));
+            return { role: found.role, eventCode: found.eventCode, meta: found.data || {}, matches };
           },
 
           join(code, onMeta, onMatches){
@@ -4291,6 +4333,23 @@ body::before{opacity:.42;}
             <p class="arc-save-notice hidden" id="archiveSaveNotice">這場比賽還沒有決出冠軍。決賽打完後，再回到這裡就能儲存。</p>
           </section>
 
+          <div class="arc-import" id="archiveImport">
+            <button type="button" class="arc-import-toggle" id="archiveImportToggle" aria-expanded="false" aria-controls="archiveImportPanel" onclick="arcToggleImport()">
+              <span class="arc-imp-ico" id="archiveImportIcon"></span>
+              <span class="arc-imp-txt"><b>用賽事代碼匯入</b><small>忘了儲存？輸入當時的代碼就能補存</small></span>
+              <svg class="arc-imp-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="arc-import-panel hidden" id="archiveImportPanel">
+              <p class="arc-imp-help">輸入當時的 3 碼賽事代碼（裁判代碼或選手代碼都可以），確認內容沒錯後，就能存進你的典藏。</p>
+              <div class="arc-imp-row">
+                <input id="archiveImportInput" type="text" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例如：A7K" aria-label="賽事代碼" onkeydown="if(event.key==='Enter')arcImportLookup()" oninput="this.value=this.value.toUpperCase()">
+                <button type="button" class="btn btn-primary" id="archiveImportGo" onclick="arcImportLookup()">查詢</button>
+              </div>
+              <div class="arc-imp-err" id="archiveImportError" role="alert"></div>
+              <div id="archiveImportPreview" class="hidden"></div>
+            </div>
+          </div>
+
           <div class="arc-search" id="archiveSearchWrap">
             <div class="arc-field">
               <svg class="arc-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -4715,6 +4774,7 @@ function initStaticIcons(){
     archiveEventIcon: 'cloud',
     archiveLibraryIcon: 'clock',
     archiveHeadingIcon: 'clock',
+    archiveImportIcon: 'download',
     archiveModalIcon: 'clock',
     archiveDetailIcon: 'medal',
     archiveSignInIcon: 'user'
@@ -5620,6 +5680,11 @@ const ARC_WEEK = ['日', '一', '二', '三', '四', '五', '六'];
 const arcHM = d => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 const arcYMD = d => `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 function arcSameDay(a, b){ return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+// 列表排序、月份分組、每列日期：匯入的賽事用「賽事實際結束時間」，其他用封存時間
+function arcListDate(item){
+  if(item.eventAt) return new Date(item.eventAt);
+  return arcDate(item);
+}
 function arcPrepare(item){
   const names = (item.playerNames || (item.players || []).map(p => p.name)).join(' ');
   item._q = [item.title, item.champion, item.runnerUp, item.third, names].filter(Boolean).join(' ').toLowerCase();
@@ -5648,6 +5713,7 @@ function openArchiveModal(saveMode){
   arcLibQuery = ''; arcLibFormat = 'all'; arcLibLimit = ARC_PAGE;
   const si = document.getElementById('archiveSearchInput');
   if(si) si.value = '';
+  arcResetImport();
 
   const notConfigured = !(window.cloudSync && window.cloudSync.isConfigured && window.cloudSync.isConfigured() && window.cloudSync.ready && window.cloudSync.auth);
   document.getElementById('archiveNotConfigured').classList.toggle('hidden', !notConfigured);
@@ -5749,7 +5815,7 @@ function refreshArchiveList(){
     document.getElementById('archiveSummary').textContent = '';
   }
   window.cloudSync.listMyArchives().then(items => {
-    arcItems = items.map(arcPrepare);
+    arcItems = items.map(arcPrepare).sort((a, b) => ((arcListDate(b) || 0) - (arcListDate(a) || 0)));
     arcLoaded = true;
     document.getElementById('archiveError').innerHTML = '';
     arcRenderChips();
@@ -5802,7 +5868,7 @@ function arcLibMore(){
 }
 
 function arcRowHTML(item){
-  const d = arcDate(item);
+  const d = arcListDate(item);
   const dateTxt = d ? `${d.getMonth() + 1}/${d.getDate()} ${arcHM(d)}` : '';   // 封存時間（到分鐘）
   const f = item.format || 'knockout';
   const champ = item.champion
@@ -5822,7 +5888,7 @@ function arcRenderLibraryList(){
 
   if(!arcItems.length){
     sumEl.textContent = '';
-    listEl.innerHTML = '<div class="arc-empty"><b>還沒有存過賽事</b><span>比賽結束後，按「儲存到我的賽事典藏」，就會出現在這裡。</span></div>';
+    listEl.innerHTML = '<div class="arc-empty"><b>還沒有存過賽事</b><span>比賽結束後，按「儲存到我的賽事典藏」，就會出現在這裡。忘了存的話，也可以用上面的「用賽事代碼匯入」補存。</span></div>';
     return;
   }
 
@@ -5842,7 +5908,7 @@ function arcRenderLibraryList(){
   let html = '';
   let lastKey = null;
   shown.forEach(item => {
-    const d = arcDate(item);
+    const d = arcListDate(item);
     const key = d ? `${d.getFullYear()} 年 ${d.getMonth() + 1} 月` : '更早';
     if(key !== lastKey){ html += `<div class="arc-month">${key}</div>`; lastKey = key; }
     html += arcRowHTML(item);
@@ -5952,6 +6018,170 @@ function confirmSaveArchive(){
   });
 }
 
+/* ---------- 用賽事代碼匯入（補存過去忘記儲存的賽事）---------- */
+let arcImportRes = null;   // 查詢到、等待使用者確認的那一場
+
+function arcResetImport(){
+  arcImportRes = null;
+  const panel = document.getElementById('archiveImportPanel');
+  if(!panel) return;
+  panel.classList.add('hidden');
+  document.getElementById('archiveImport').classList.remove('open');
+  document.getElementById('archiveImportToggle').setAttribute('aria-expanded', 'false');
+  document.getElementById('archiveImportInput').value = '';
+  document.getElementById('archiveImportError').textContent = '';
+  const pv = document.getElementById('archiveImportPreview');
+  pv.classList.add('hidden'); pv.innerHTML = '';
+}
+
+function arcToggleImport(){
+  const wrap = document.getElementById('archiveImport');
+  const open = !wrap.classList.contains('open');
+  wrap.classList.toggle('open', open);
+  document.getElementById('archiveImportPanel').classList.toggle('hidden', !open);
+  document.getElementById('archiveImportToggle').setAttribute('aria-expanded', String(open));
+  if(open) setTimeout(() => { const i = document.getElementById('archiveImportInput'); if(i) i.focus(); }, 50);
+}
+
+// 暫時把全域 state 換成「別場賽事」，用 App 自己的算法算冠亞季軍，算完立刻換回來（不會動到目前這台的賽事）
+function arcWithState(foreign, fn){
+  const keep = state;
+  state = foreign;
+  try{ return fn(); }finally{ state = keep; }
+}
+
+function arcForeignState(res){
+  const meta = res.meta || {};
+  const matches = (res.matches || []).slice().sort((a, b) => {
+    if(a.round !== b.round) return a.round - b.round;
+    const ai = parseInt(String(a.id).split('-')[1] || 0, 10) || 0;
+    const bi = parseInt(String(b.id).split('-')[1] || 0, 10) || 0;
+    return ai - bi;
+  });
+  return {
+    tournament: { name: meta.name || '', pointsToWin: meta.pointsToWin, format: meta.format || 'knockout', quickMode: !!meta.quickMode, status: meta.status },
+    players: Array.isArray(meta.players) ? meta.players : [],
+    teams: Array.isArray(meta.teams) ? meta.teams : [],
+    matches,
+    currentRound: meta.currentRound || 1
+  };
+}
+
+function arcInspectImport(res){
+  const st = arcForeignState(res);
+  let award = { ready:false };
+  try{ award = arcWithState(st, getAwardPodiumData) || { ready:false }; }catch(e){ console.error('計算匯入賽事結果失敗', e); }
+  const real = st.matches.filter(m => !m.isBye && !m.inactive);
+  const stamps = st.matches.filter(m => m.status === 'completed').map(m => Number(m.completedAt)).filter(t => t > 0);
+  let eventAt = stamps.length ? Math.max(...stamps) : null;
+  if(!eventAt && res.meta && res.meta.updatedAt && res.meta.updatedAt.seconds) eventAt = res.meta.updatedAt.seconds * 1000;
+  return { st, award, matchCount: real.length, playerCount: st.players.filter(p => !p.withdrawn).length, eventAt,
+           ok: !!(award.ready && award.champion) };
+}
+
+function arcImportPayload(res, info, title){
+  const st = info.st, a = info.award;
+  return {
+    title: title || st.tournament.name || '未命名賽事',
+    format: st.tournament.format,
+    playerCount: info.playerCount,
+    matchCount: info.matchCount,
+    champion: a.champion || null,
+    runnerUp: a.silver || null,
+    third: a.bronze || null,
+    savedRole: 'import',                       // 這筆是用代碼匯入的
+    importedFromCode: res.eventCode,
+    eventAt: info.eventAt || null,             // 賽事實際結束時間（列表依這個排序）
+    playerNames: st.players.map(p => p.name),
+    players: st.players,
+    matches: st.matches,
+    originalEventCode: res.eventCode,
+    completedAt: info.eventAt || Date.now()
+  };
+}
+
+async function arcImportLookup(){
+  const input = document.getElementById('archiveImportInput');
+  const errEl = document.getElementById('archiveImportError');
+  const pv = document.getElementById('archiveImportPreview');
+  const btn = document.getElementById('archiveImportGo');
+  const code = (input.value || '').trim().toUpperCase();
+  errEl.textContent = '';
+  pv.classList.add('hidden'); pv.innerHTML = '';
+  arcImportRes = null;
+  if(code.length !== 3){ errEl.textContent = '請輸入 3 碼賽事代碼。'; input.focus(); return; }
+  if(!window.cloudSync || !window.cloudSync.fetchEvent){ errEl.textContent = '目前無法查詢賽事，請重新整理頁面後再試。'; return; }
+
+  btn.disabled = true; btn.textContent = '查詢中…';
+  try{
+    const res = await window.cloudSync.fetchEvent(code);
+    if(!res){ errEl.textContent = '找不到這組代碼。請確認有沒有輸入錯誤。'; return; }
+    const info = arcInspectImport(res);
+    if(!res.matches.length){
+      pv.innerHTML = '<div class="arc-imp-bad">這組代碼底下沒有比賽資料，可能已經被清除，沒辦法匯入。</div>';
+      pv.classList.remove('hidden');
+      return;
+    }
+    if(!info.ok){
+      pv.innerHTML = `<div class="arc-imp-bad">找到「${escapeHtml(info.st.tournament.name || '未命名賽事')}」，但這場賽事還沒有決出冠軍，暫時不能存入典藏。</div>`;
+      pv.classList.remove('hidden');
+      return;
+    }
+    arcImportRes = { res, info };
+    const f = info.st.tournament.format;
+    const when = info.eventAt ? new Date(info.eventAt) : null;
+    const whenTxt = when ? `　最後一場結束於 ${when.getMonth() + 1}/${when.getDate()} ${arcHM(when)}` : '';
+    pv.innerHTML = `<div class="arc-imp-card">
+      <div class="arc-imp-name">${escapeHtml(info.st.tournament.name || '未命名賽事')}</div>
+      <div class="arc-imp-meta">${escapeHtml(arcFormatLabel(f))}　${info.playerCount} ${f === 'team3v3' ? '支隊伍' : '位選手'}　${info.matchCount} 場${whenTxt}</div>
+      <div class="arc-imp-pod">
+        <div><span>冠軍</span><b class="g">${escapeHtml(info.award.champion)}</b></div>
+        ${info.award.silver ? `<div><span>亞軍</span><b>${escapeHtml(info.award.silver)}</b></div>` : ''}
+        ${info.award.bronze ? `<div><span>季軍</span><b>${escapeHtml(info.award.bronze)}</b></div>` : ''}
+      </div>
+      <div class="field-label">存進典藏的名稱（選填）</div>
+      <input class="text-input" id="archiveImportTitle" autocomplete="off" value="${escapeAttr(info.st.tournament.name || '')}">
+      <button type="button" class="btn btn-primary btn-block" style="margin-top:10px;" id="archiveImportSave" onclick="arcImportSave()">存入我的賽事典藏</button>
+      <p class="arc-imp-note">賽事代碼只有 3 碼，之後可能被別場賽事重複使用。請先確認上面的名稱和冠軍，是不是你要的那一場。</p>
+    </div>`;
+    pv.classList.remove('hidden');
+  }catch(err){
+    console.error(err);
+    errEl.textContent = '查詢失敗，請確認網路連線後再試一次。';
+  }finally{
+    btn.disabled = false; btn.textContent = '查詢';
+  }
+}
+
+function arcImportSave(){
+  if(!arcImportRes) return;
+  const { res, info } = arcImportRes;
+  const title = (document.getElementById('archiveImportTitle').value || '').trim();
+  const payload = arcImportPayload(res, info, title);
+  const errEl = document.getElementById('archiveImportError');
+  errEl.textContent = '';
+
+  const doSave = () => {
+    const btn = document.getElementById('archiveImportSave');
+    if(btn){ btn.disabled = true; btn.textContent = '儲存中…'; }
+    window.cloudSync.archiveEvent(payload).then(() => {
+      showToast('已存入我的賽事典藏');
+      arcResetImport();
+      document.getElementById('archiveScroll').scrollTop = 0;
+      refreshArchiveList();
+    }).catch(err => {
+      console.error(err);
+      errEl.textContent = '儲存失敗，請稍後再試。';
+      if(btn){ btn.disabled = false; btn.textContent = '存入我的賽事典藏'; }
+    });
+  };
+
+  const dup = arcItems.find(i => i.originalEventCode === res.eventCode && i.champion === payload.champion
+    && (i.matchCount || 0) === payload.matchCount && (i.title || '') === payload.title);
+  if(dup) showConfirm('典藏裡已經有一份看起來一模一樣的賽事。還要再存一份嗎？', doSave);
+  else doSave();
+}
+
 /* ---------- 賽事詳情 ---------- */
 const arcDetailCache = new Map();   // 已讀過的完整資料，重複打開不用再讀
 function arcCacheDetail(item){
@@ -5980,7 +6210,7 @@ function viewArchive(id){
 function arcSetDetailHeader(item){
   document.getElementById('archiveDetailTitle').textContent = item.title || '未命名賽事';
   const d = arcDate(item);
-  const when = d ? `${arcYMD(d)} ${arcHM(d)} 封存` : '';
+  const when = d ? `${arcYMD(d)} ${arcHM(d)} ${item.savedRole === 'import' ? '匯入' : '封存'}` : '';
   document.getElementById('archiveDetailSub').textContent = `${when}　${arcFormatLabel(item.format || 'knockout')}`.trim();
 }
 
@@ -6181,7 +6411,7 @@ function arcOverviewHTML(){
 
   const saved = arcDate(item);
   const kv = [];
-  if(saved) kv.push(['封存時間', `${arcYMD(saved)}（${ARC_WEEK[saved.getDay()]}）${arcHM(saved)}`]);
+  if(saved) kv.push([item.savedRole === 'import' ? '匯入時間' : '封存時間', `${arcYMD(saved)}（${ARC_WEEK[saved.getDay()]}）${arcHM(saved)}`]);
   const stampTxt = d => (saved && arcSameDay(d, saved)) ? arcHM(d) : `${d.getMonth() + 1}/${d.getDate()} ${arcHM(d)}`;
   if(vm.firstDone) kv.push(['首場完賽', stampTxt(vm.firstDone)]);
   if(vm.lastDone && vm.firstDone && vm.lastDone.getTime() !== vm.firstDone.getTime()) kv.push(['最後完賽', stampTxt(vm.lastDone)]);
@@ -10128,7 +10358,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.13\n更新日期：2026/09/21\n\n更新摘要\n\n• 新增「我的賽事典藏」：比賽結束後，可用 Google 帳號把整場賽事存到雲端，換手機、換電腦也能查看。選手模式在賽事結束後也能儲存。\n• 典藏改為手機優先的全螢幕版面：依月份瀏覽，可用關鍵字或賽制篩選，賽事再多也好找。\n• 賽事詳情分成「概覽、賽程、選手」三頁；賽程依輪次分組並可搜尋選手，點選手即可看他的所有比賽。\n• 每場典藏自動記下封存日期與時間，並顯示首場與最後完賽時間。\n• 典藏資料分開存放，賽事變多也不會讓列表變慢；手機返回鍵只會關掉目前的典藏畫面，不會直接離開網頁。\n• 修正 Google 登入後又跳回未登入畫面的問題。\n• 團體賽的「參賽團體」「新增團體」改為「參賽隊伍」「新增隊伍」。\n• QR 碼改為瀏覽器端直接產生，減少等待並避免一般情況下將賽事連結送往圖片服務。\n• QR 元件採首次使用才載入，失敗時自動切換備援產生方式。\n• 賽事與比分改為本次瀏覽暫存，下次開啟不會自動套用舊資料。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.13\n更新日期：2026/09/21\n\n更新摘要\n\n• 新增「我的賽事典藏」：比賽結束後，可用 Google 帳號把整場賽事存到雲端，換手機、換電腦也能查看。選手模式在賽事結束後也能儲存。\n• 典藏改為手機優先的全螢幕版面：依月份瀏覽，可用關鍵字或賽制篩選，賽事再多也好找。\n• 賽事詳情分成「概覽、賽程、選手」三頁；賽程依輪次分組並可搜尋選手，點選手即可看他的所有比賽。\n• 新增「用賽事代碼匯入」：過去忘了儲存的賽事，輸入當時的 3 碼代碼，確認內容後就能補存進典藏。\n• 每場典藏自動記下封存日期與時間，並顯示首場與最後完賽時間。\n• 典藏資料分開存放，賽事變多也不會讓列表變慢；手機返回鍵只會關掉目前的典藏畫面，不會直接離開網頁。\n• 修正 Google 登入後又跳回未登入畫面的問題。\n• 團體賽的「參賽團體」「新增團體」改為「參賽隊伍」「新增隊伍」。\n• QR 碼改為瀏覽器端直接產生，減少等待並避免一般情況下將賽事連結送往圖片服務。\n• QR 元件採首次使用才載入，失敗時自動切換備援產生方式。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
