@@ -3486,7 +3486,7 @@ body::before{opacity:.42;}
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
         const {
           getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc,
-          onSnapshot, collection, writeBatch, serverTimestamp, deleteField,
+          onSnapshot, collection, writeBatch, serverTimestamp, deleteField, runTransaction,
           query, where, limit
         } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js");
         const {
@@ -3573,6 +3573,35 @@ body::before{opacity:.42;}
             const matches = [];
             snap.forEach(d => matches.push(d.data()));
             return { role: found.role, eventCode: found.eventCode, meta: found.data || {}, matches };
+          },
+
+          // 建立賽事並「保證」兩組代碼從沒被用過（原子操作，兩台裝置同時建立也不會撞）：
+          //   1. 代碼永久登記在 eventCodes/{代碼}：即使賽事之後被刪除，這組代碼也不會再發給新賽事
+          //   2. 同時檢查 events/{代碼} 是否已存在（涵蓋還沒登記過的舊賽事）
+          // 回傳 true = 建立成功；false = 代碼已被用過，呼叫端請換一組再試。
+          // 若 Firestore 規則還沒開放 eventCodes（permission-denied），退回一般建立，功能照常運作。
+          async createEventUnique(refCode, viewerCode, metaData){
+            try{
+              return await runTransaction(db, async tx => {
+                const regRef = doc(db, 'eventCodes', refCode);
+                const regView = doc(db, 'eventCodes', viewerCode);
+                const evRef = doc(db, 'events', refCode);
+                const evView = doc(db, 'events', viewerCode);
+                const snaps = await Promise.all([tx.get(regRef), tx.get(regView), tx.get(evRef), tx.get(evView)]);
+                if(snaps.some(sn => sn.exists())) return false;
+                tx.set(regRef, { kind: 'ref', createdAt: serverTimestamp() });
+                tx.set(regView, { kind: 'viewer', createdAt: serverTimestamp() });
+                tx.set(evRef, { ...metaData, viewerCode, updatedAt: serverTimestamp() });
+                return true;
+              });
+            }catch(err){
+              if(err && err.code === 'permission-denied'){
+                console.warn('eventCodes 尚未開放，改用一般建立（只能避開目前還存在的賽事代碼）。請更新 Firestore 規則。');
+                await setDoc(doc(db, 'events', refCode), { ...metaData, viewerCode, updatedAt: serverTimestamp() });
+                return true;
+              }
+              throw err;
+            }
           },
 
           join(code, onMeta, onMatches){
@@ -4236,7 +4265,7 @@ body::before{opacity:.42;}
 
       <div id="cloudPaneCreate">
         <div class="text-muted" style="font-size:12px; margin-bottom:12px;">
-          會產生兩組 3 碼代碼：一組給裁判用（完整功能），一組給選手／觀眾用（唯讀，只能看對戰紀錄與即時戰況）。
+          會產生兩組 4 碼代碼：一組給裁判用（完整功能），一組給選手／觀眾用（唯讀，只能看對戰紀錄與即時戰況）。
         </div>
         <div class="field-label">賽事名稱（選填）</div>
         <input class="text-input" id="cloudNewName" placeholder="例如：2026 校內盃">
@@ -4265,7 +4294,7 @@ body::before{opacity:.42;}
 
       <div id="cloudPaneJoin" class="hidden">
         <div class="field-label">輸入賽事代碼</div>
-        <input class="text-input" id="cloudJoinCode" placeholder="例如：A7K" style="text-transform:uppercase; letter-spacing:5px; text-align:center; font-weight:800;" maxlength="3">
+        <input class="text-input" id="cloudJoinCode" placeholder="例如：A7K9" style="text-transform:uppercase; letter-spacing:5px; text-align:center; font-weight:800;" maxlength="4">
         <div class="text-muted" style="font-size:12px; margin-top:6px;">裁判代碼或選手代碼皆可輸入，系統會自動判斷身分。</div>
         <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="handleJoinEvent()">加入這場賽事</button>
       </div>
@@ -4340,9 +4369,9 @@ body::before{opacity:.42;}
               <svg class="arc-imp-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div class="arc-import-panel hidden" id="archiveImportPanel">
-              <p class="arc-imp-help">輸入當時的 3 碼賽事代碼（裁判代碼或選手代碼都可以），確認內容沒錯後，就能存進你的典藏。</p>
+              <p class="arc-imp-help">輸入當時的賽事代碼（現在是 4 碼，舊賽事是 3 碼；裁判代碼或選手代碼都可以），確認內容沒錯後，就能存進你的典藏。</p>
               <div class="arc-imp-row">
-                <input id="archiveImportInput" type="text" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例如：A7K" aria-label="賽事代碼" onkeydown="if(event.key==='Enter')arcImportLookup()" oninput="this.value=this.value.toUpperCase()">
+                <input id="archiveImportInput" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例如：A7K9" aria-label="賽事代碼" onkeydown="if(event.key==='Enter')arcImportLookup()" oninput="this.value=this.value.toUpperCase()">
                 <button type="button" class="btn btn-primary" id="archiveImportGo" onclick="arcImportLookup()">查詢</button>
               </div>
               <div class="arc-imp-err" id="archiveImportError" role="alert"></div>
@@ -5596,7 +5625,7 @@ function renderQRCodeFallback(link){
 
 async function showQRCode(code){
   code = (code || '').trim().toUpperCase();
-  if(code.length !== 3) return;
+  if(!isValidEventCode(code)) return;
   currentQRCode = code;
   const link = buildShareLink(code);
   document.getElementById('qrCodeLink').innerText = link;
@@ -6109,7 +6138,7 @@ async function arcImportLookup(){
   errEl.textContent = '';
   pv.classList.add('hidden'); pv.innerHTML = '';
   arcImportRes = null;
-  if(code.length !== 3){ errEl.textContent = '請輸入 3 碼賽事代碼。'; input.focus(); return; }
+  if(!isValidEventCode(code)){ errEl.textContent = EVENT_CODE_LEN_MSG; input.focus(); return; }
   if(!window.cloudSync || !window.cloudSync.fetchEvent){ errEl.textContent = '目前無法查詢賽事，請重新整理頁面後再試。'; return; }
 
   btn.disabled = true; btn.textContent = '查詢中…';
@@ -6142,7 +6171,7 @@ async function arcImportLookup(){
       <div class="field-label">存進典藏的名稱（選填）</div>
       <input class="text-input" id="archiveImportTitle" autocomplete="off" value="${escapeAttr(info.st.tournament.name || '')}">
       <button type="button" class="btn btn-primary btn-block" style="margin-top:10px;" id="archiveImportSave" onclick="arcImportSave()">存入我的賽事典藏</button>
-      <p class="arc-imp-note">賽事代碼只有 3 碼，之後可能被別場賽事重複使用。請先確認上面的名稱和冠軍，是不是你要的那一場。</p>
+      <p class="arc-imp-note">賽事代碼很短，時間久了可能被別場賽事重複使用。請先確認上面的名稱和冠軍，是不是你要的那一場。</p>
     </div>`;
     pv.classList.remove('hidden');
   }catch(err){
@@ -6708,7 +6737,7 @@ async function downloadAwardImage(){
 
 async function copyShareLink(code, btnEl){
   code = (code || '').trim().toUpperCase();
-  if(code.length !== 3) return;
+  if(!isValidEventCode(code)) return;
   const link = buildShareLink(code);
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -6775,7 +6804,7 @@ function initCloud(){
 
     const params = new URLSearchParams(window.location.search);
     const urlCode = (params.get('code') || '').trim().toUpperCase();
-    if(urlCode.length === 3){
+    if(isValidEventCode(urlCode)){
       joinEventByCode(urlCode).finally(() => {
         const url = new URL(window.location.href);
         url.searchParams.delete('code');
@@ -6843,10 +6872,16 @@ function updateCloudStatusUI(){
   }
 }
 
+// 賽事代碼：新賽事一律產生 4 碼（31^4 ≈ 92 萬種組合）；
+// 舊賽事的 3 碼代碼仍然有效，所以輸入端接受 3～4 碼。
+const EVENT_CODE_LEN = 4;
+function isValidEventCode(code){ return code.length === 3 || code.length === EVENT_CODE_LEN; }
+const EVENT_CODE_LEN_MSG = '請輸入 4 碼賽事代碼（舊賽事的 3 碼代碼也可以）。';
+
 function genEventCode(){
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXY23456789'; // no O/0/I/1 to avoid confusion
   let code = '';
-  for(let i=0; i<3; i++) code += chars[Math.floor(Math.random()*chars.length)];
+  for(let i=0; i<EVENT_CODE_LEN; i++) code += chars[Math.floor(Math.random()*chars.length)];
   return code;
 }
 function genDistinctCodePair(){
@@ -6854,6 +6889,20 @@ function genDistinctCodePair(){
   let b = genEventCode();
   while(b === a) b = genEventCode();
   return [a, b];
+}
+// 建立賽事：抽一組新代碼 → 先查目前有沒有賽事在用（含選手碼欄位）→ 再用交易「登記 + 建立」。
+// 任何一步發現撞碼就換一組重抽，直到建立成功；代碼會永久登記，之後不會再被發給別場賽事。
+async function createEventWithFreshCodes(meta){
+  for(let i = 0; i < 8; i++){
+    const [a, b] = genDistinctCodePair();
+    const [ra, rb] = await Promise.all([window.cloudSync.resolveCode(a), window.cloudSync.resolveCode(b)]);
+    if(ra || rb) continue;
+    const ok = window.cloudSync.createEventUnique
+      ? await window.cloudSync.createEventUnique(a, b, meta)
+      : (await window.cloudSync.createEvent(a, b, meta), true);
+    if(ok) return [a, b];
+  }
+  throw new Error('無法產生不重複的賽事代碼');
 }
 
 function openCloudModal(){
@@ -6910,11 +6959,10 @@ function switchCloudTab(which){
 async function handleCreateEvent(){
   const errEl = document.getElementById('cloudError');
   errEl.innerText = '';
-  const [refCode, viewerCode] = genDistinctCodePair();
   const name = document.getElementById('cloudNewName').value.trim();
   try{
     if(name) state.tournament.name = name;
-    await window.cloudSync.createEvent(refCode, viewerCode, {
+    const [refCode, viewerCode] = await createEventWithFreshCodes({
       name: state.tournament.name, pointsToWin: state.tournament.pointsToWin,
       format: state.tournament.format, status: state.tournament.status,
       players: state.players, teams: state.teams || [], currentRound: state.currentRound
@@ -6940,7 +6988,7 @@ async function handleJoinEvent(){
   const errEl = document.getElementById('cloudError');
   errEl.innerText = '';
   const code = document.getElementById('cloudJoinCode').value.trim().toUpperCase();
-  if(code.length !== 3){ errEl.innerText = '請輸入 3 碼賽事代碼。'; return; }
+  if(!isValidEventCode(code)){ errEl.innerText = EVENT_CODE_LEN_MSG; return; }
   try{
     const ok = await joinEventByCode(code);
     if(!ok){ errEl.innerText = '找不到這組賽事代碼，請確認是否輸入正確。'; return; }
@@ -10358,7 +10406,7 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('目前版本：V3.13\n更新日期：2026/09/21\n\n更新摘要\n\n• 新增「我的賽事典藏」：比賽結束後，可用 Google 帳號把整場賽事存到雲端，換手機、換電腦也能查看。選手模式在賽事結束後也能儲存。\n• 典藏改為手機優先的全螢幕版面：依月份瀏覽，可用關鍵字或賽制篩選，賽事再多也好找。\n• 賽事詳情分成「概覽、賽程、選手」三頁；賽程依輪次分組並可搜尋選手，點選手即可看他的所有比賽。\n• 新增「用賽事代碼匯入」：過去忘了儲存的賽事，輸入當時的 3 碼代碼，確認內容後就能補存進典藏。\n• 每場典藏自動記下封存日期與時間，並顯示首場與最後完賽時間。\n• 典藏資料分開存放，賽事變多也不會讓列表變慢；手機返回鍵只會關掉目前的典藏畫面，不會直接離開網頁。\n• 修正 Google 登入後又跳回未登入畫面的問題。\n• 團體賽的「參賽團體」「新增團體」改為「參賽隊伍」「新增隊伍」。\n• QR 碼改為瀏覽器端直接產生，減少等待並避免一般情況下將賽事連結送往圖片服務。\n• QR 元件採首次使用才載入，失敗時自動切換備援產生方式。', [{label:'知道了',className:'btn-primary'}]);
+  showModal('目前版本：V3.13\n更新日期：2026/09/21\n\n更新摘要\n\n• 新增「我的賽事典藏」：比賽結束後，可用 Google 帳號把整場賽事存到雲端，換手機、換電腦也能查看。選手模式在賽事結束後也能儲存。\n• 典藏改為手機優先的全螢幕版面：依月份瀏覽，可用關鍵字或賽制篩選，賽事再多也好找。\n• 賽事詳情分成「概覽、賽程、選手」三頁；賽程依輪次分組並可搜尋選手，點選手即可看他的所有比賽。\n• 新增「用賽事代碼匯入」：過去忘了儲存的賽事，輸入當時的代碼，確認內容後就能補存進典藏。\n• 賽事代碼從 3 碼改為 4 碼，組合更多；建立賽事時會保證新代碼不會和過去用過的重複（同時建立也不會撞）。舊的 3 碼代碼仍可使用。\n• 每場典藏自動記下封存日期與時間，並顯示首場與最後完賽時間。\n• 典藏資料分開存放，賽事變多也不會讓列表變慢；手機返回鍵只會關掉目前的典藏畫面，不會直接離開網頁。\n• 修正 Google 登入後又跳回未登入畫面的問題。\n• 團體賽的「參賽團體」「新增團體」改為「參賽隊伍」「新增隊伍」。\n• QR 碼改為瀏覽器端直接產生，減少等待並避免一般情況下將賽事連結送往圖片服務。', [{label:'知道了',className:'btn-primary'}]);
 }
 
 function showAlert(message){
