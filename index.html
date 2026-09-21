@@ -3277,6 +3277,7 @@ body::before{opacity:.42;}
 .arc-note{ margin:0 0 16px; font-size:14px; line-height:1.75; color:var(--muted); }
 .arc-error{ padding:0 18px; margin-top:12px; font-size:13px; line-height:1.6; color:#ff8f8f; }
 .arc-error:empty{ display:none; }
+.arc-warn{ margin:16px 0 0; font-size:14px; line-height:1.75; color:#ff8f8f; }
 .arc-link{
   background:none; border:0; padding:8px 6px; min-height:36px;
   color:var(--cyan-soft); font:600 13px 'Noto Sans TC',sans-serif; text-decoration:underline; text-underline-offset:3px;
@@ -4273,6 +4274,7 @@ body::before{opacity:.42;}
         <div id="archiveSignedOut" class="arc-pad">
           <p class="arc-note">登入 Google 帳號後，就能把比賽結束的賽事存起來。之後換手機或電腦，登入就能查看每一場的對戰紀錄。不登入也能正常比賽，裁判和選手的代碼照常使用。</p>
           <button class="btn btn-primary btn-block" id="archiveSignInBtn" onclick="handleArchiveSignIn()"><span id="archiveSignInIcon" class="btn-icon-slot"></span> <span id="archiveSignInLabel">使用 Google 帳號登入</span></button>
+          <p class="arc-warn">請用 Safari 或 Chrome 開啟賽事典藏，不要在 LINE、IG 或 FB 的內建瀏覽器裡開，內建瀏覽器常不支援 Google 登入彈窗。</p>
           <div id="archiveAuthError" style="margin-top:10px; font-size:13px; color:#ff8f8f;"></div>
         </div>
 
