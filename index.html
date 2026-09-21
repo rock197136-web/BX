@@ -1598,7 +1598,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .cloud-tab.active{ background:var(--panel); color:var(--text); }
 .cloud-code-display{
-  font-family:'Space Mono',monospace; font-size:26px; font-weight:700; letter-spacing:6px;
+  font-family:'Inter','Noto Sans TC',-apple-system,sans-serif; font-size:26px; font-weight:700; letter-spacing:6px;
   text-align:center; background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
   padding:12px; color:var(--cyan);
 }
@@ -1742,13 +1742,13 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   .award-modal-box{ max-width:94vw; padding:18px; }
 }
 
-.qr-modal-box{ text-align:center; }
+.qr-modal-box{ text-align:center; max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); overflow-y:auto; }
 .qr-code-wrap{
   background:#fff; border-radius:12px; padding:14px 14px 12px; display:inline-flex; flex-direction:column;
   align-items:center; justify-content:center; gap:10px; margin:6px 0 14px;
 }
 .qr-event-code{ color:#3c4148; font:700 14px/1.2 'Noto Sans TC',sans-serif; letter-spacing:.02em; white-space:nowrap; }
-.qr-event-code b{ color:#111; font:800 22px/1 'Space Mono',monospace; letter-spacing:.14em; margin-left:2px; }
+.qr-event-code b{ color:#111; font:700 26px/1 'Inter','Noto Sans TC',-apple-system,sans-serif; letter-spacing:.16em; margin-left:2px; }
 .qr-code-render{ display:grid; place-items:center; width:220px; height:220px; }
 .qr-code-render canvas,.qr-code-render img{ display:block; width:220px!important; height:220px!important; image-rendering:pixelated; }
 .qr-code-render-status{ display:grid; place-items:center; width:220px; height:220px; padding:18px; color:#3c4148; font-size:12px; font-weight:800; line-height:1.5; }
@@ -3293,7 +3293,7 @@ body::before{opacity:.42;}
 .arc-imp-row input{
   flex:1; min-width:0; height:50px; padding:0 8px 0 14px; border-radius:12px; border:1px solid var(--border);
   background:var(--panel-2); color:var(--text); text-align:center; text-transform:uppercase;
-  font:800 22px 'Space Mono','Rajdhani',monospace; letter-spacing:.4em;
+  font:700 22px 'Inter','Noto Sans TC',-apple-system,sans-serif; letter-spacing:.4em;
 }
 .arc-imp-row input::placeholder{ font:500 15px 'Noto Sans TC',sans-serif; letter-spacing:0; color:var(--muted); }
 .arc-imp-row .btn{ flex:0 0 88px; min-height:50px; }
@@ -4323,6 +4323,7 @@ body::before{opacity:.42;}
     </div>
     <div class="qr-code-link" id="qrCodeLink"></div>
     <button class="btn btn-primary btn-block" id="qrCopyBtn" onclick="copyShareLink(currentQRCode, this)">複製連結</button>
+    <button class="btn btn-dark btn-block" style="margin-top:10px;" id="qrSaveBtn" onclick="saveQRImage(this)">儲存圖片</button>
     <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="hideQRModal()">關閉</button>
   </div>
 </div>
@@ -4824,6 +4825,7 @@ function initStaticIcons(){
   setIconLabel('cloudResultViewerShareBtn', 'link', '複製選手連結', 14);
   setIconLabel('cloudResultQrBtn', 'qr-code', '生成QR碼', 14);
   setIconLabel('qrCopyBtn', 'link', '複製連結', 14);
+  setIconLabel('qrSaveBtn', 'download', '儲存圖片', 14);
   setIconLabel('awardDownloadBtn', 'download', '下載圖片', 14);
   const attendanceIcon = document.getElementById('attendanceToggleIcon');
   if(attendanceIcon) attendanceIcon.innerHTML = icon('clipboard-check', 18);
@@ -5633,6 +5635,7 @@ async function showQRCode(code){
   const link = buildShareLink(code);
   document.getElementById('qrCodeLink').innerText = link;
   document.getElementById('qrEventCode').innerHTML = `賽事代碼 - <b>${escapeHtml(code)}</b>`;
+  try{ if(document.fonts && document.fonts.load){ document.fonts.load("700 96px Inter"); document.fonts.load("700 48px 'Noto Sans TC'"); } }catch(e){}   // 先載入字型，儲存圖片時才畫得出來
   document.getElementById('qrModal').classList.add('show');
   setQRCodeRenderStatus('正在產生 QR 碼…');
   try{
@@ -5650,6 +5653,75 @@ async function showQRCode(code){
     });
   }catch(e){
     if(currentQRCode === code) renderQRCodeFallback(link);
+  }
+}
+
+// 把「QR 碼 + 賽事代碼 - XXXX」合成一張圖片存起來（手機會跳出分享選單，選「儲存圖片」即可存到相簿；電腦則直接下載）
+async function saveQRImage(btn){
+  const code = currentQRCode;
+  const host = document.getElementById('qrCodeRender');
+  if(!code || !host) return;
+  // qrcode.js 會同時放 canvas 和 img；優先用 canvas（不會有跨網域限制），備援 QR 圖才用 img
+  const srcEl = host.querySelector('canvas') || host.querySelector('img');
+  if(!srcEl || (srcEl.tagName === 'IMG' && !srcEl.complete)){ showToast('請等 QR 碼出現後，再儲存圖片'); return; }
+
+  const label = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.textContent = '產生圖片中…'; }
+  try{
+    try{ await Promise.all([document.fonts.load('700 96px Inter'), document.fonts.load("700 48px 'Noto Sans TC'")]); }catch(e){}
+
+    const W = 900, PAD = 90, QR = 720;
+    const H = PAD + QR + 210;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, W, H);
+    g.imageSmoothingEnabled = false;              // QR 方塊邊緣要銳利，掃描才穩
+    g.drawImage(srcEl, PAD, PAD, QR, QR);
+
+    // 底下一行：賽事代碼 - XXXX（逐字繪製，字距一致、不依賴瀏覽器的 letterSpacing 支援）
+    const labelFont = "700 46px 'Noto Sans TC', -apple-system, sans-serif";
+    const codeFont = "700 92px Inter, 'Noto Sans TC', -apple-system, sans-serif";
+    const gapAfterLabel = 22, tracking = 16;
+    g.textBaseline = 'alphabetic';
+    g.font = labelFont;
+    const labelText = '賽事代碼 -';
+    const labelW = g.measureText(labelText).width;
+    g.font = codeFont;
+    const chars = code.split('');
+    const widths = chars.map(ch => g.measureText(ch).width);
+    const codeW = widths.reduce((a, b) => a + b, 0) + tracking * (chars.length - 1);
+    let x = (W - (labelW + gapAfterLabel + codeW)) / 2;
+    const baseY = PAD + QR + 135;
+    g.font = labelFont; g.fillStyle = '#3c4148';
+    g.fillText(labelText, x, baseY - 4);
+    x += labelW + gapAfterLabel;
+    g.font = codeFont; g.fillStyle = '#111111';
+    chars.forEach((ch, i) => { g.fillText(ch, x, baseY); x += widths[i] + tracking; });
+
+    const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+    if(!blob) throw new Error('toBlob failed');
+    const fileName = `beyblade-x-code-${code}.png`;   // 用英數檔名，各種手機／系統都不會亂碼
+    const file = new File([blob], fileName, { type:'image/png' });
+
+    // 手機：用系統分享選單（可直接「儲存圖片」到相簿）
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      try{ await navigator.share({ files:[file] }); return; }
+      catch(e){ if(e && e.name === 'AbortError') return; }   // 使用者取消就結束；其他錯誤改走下載
+    }
+    // 電腦／不支援分享：直接下載
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    showToast('已儲存圖片');
+  }catch(e){
+    console.error('儲存 QR 圖片失敗', e);
+    showToast('儲存圖片失敗，請改用螢幕截圖');
+  }finally{
+    if(btn){ btn.disabled = false; btn.innerHTML = label || `${icon('download',14)} 儲存圖片`; }
   }
 }
 
