@@ -1744,9 +1744,11 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 .qr-modal-box{ text-align:center; }
 .qr-code-wrap{
-  background:#fff; border-radius:12px; padding:14px; display:inline-flex;
-  align-items:center; justify-content:center; margin:6px 0 14px;
+  background:#fff; border-radius:12px; padding:14px 14px 12px; display:inline-flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; margin:6px 0 14px;
 }
+.qr-event-code{ color:#3c4148; font:700 14px/1.2 'Noto Sans TC',sans-serif; letter-spacing:.02em; white-space:nowrap; }
+.qr-event-code b{ color:#111; font:800 22px/1 'Space Mono',monospace; letter-spacing:.14em; margin-left:2px; }
 .qr-code-render{ display:grid; place-items:center; width:220px; height:220px; }
 .qr-code-render canvas,.qr-code-render img{ display:block; width:220px!important; height:220px!important; image-rendering:pixelated; }
 .qr-code-render-status{ display:grid; place-items:center; width:220px; height:220px; padding:18px; color:#3c4148; font-size:12px; font-weight:800; line-height:1.5; }
@@ -4317,6 +4319,7 @@ body::before{opacity:.42;}
     <div class="modal-title"><span id="qrModalIcon"></span> 選手／觀眾連結 QR 碼</div>
     <div class="qr-code-wrap">
       <div class="qr-code-render" id="qrCodeRender" role="img" aria-label="選手／觀眾連結 QR 碼"></div>
+      <div class="qr-event-code" id="qrEventCode"></div>
     </div>
     <div class="qr-code-link" id="qrCodeLink"></div>
     <button class="btn btn-primary btn-block" id="qrCopyBtn" onclick="copyShareLink(currentQRCode, this)">複製連結</button>
@@ -5629,6 +5632,7 @@ async function showQRCode(code){
   currentQRCode = code;
   const link = buildShareLink(code);
   document.getElementById('qrCodeLink').innerText = link;
+  document.getElementById('qrEventCode').innerHTML = `賽事代碼 - <b>${escapeHtml(code)}</b>`;
   document.getElementById('qrModal').classList.add('show');
   setQRCodeRenderStatus('正在產生 QR 碼…');
   try{
