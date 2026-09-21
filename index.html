@@ -1620,16 +1620,16 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
    AWARD REPORT (賽後頒獎戰報) — standalone "poster" design,
    scoped entirely under .award-* so it never collides with
    the app's own .podium-name / .champ-name / .sys-tag / .trophy
-   classes used elsewhere. Built as a fixed 1080x1600 canvas
-   (phone-screen portrait ratio) that gets CSS-scaled down for
+   classes used elsewhere. Built as a compact 1080x1350 canvas
+   (4:5 social portrait ratio) that gets CSS-scaled down for
    on-screen preview; html2canvas grabs it at native resolution
    (transform reset to none) for export.
 ========================================================= */
 .award-modal-box{ max-width:480px; }
 .award-stage-wrap{ width:100%; display:flex; justify-content:center; overflow:hidden; }
-.award-stage{ width:1080px; height:1600px; transform-origin:top center; }
+.award-stage{ width:1080px; height:1350px; transform-origin:top center; }
 .award-poster{
-  position:relative; width:1080px; height:1600px; overflow:hidden;
+  position:relative; width:1080px; height:1350px; overflow:hidden;
   background:
     radial-gradient(900px 600px at 50% -8%, rgba(255,201,138,.14), transparent 60%),
     radial-gradient(700px 500px at 100% 110%, rgba(0,195,255,.08), transparent 60%),
@@ -1661,38 +1661,48 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .award-corner span:nth-child(2){ width:34px; height:2px; top:14px; left:0; opacity:.55; }
 .award-corner span:nth-child(3){ width:2px; height:34px; top:0; left:14px; opacity:.55; }
 .award-corner span:nth-child(4){ width:7px; height:7px; top:24px; left:24px; opacity:.9; background:#ffd27a; box-shadow:0 0 10px rgba(255,201,138,.8); border-radius:50%; }
-.award-band{ position:relative; z-index:1; padding:54px 60px 0; text-align:center; flex:0 0 auto; }
+.award-band{ position:relative; z-index:1; padding:42px 60px 0; text-align:center; flex:0 0 auto; }
 .award-sys-tag{
   font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:500; letter-spacing:.35em;
   color:#ffc98a; text-transform:uppercase; display:inline-flex; align-items:center; gap:10px;
 }
 .award-sys-tag .award-dot{ width:8px; height:8px; border-radius:50%; background:#ff9d42; box-shadow:0 0 10px rgba(255,157,66,.8); }
 .award-wordmark{
-  margin-top:14px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:34px; letter-spacing:2px;
+  margin-top:10px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:32px; letter-spacing:2px;
   background:linear-gradient(90deg,#fff 0%, #ff9d42 45%, #ff4726 88%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
-.award-hr-thin{ margin:24px auto 0; width:520px; height:1px; background:linear-gradient(90deg, transparent, rgba(255,201,138,.55), transparent); }
-.award-champ-block{ position:relative; z-index:1; flex:0 0 680px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:24px 50px 12px; min-height:0; }
-.award-trophy{ width:184px; height:184px; filter:drop-shadow(0 12px 16px rgba(0,0,0,.72)); }
+.award-format-row{ display:flex; justify-content:center; margin-top:18px; }
+.award-format-pill{
+  display:inline-flex; align-items:center; justify-content:center; gap:14px; min-height:44px; padding:0 22px;
+  border:1px solid rgba(255,190,102,.32); background:rgba(255,157,66,.07); color:#f4c88e;
+  font-family:'Noto Sans TC',sans-serif; font-size:18px; font-weight:800; letter-spacing:.08em;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+}
+.award-format-pill small{ color:#8f8172; font:600 14px/1 'IBM Plex Mono',monospace; letter-spacing:.18em; }
+.award-format-mark{ width:20px; height:20px; display:block; color:#ffae55; }
+.award-format-mark path{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.award-hr-thin{ margin:18px auto 0; width:560px; height:1px; background:linear-gradient(90deg, transparent, rgba(255,201,138,.55), transparent); }
+.award-champ-block{ position:relative; z-index:1; flex:0 0 440px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:18px 50px 10px; min-height:0; }
+.award-trophy{ width:150px; height:150px; filter:drop-shadow(0 12px 16px rgba(0,0,0,.72)); }
 .award-trophy svg{ width:100%; height:100%; display:block; }
 .award-champ-name{
-  margin-top:8px; padding:10px 8px 7px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:86px; line-height:1.16;
+  margin-top:4px; padding:8px 8px 4px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:76px; line-height:1.12;
   text-align:center; max-width:960px; overflow:visible; overflow-wrap:break-word;
   background:linear-gradient(180deg,#fff6df 0%, #ffd875 22%, #e8a93e 48%, #fff2c9 62%, #c98a2e 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 4px 0 rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,200,90,.25));
 }
 .award-champ-label{
-  margin-top:6px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:30px; letter-spacing:.6em;
+  margin-top:4px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:26px; letter-spacing:.55em;
   color:#fff; text-shadow:0 0 18px rgba(255,215,140,.6);
 }
 .award-podium-row{
   position:relative; z-index:1; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center;
-  gap:24px; padding:0 60px; margin-top:-12px;
+  gap:22px; padding:0 64px; margin-top:0;
 }
 .award-podium-card{
-  flex:1; max-width:420px; border-radius:20px; padding:24px 20px 22px; text-align:center;
+  flex:1; max-width:420px; border-radius:16px; padding:17px 20px 18px; text-align:center;
   position:relative; overflow:hidden;
   background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
   border:1px solid rgba(255,255,255,.12);
@@ -1708,36 +1718,36 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
   box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 1px 0 rgba(255,255,255,.08) inset;
 }
-.award-medal{ width:108px; height:119px; margin:0 auto 8px; filter:drop-shadow(0 7px 12px rgba(0,0,0,.5)); }
+.award-medal{ width:78px; height:86px; margin:0 auto 5px; filter:drop-shadow(0 7px 12px rgba(0,0,0,.5)); }
 .award-medal svg{ width:100%; height:100%; display:block; }
 .award-podium-rank{
-  font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; letter-spacing:.2em;
-  color:var(--award-medal-color); text-transform:uppercase; margin-bottom:8px;
+  font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; letter-spacing:.18em;
+  color:var(--award-medal-color); text-transform:uppercase; margin-bottom:5px;
 }
-.award-podium-name{ font-family:'Rajdhani',sans-serif; font-weight:800; font-size:40px; line-height:1.12; color:#f4f4f4; overflow-wrap:break-word; }
-.award-stats-strip{ position:relative; z-index:1; flex:0 0 auto; display:flex; justify-content:center; align-items:center; gap:0; margin:28px 0 0; padding:0 60px; }
+.award-podium-name{ font-family:'Rajdhani',sans-serif; font-weight:800; font-size:38px; line-height:1.1; color:#f4f4f4; overflow-wrap:break-word; }
+.award-stats-strip{ position:relative; z-index:1; flex:0 0 auto; display:flex; justify-content:center; align-items:center; gap:0; margin:24px 0 0; padding:0 60px; }
 .award-stat-cell{ text-align:center; padding:0 44px; }
 .award-stat-divider{ width:1px; height:46px; background:linear-gradient(180deg, transparent, rgba(255,255,255,.18), transparent); }
-.award-stat-num{ font-family:'Space Mono',monospace; font-weight:700; font-size:44px; color:#fff; }
-.award-stat-cap{ margin-top:6px; font-family:'Space Grotesk',sans-serif; font-size:17px; letter-spacing:.3em; color:#8a8a8a; text-transform:uppercase; }
+.award-stat-num{ font-family:'Space Mono',monospace; font-weight:700; font-size:38px; color:#fff; }
+.award-stat-cap{ margin-top:4px; font-family:'Space Grotesk',sans-serif; font-size:15px; letter-spacing:.28em; color:#8a8a8a; text-transform:uppercase; }
 
 /* Footer is the event's "signature" — the tournament name is the biggest
    text on this whole card after the champion's name, since that's what
    the poster gets shared for: which event this result belongs to. */
-.award-footer{ position:relative; z-index:1; flex:0 0 auto; margin-top:auto; padding:28px 60px 36px; text-align:center; }
+.award-footer{ position:relative; z-index:1; flex:0 0 auto; margin-top:auto; padding:22px 60px 28px; text-align:center; }
 .award-footer-divider{
   width:100%; height:1px;
   background:repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 14px, transparent 14px 22px);
-  margin-bottom:24px; opacity:.5;
+  margin-bottom:18px; opacity:.5;
 }
 .award-tname{
-  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:50px; line-height:1.15; letter-spacing:.04em;
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:42px; line-height:1.12; letter-spacing:.04em;
   text-transform:uppercase; overflow-wrap:break-word;
   background:linear-gradient(90deg,#fff 0%, #ffc98a 50%, #ff9d5c 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
-.award-tdate{ margin-top:12px; font-family:'IBM Plex Mono',monospace; font-size:18px; letter-spacing:.25em; color:#8a8a8a; }
-.award-brand{ margin-top:18px; font-family:'Space Grotesk',sans-serif; font-size:12px; letter-spacing:.35em; color:#4a4a4a; text-transform:uppercase; }
+.award-tdate{ margin-top:9px; font-family:'IBM Plex Mono',monospace; font-size:16px; letter-spacing:.24em; color:#8a8a8a; }
+.award-brand{ margin-top:12px; font-family:'Space Grotesk',sans-serif; font-size:11px; letter-spacing:.32em; color:#4a4a4a; text-transform:uppercase; }
 @media (max-width:600px){
   .award-modal-box{ max-width:94vw; padding:18px; }
 }
@@ -4432,6 +4442,13 @@ body::before{opacity:.42;}
           <div class="award-band">
             <div class="award-sys-tag"><span class="award-dot"></span>TOURNAMENT RESULTS</div>
             <div class="award-wordmark">BEYBLADE X TOURNAMENT</div>
+            <div class="award-format-row">
+              <div class="award-format-pill">
+                <svg class="award-format-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M5 19v-5h4v5M10 19V8h4v11M15 19v-8h4v8"/></svg>
+                <small>FORMAT</small>
+                <span id="awardFormatName">單淘汰</span>
+              </div>
+            </div>
             <div class="award-hr-thin"></div>
           </div>
 
@@ -4543,7 +4560,7 @@ body::before{opacity:.42;}
           <div class="award-stats-strip">
             <div class="award-stat-cell">
               <div class="award-stat-num" id="awardPlayerCount">0</div>
-              <div class="award-stat-cap">PLAYERS</div>
+              <div class="award-stat-cap" id="awardParticipantLabel">PLAYERS</div>
             </div>
             <div class="award-stat-divider"></div>
             <div class="award-stat-cell">
@@ -6707,7 +6724,13 @@ function getAwardPodiumData(){
   const playerCount = state.players.filter(p => !p.withdrawn).length;
   // 與「即時戰況／總場次」使用完全相同的計算口徑，不把輪空列入場次。
   const totalMatches = state.matches.filter(m => !m.isBye && !m.inactive).length;
-  const base = { playerCount, totalMatches, tournamentName: state.tournament.name || '未命名賽事' };
+  const base = {
+    playerCount,
+    totalMatches,
+    tournamentName: state.tournament.name || '未命名賽事',
+    format: state.tournament.format || 'knockout',
+    formatName: arcFormatLabel(state.tournament.format || 'knockout')
+  };
 
   if(isElimination(state.tournament.format)){
     if(state.matches.length === 0) return { ready:false };
@@ -6744,14 +6767,16 @@ function openAwardReport(){
     return;
   }
 
-  document.getElementById('awardChampName').textContent = data.champion;
-  document.getElementById('awardSilverName').textContent = data.silver || '－';
-  document.getElementById('awardBronzeName').textContent = data.bronze || '－';
+  setAwardName('awardChampName', data.champion, 76, 44, 8, 3.2);
+  setAwardName('awardSilverName', data.silver || '－', 38, 24, 7, 2.2);
+  setAwardName('awardBronzeName', data.bronze || '－', 38, 24, 7, 2.2);
   document.getElementById('awardSilverCard').style.display = data.silver ? '' : 'none';
   document.getElementById('awardBronzeCard').style.display = data.bronze ? '' : 'none';
   document.getElementById('awardPlayerCount').textContent = data.playerCount;
   document.getElementById('awardMatchCount').textContent = data.totalMatches;
-  document.getElementById('awardTournamentName').textContent = data.tournamentName;
+  document.getElementById('awardFormatName').textContent = data.formatName;
+  document.getElementById('awardParticipantLabel').textContent = data.format === 'team3v3' ? 'TEAMS' : 'PLAYERS';
+  setAwardName('awardTournamentName', data.tournamentName, 42, 28, 18, 1.25);
 
   const d = new Date();
   document.getElementById('awardDate').textContent =
@@ -6761,11 +6786,21 @@ function openAwardReport(){
   fitAwardStage();
 }
 
+// 戰報仍需容納現場常見的長隊名／選手名；字數較長時只縮小該欄，不壓縮整張海報。
+function setAwardName(id, value, baseSize, minSize, freeChars, step){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const text = String(value || '－');
+  const length = Array.from(text).length;
+  el.textContent = text;
+  el.style.fontSize = `${Math.max(minSize, baseSize - Math.max(0, length - freeChars) * step)}px`;
+}
+
 function hideAwardModal(){
   document.getElementById('awardModal').classList.remove('show');
 }
 
-// Scales the fixed 1080x1600 poster down to fit the modal on screen.
+// Scales the fixed 1080x1350 poster down to fit the modal on screen.
 // downloadAwardImage() temporarily resets this to capture full-res.
 function fitAwardStage(){
   const stage = document.getElementById('awardStage');
@@ -6774,7 +6809,7 @@ function fitAwardStage(){
   const maxW = Math.min(wrap.clientWidth || 420, 420);
   const scale = maxW / 1080;
   stage.style.transform = `scale(${scale})`;
-  wrap.style.height = (1600 * scale) + 'px';
+  wrap.style.height = (1350 * scale) + 'px';
 }
 window.addEventListener('resize', () => {
   if(document.getElementById('awardModal').classList.contains('show')) fitAwardStage();
@@ -6790,7 +6825,7 @@ async function downloadAwardImage(){
   }
 
   const originalTransform = stage.style.transform;
-  stage.style.transform = 'none'; // capture at full 1080x1600 resolution, not the scaled-down preview
+  stage.style.transform = 'none'; // capture at full 1080x1350 resolution, not the scaled-down preview
   const originalHTML = btn ? btn.innerHTML : '';
   if(btn){ btn.disabled = true; btn.innerText = '產生圖片中…'; }
 
