@@ -2717,6 +2717,11 @@ button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-off
 }
 @media(prefers-reduced-motion:reduce){.tabs{scroll-behavior:auto;}}
 
+/* 裁判台需要最大化計分空間：完整隱藏賽事頁首，連線與同步狀態列保留。 */
+.referee-view .header{
+  display:none!important;
+}
+
 
 /* Portrait header: editorial alignment with a restrained competition frame. */
 .header-release-row{display:flex;align-items:center;justify-content:flex-end;gap:6px;border-top:1px solid #ffffff0d;padding-top:3px;}
@@ -2737,6 +2742,13 @@ button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-off
 .update-notes-heading{margin:0 0 7px;color:#f0d7a8;font-size:13px;font-weight:800;line-height:1.4;}
 .update-notes-list{display:grid;gap:6px;margin:0;padding-left:18px;}
 .update-notes-list li{color:#d2c8ba;line-height:1.6;}
+.install-guide{display:grid;gap:15px;color:#d7cec1;}
+.install-guide-intro,.install-guide-complete{margin:0;font-size:14px;line-height:1.75;}
+.install-guide strong{color:#f4e4c8;font-weight:800;}
+.install-guide-device{margin:1px 0 0;color:#f0d7a8;font-size:14px;font-weight:800;}
+.install-guide-steps{display:grid;gap:9px;margin:0;padding-left:24px;}
+.install-guide-steps li{padding-left:3px;color:#d2c8ba;font-size:14px;line-height:1.65;}
+.install-guide-warn{margin:0;padding:10px 12px;border-left:3px solid #ff5b5b;border-radius:2px 8px 8px 2px;background:rgba(255,77,77,.07);color:#ff9696;font-size:13px;line-height:1.65;}
 @media(max-width:700px){
  .header{padding:14px 16px 14px;background:radial-gradient(ellipse at 50% -30%,#e9bb6812,transparent 75%),#111316;}
  .header::before{opacity:.35;background-size:36px 36px,36px 36px,auto;}
@@ -4964,6 +4976,39 @@ window.addEventListener('appinstalled', () => {
   showToast('已安裝到手機主畫面');
 });
 
+function showPWAInstallGuide(platform){
+  const isApple = platform === 'apple';
+  const deviceName = isApple ? 'iPhone／iPad' : 'Android 手機／平板';
+  const steps = isApple
+    ? [
+        '使用 <strong>Safari</strong> 開啟賽事系統',
+        '點擊工具列的 <strong>「分享」按鈕</strong>',
+        '選擇 <strong>「加入主畫面」</strong>',
+        '確認名稱與 X 圖示後，點擊 <strong>「新增」</strong>'
+      ]
+    : [
+        '使用 <strong>Chrome</strong> 開啟賽事系統',
+        '點擊右上角 <strong>「⋮」</strong>',
+        '選擇 <strong>「安裝應用程式」</strong> 或 <strong>「加到主畫面」</strong>',
+        '點擊 <strong>「安裝」或「新增」</strong> 即可完成'
+      ];
+  const warning = isApple
+    ? '若沒有出現「加入主畫面」，請確認目前使用 Safari，並透過 HTTPS 網址開啟。'
+    : '若沒有出現安裝選項，請確認網站是透過 HTTPS 網址開啟。';
+
+  showModal('', [{label:'知道了',className:'btn-primary'}], '將賽事系統加入主畫面');
+  const message = document.getElementById('customModalMessage');
+  message.innerHTML = `
+    <div class="install-guide">
+      <p class="install-guide-intro">把賽事系統加入手機主畫面後，<strong>下次不用再找網址</strong>。<br>直接點擊主畫面的 <strong>X 圖示</strong>，就能像開啟 APP 一樣快速進入賽事系統。</p>
+      <h4 class="install-guide-device">${deviceName}</h4>
+      <ol class="install-guide-steps">${steps.map(step => `<li>${step}</li>`).join('')}</ol>
+      <p class="install-guide-complete">完成後，主畫面會出現 <strong>X 圖示</strong>，之後直接點擊即可開啟。</p>
+      <p class="install-guide-warn">${warning}</p>
+    </div>`;
+  message.scrollTop = 0;
+}
+
 async function requestPWAInstall(){
   if(isPWAStandalone()){
     showToast('目前已從手機主畫面開啟');
@@ -4980,11 +5025,11 @@ async function requestPWAInstall(){
   }
 
   if(isIOSDevice()){
-    showModal('為了讓大家更方便開啟賽事系統，加入主畫面後就不用每次重新尋找網址；點一下 X 圖示，即可便捷、快速地啟用。\n\n【iPhone／iPad】\n1. 請使用 Safari 開啟本網站\n2. 點擊 Safari 的「分享」按鈕\n3. 向下選擇「加入主畫面」\n4. 確認名稱與 X 圖示後，點擊「新增」\n\n完成後即可從手機主畫面直接開啟，並以全螢幕模式使用。', [{label:'知道了',className:'btn-primary'}], '加入手機主畫面');
+    showPWAInstallGuide('apple');
     return;
   }
 
-  showModal('為了讓大家更方便開啟賽事系統，加入主畫面後就不用每次重新尋找網址；點一下 X 圖示，即可便捷、快速地啟用。\n\n【Android 手機／平板】\n1. 請使用 Chrome 開啟本網站\n2. 點擊右上角「⋮」瀏覽器選單\n3. 選擇「安裝應用程式」或「加到主畫面」\n4. 點擊「安裝」或「新增」完成設定\n\n若沒有出現安裝選項，請確認網站是透過 HTTPS 網址開啟。', [{label:'知道了',className:'btn-primary'}], '加入手機主畫面');
+  showPWAInstallGuide('android');
 }
 
 function initPWAInstall(){
