@@ -1822,7 +1822,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   margin-bottom:18px; opacity:.5;
 }
 .award-brand{ display:flex; justify-content:center; }
-.award-brand img{ height:51px; width:auto; display:block; opacity:.6; filter:grayscale(1) brightness(1.6); }
+.award-brand img{ height:62px; width:auto; display:block; opacity:.68; filter:grayscale(1) brightness(1.6); }
 @media (max-width:600px){
   .award-modal-box{ max-width:94vw; padding:18px; }
 }
@@ -7220,6 +7220,10 @@ function getAwardPodiumData(){
   });
 }
 
+let awardImageFile = null;
+let awardImagePreparePromise = null;
+let awardImageGeneration = 0;
+
 function openAwardReport(){
   const data = getAwardPodiumData();
   if(!data.ready || !data.champion){
@@ -7242,8 +7246,12 @@ function openAwardReport(){
   document.getElementById('awardDate').textContent =
     `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
 
+  awardImageGeneration += 1;
+  awardImageFile = null;
+  awardImagePreparePromise = null;
   document.getElementById('awardModal').classList.add('show');
   fitAwardStage();
+  requestAnimationFrame(() => void prepareAwardImage(awardImageGeneration));
 }
 
 // 戰報仍需容納現場常見的長隊名／選手名；字數較長時只縮小該欄，不壓縮整張海報。
@@ -7297,36 +7305,125 @@ async function waitForAwardFontsReady(){
   }
 }
 
-async function downloadAwardImage(){
+async function waitForAwardImagesReady(stage){
+  const images = Array.from(stage?.querySelectorAll('img') || []);
+  await Promise.all(images.map(async image => {
+    if(image.complete && image.naturalWidth > 0){
+      try{ await image.decode?.(); }catch(e){}
+      return;
+    }
+    await new Promise(resolve => {
+      const done = () => { clearTimeout(timer); resolve(); };
+      const timer = setTimeout(done, 4000);
+      image.addEventListener('load', done, { once:true });
+      image.addEventListener('error', done, { once:true });
+    });
+  }));
+}
+
+async function prepareAwardImage(generation = awardImageGeneration){
   const stage = document.getElementById('awardStage');
   const btn = document.getElementById('awardDownloadBtn');
-  if(!stage) return;
+  if(!stage) return null;
+  if(awardImageFile) return awardImageFile;
+  if(awardImagePreparePromise) return awardImagePreparePromise;
   if(typeof html2canvas === 'undefined'){
     showToast('圖片產生元件載入失敗，請檢查網路連線後重試');
+    return null;
+  }
+
+  if(btn){ btn.disabled = true; btn.innerText = '準備戰報圖片中…'; }
+  awardImagePreparePromise = (async () => {
+    await waitForAwardFontsReady();
+    await waitForAwardImagesReady(stage);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    const canvas = await html2canvas(stage, {
+      backgroundColor:null,
+      scale:1,
+      width:1080,
+      height:1200,
+      windowWidth:1080,
+      windowHeight:1200,
+      useCORS:true,
+      allowTaint:false,
+      logging:false,
+      imageTimeout:5000,
+      onclone:clonedDocument => {
+        const clonedStage = clonedDocument.getElementById('awardStage');
+        const clonedWrap = clonedDocument.getElementById('awardStageWrap');
+        if(clonedStage) clonedStage.style.transform = 'none';
+        if(clonedWrap){
+          clonedWrap.style.width = '1080px';
+          clonedWrap.style.height = '1200px';
+          clonedWrap.style.overflow = 'visible';
+        }
+      }
+    });
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if(!blob) throw new Error('Canvas 無法輸出 PNG');
+    if(generation !== awardImageGeneration) return null;
+    awardImageFile = new File([blob], 'beyblade-x-award-report.png', { type:'image/png' });
+    return awardImageFile;
+  })();
+
+  try{
+    return await awardImagePreparePromise;
+  }catch(e){
+    console.error('產生頒獎戰報圖片失敗', e);
+    if(generation === awardImageGeneration) showToast('產生圖片失敗，請重試一次');
+    return null;
+  }finally{
+    if(generation === awardImageGeneration){
+      awardImagePreparePromise = null;
+      if(btn){
+        btn.disabled = false;
+        btn.innerHTML = awardImageFile
+          ? `${icon('download',14)} 儲存圖片`
+          : `${icon('download',14)} 重新產生圖片`;
+      }
+    }
+  }
+}
+
+async function downloadAwardImage(){
+  const btn = document.getElementById('awardDownloadBtn');
+  // 圖片在戰報開啟時就會預先產生；若先前失敗，這次點擊只負責重試產圖，
+  // 完成後再點一次即可保留手機分享所需的使用者操作權限。
+  if(!awardImageFile){
+    const file = await prepareAwardImage();
+    if(file) showToast('戰報圖片已準備完成，請再按一次儲存');
     return;
   }
 
-  const originalTransform = stage.style.transform;
-  stage.style.transform = 'none'; // capture at full 1080x1200 resolution, not the scaled-down preview
-  const originalHTML = btn ? btn.innerHTML : '';
-  if(btn){ btn.disabled = true; btn.innerText = '字型載入中…'; }
-
+  const file = awardImageFile;
+  if(btn) btn.disabled = true;
   try{
-    await waitForAwardFontsReady();
-    if(btn){ btn.innerText = '產生圖片中…'; }
-    const canvas = await html2canvas(stage, { backgroundColor:null, scale:2, useCORS:true });
-    const safeName = (document.getElementById('awardTournamentName').textContent || 'beyblade-x')
-      .replace(/[\\/:*?"<>|]/g, '_').trim() || 'beyblade-x';
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      // 手機使用系統分享選單，可直接選擇「儲存影像」；呼叫前不再執行耗時工作，
+      // 避免 iPhone 因使用者操作權限逾時而拒絕分享。
+      try{
+        await navigator.share({ files:[file], title:'BEYBLADE X 頒獎戰報' });
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError') return;
+        console.warn('系統分享失敗，改用瀏覽器下載', e);
+      }
+    }
+
+    const url = URL.createObjectURL(file);
     const link = document.createElement('a');
-    link.download = `${safeName}_頒獎戰報.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showToast('戰報圖片已下載');
   }catch(e){
-    console.error('產生頒獎戰報圖片失敗', e);
-    showToast('產生圖片失敗，請重試一次');
+    console.error('儲存頒獎戰報圖片失敗', e);
+    showToast('儲存失敗，請改用 Safari 或 Chrome 再試一次');
   }finally{
-    stage.style.transform = originalTransform;
-    if(btn){ btn.disabled = false; btn.innerHTML = originalHTML || `${icon('download',14)} 下載圖片`; }
+    if(btn) btn.disabled = false;
   }
 }
 
@@ -8412,6 +8509,20 @@ function startTeamTournament(){
   else commit();
 }
 
+// 「即時戰況」原本是在設定分頁仍顯示時先渲染，再切換分頁；手機瀏覽器會因此
+// 用隱藏區塊的尺寸計算版面。先切頁再重建內容，效果等同安全的局部刷新，且不會
+// 中斷正在寫入的雲端賽事資料。
+function refreshLiveStatusAfterTournamentStart(){
+  switchTab('standings');
+  renderAll();
+  requestAnimationFrame(() => {
+    renderStandings();
+    renderStats();
+    renderPlayerNextMatchCard();
+    window.scrollTo({ top:0, behavior:'auto' });
+  });
+}
+
 function finalizeTeamTournament(teams){
   const teamPlayers = teams.map(team => ({ id:team.id, name:team.name }));
   state.teams = teams;
@@ -8430,8 +8541,7 @@ function finalizeTeamTournament(teams){
   attendanceManagerOpen = false;
   cloudNeedsFullReplace = true;
   saveState();
-  renderAll();
-  switchTab('standings');
+  refreshLiveStatusAfterTournamentStart();
 }
 
 function finalizeStartTournament(names){
@@ -8461,8 +8571,7 @@ function finalizeStartTournament(names){
 
   cloudNeedsFullReplace = true;
   saveState();
-  renderAll();
-  switchTab('standings');
+  refreshLiveStatusAfterTournamentStart();
 }
 
 /* =========================================================
@@ -11019,7 +11128,8 @@ function openUpdateNotes(){
         <h4 class="update-notes-heading">手機操作</h4>
         <ul class="update-notes-list">
           <li>加高底部主選單並補足 iPhone 安全距離，降低誤觸。</li>
-          <li>修正賽事戰報的手機下載與中文名稱顯示，重新整理頒獎排版。</li>
+          <li>開始比賽後立即刷新即時戰況，避免手機沿用隱藏分頁的舊版面。</li>
+          <li>修正 iPhone 戰報儲存流程與中文名稱顯示，並放大底部識別 LOGO。</li>
         </ul>
       </section>
       <section class="update-notes-section">
