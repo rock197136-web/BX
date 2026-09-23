@@ -2131,7 +2131,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   width:clamp(240px,34vw,440px);
   opacity:.13;
   pointer-events:none;
-  z-index:2;
+  z-index:0;
   user-select:none;
 }
 .bracket-watermark img{display:block;width:100%;height:auto;}
@@ -2762,20 +2762,20 @@ button:focus-visible,summary:focus-visible{outline:2px solid #f0d7a8;outline-off
  .header .sys-dot{width:4px;height:4px;background:#e9bb68;box-shadow:none;}
  .header .logo-img{height:39px;}
  .header .logo-x{color:#e9bb68;}
- .header .identity-card{display:grid;place-items:center;position:relative;min-height:124px;margin:0 0 10px;padding:14px 16px 16px;border:1px solid #e9bb682b;border-radius:12px;background:linear-gradient(135deg,#e9bb6808,transparent 55%),#15171a;overflow:hidden;}
+ .header .identity-card{display:grid;place-items:center;position:relative;min-height:96px;margin:0 0 10px;padding:12px 16px;border:1px solid #e9bb682b;border-radius:12px;background:linear-gradient(135deg,#e9bb6808,transparent 55%),#15171a;overflow:hidden;}
  .header .identity-bg{display:none;}
  .header .identity-card::before{content:'';position:absolute;inset:7px;pointer-events:none;background:linear-gradient(#d5b47a,#d5b47a) left top/17px 1px no-repeat,linear-gradient(#d5b47a,#d5b47a) left top/1px 8px no-repeat,linear-gradient(#d5b47a,#d5b47a) right bottom/17px 1px no-repeat,linear-gradient(#d5b47a,#d5b47a) right bottom/1px 8px no-repeat;opacity:.65;}
  .header .identity-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#e9bb68,transparent);opacity:.65;}
- .header .identity-copy{position:relative;left:auto;top:auto;transform:none;display:grid;place-items:center;width:100%;max-width:none;min-height:94px;padding:0;background:none;text-align:center;}
- .header .identity-kicker{position:absolute;top:0;left:0;right:0;font:600 10px/1.4 'Inter',sans-serif;letter-spacing:.18em;color:#b6a17e;margin:0;}
- .header .identity-name{align-self:center;display:block;max-width:100%;overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:anywhere;font-family:'Noto Sans TC',sans-serif;font-weight:800;font-size:clamp(24px,6.8vw,32px);line-height:1.24;letter-spacing:.03em;color:#f5f0e7;text-shadow:none;}
+ .header .identity-copy{position:relative;left:auto;top:auto;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;max-width:none;min-height:96px;padding:0;background:none;text-align:center;}
+ .header .identity-kicker{position:static;font:600 9px/1.3 'Inter',sans-serif;letter-spacing:.18em;color:#b6a17e;margin:0;}
+ .header .identity-name{align-self:center;display:block;max-width:100%;overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:anywhere;font-family:'Noto Sans TC',sans-serif;font-weight:800;font-size:clamp(27px,7.4vw,40px);line-height:1.12;letter-spacing:.03em;color:#f5f0e7;text-shadow:none;}
  .header-release-row{justify-content:space-between;}
  .header-release-row .version-info{font-size:11px;gap:6px;padding:6px 0;}
  .pwa-install-btn{min-height:38px;padding:6px 9px;font-size:11px;}
  .referee-view .header{padding:10px 16px 12px;}
  .referee-view .header .identity-card{display:block;min-height:0;margin:0 0 4px;padding:0;border:0;border-radius:0;background:none;}
  .referee-view .header .identity-card::before,.referee-view .header .identity-card::after{display:none;}
- .referee-view .header .identity-copy{text-align:left;}
+ .referee-view .header .identity-copy{display:block;min-height:0;text-align:left;}
  .referee-view .header-release-row .version-info{display:inline-flex;}
  .referee-view .header .identity-name{font-size:18px;}
  #customModalMessage{font-size:14px;max-height:60vh;}
@@ -2976,6 +2976,226 @@ button:focus-visible,summary:focus-visible{outline:2px solid #ffdc8d;outline-off
 }
 @media(prefers-reduced-motion:reduce){
   .bracket-match.done:not(.final-match){ transition:none; }
+}
+
+/* 對戰卡：選手姓名與固定寬度比分分欄，勝者只在姓名區標記。 */
+.conn-path{stroke:#59616b;stroke-width:2.5;}
+.conn-path.active{stroke:rgb(var(--theme-rgb));stroke-width:3;filter:none;}
+.bracket-match.done:not(.final-match){border-color:rgba(var(--theme-rgb),.62);box-shadow:none;}
+.bracket-slot{position:relative;gap:0;padding:0 0 0 11px;background:#1d1e20;}
+.bracket-slot.winner{
+  background:linear-gradient(90deg,rgba(var(--theme-rgb),.19),rgba(var(--theme-rgb),.10));
+  box-shadow:none;
+}
+.bracket-match .bracket-slot.winner .bslot-name{color:#fff;font-weight:750;text-shadow:none;}
+.bracket-slot .bslot-name{font-size:14px;padding-right:4px;}
+.bslot-pts{
+  order:3;margin:0;width:32px;height:100%;display:flex;align-items:center;justify-content:center;
+  background:#5a5e64;border:0;
+  color:#fff;font-size:14px;font-weight:800;box-sizing:border-box;
+}
+.bslot-pts:empty{display:none;}
+.bracket-slot.winner .bslot-pts{color:#fff;font-weight:800;background:#5a5e64;border:0;}
+.bracket-slot.loser .bslot-name{color:#858b93;}
+.bracket-slot.loser .bslot-pts{color:#fff;opacity:1;background:#5a5e64;border:0;}
+.bslot-check{
+  order:2;display:inline-flex;align-items:center;justify-content:center;
+  width:auto;height:19px;margin:0 6px 0 2px;padding:0 4px;flex-shrink:0;
+  border:1px solid rgba(var(--theme-rgb),.42);border-radius:5px;
+  background:linear-gradient(135deg,rgba(var(--theme-rgb),.24),rgba(var(--theme-rgb),.12));
+  color:#fff;font-size:9px;font-weight:500;line-height:1;letter-spacing:.02em;white-space:nowrap;
+  box-shadow:none;
+}
+.bracket-round-label{font-size:13px;font-weight:800;color:#d0d4da;letter-spacing:.04em;}
+.single-match-tag{color:#aab1ba;font-weight:650;}
+.bracket-match.final-match,.bracket-match.final-match.done{
+  background:linear-gradient(135deg,rgba(245,196,66,.09),#191a1d 72%);
+  border-color:#947a42;box-shadow:none;
+}
+.bracket-match.final-match .bracket-slot.winner{background:linear-gradient(90deg,rgba(var(--theme-rgb),.19),rgba(var(--theme-rgb),.10));}
+.bracket-match.final-match .bracket-slot:nth-last-child(2){border-radius:9px 9px 0 0;}
+.bracket-match.final-match .bracket-slot:last-child{border-radius:0 0 9px 9px;}
+.bracket-match.final-match .bracket-slot.winner .bslot-name,
+.bracket-match.final-match .bracket-slot.winner .bslot-pts{color:#fff;text-shadow:none;}
+.bracket-match.final-match .bslot-check{
+  border-color:rgba(var(--theme-rgb),.42);
+  background:linear-gradient(135deg,rgba(var(--theme-rgb),.24),rgba(var(--theme-rgb),.12));
+  color:#fff;box-shadow:none;
+}
+.bracket-match .bracket-slot.winner .bslot-name.search-hit-name{color:#fff!important;}
+.bracket-status-badge.live,.bracket-status-badge.next{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;font-weight:800;letter-spacing:.02em;}
+@media(max-width:700px){
+  .bracket-watermark{opacity:.07;}
+  .bracket-slot .bslot-name{font-size:15px;}
+  .bslot-pts{width:32px;font-size:14px;}
+  .bracket-status-badge.live,.bracket-status-badge.next{font-size:12px;}
+}
+
+/*比分色塊採霧面深灰底，疊一層低飽和主題色，讓所有主題保持同一材質。*/
+.bracket-match .bslot-pts,
+.bracket-match .bracket-slot.winner .bslot-pts,
+.bracket-match .bracket-slot.loser .bslot-pts{
+  background:linear-gradient(145deg,rgba(var(--theme-rgb),.22),rgba(var(--theme-rgb),.10)),#34383f !important;
+  border-left:1px solid rgba(var(--theme-rgb),.26);
+  color:#fff !important;
+}
+.bracket-match .bracket-slot.loser .bslot-pts{
+  color:#858b93 !important;
+  font-weight:600;
+  text-shadow:none;
+}
+
+/*狀態及決賽框線不改變卡片尺寸，避免框線與賽程連線錯位；內描邊完整貼合圓角。*/
+.bracket-match.is-live,
+.bracket-match.final-match.is-live,
+.bracket-bronze-body .bracket-match.is-live{
+  border:1px solid #ff2f3d !important;
+  border-radius:10px !important;
+  outline:none !important;
+  box-shadow:inset 0 0 0 1px #ff2f3d !important;
+  filter:none !important;
+  animation:none !important;
+}
+.bracket-match.is-next,
+.bracket-match.final-match.is-next{
+  border:1px solid #ffc128 !important;
+  border-radius:10px !important;
+  outline:none !important;
+  box-shadow:inset 0 0 0 1px #ffc128 !important;
+  filter:none !important;
+  animation:nextMatchFrameGlow 1.7s ease-in-out infinite !important;
+}
+.bracket-match.final-match:not(.is-live):not(.is-next){
+  border:1px solid rgba(245,196,66,.78) !important;
+  border-radius:11px !important;
+  box-shadow:inset 0 0 0 1px rgba(245,196,66,.28) !important;
+}
+/*決賽卡為了讓上方標籤外露使用 overflow:visible；以外框偽元素完整包住兩列內容，避免列底色蓋斷邊線。*/
+.bracket-match.final-match{
+  isolation:isolate;
+  border-color:transparent !important;
+  box-shadow:none !important;
+}
+.bracket-match.final-match::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  z-index:3;
+  border:1px solid rgba(245,196,66,.78);
+  border-radius:11px;
+  box-shadow:none;
+  pointer-events:none;
+}
+.bracket-match.final-match.is-live::after{
+  border-color:#ff2f3d;
+  box-shadow:none;
+  animation:none;
+}
+.bracket-match.final-match.is-next::after{
+  border-color:#ffc128;
+  box-shadow:none;
+  animation:none;
+}
+
+/*決賽標籤置中對齊最終輪卡片，與季軍戰標題採同一視覺軸線。*/
+.single-match-tag.final-match-heading,
+.double-tree .de-source.final-match-heading{
+  left:50% !important;
+  right:auto !important;
+  justify-content:center;
+  transform:translateX(-50%) !important;
+  transform-origin:center;
+}
+
+/*狀態卡底層框線透明，只由最上層繪製單一 1px 彩色框，不加外溢光暈。*/
+.bracket-match.is-live,
+.bracket-match.final-match.is-live,
+.bracket-bronze-body .bracket-match.is-live{
+  border:1px solid transparent !important;
+  border-radius:10px !important;
+  outline:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+.bracket-match.is-next,
+.bracket-match.final-match.is-next{
+  border:1px solid transparent !important;
+  border-radius:10px !important;
+  outline:none !important;
+  box-shadow:none !important;
+  animation:none !important;
+}
+.bracket-match.final-match::after{
+  border-width:1px;
+  box-shadow:none;
+}
+.bracket-match.final-match.is-live::after{
+  border-color:#ff4652;
+  box-shadow:none;
+  animation:none;
+}
+.bracket-match.final-match.is-next::after{
+  border-color:#ffc128;
+  box-shadow:none;
+  animation:none;
+}
+.bracket-match .bracket-status-badge.live,
+.bracket-match .bracket-status-badge.next{
+  text-shadow:none !important;
+}
+/*決賽與季軍戰標題置中；狀態縮為左上角小標，與標題保留間距。*/
+.bracket-match.final-match .bracket-status-badge.with-final,
+.bracket-bronze-body .bracket-match .bracket-status-badge{
+  top:0 !important;
+  right:auto !important;
+  bottom:auto !important;
+  left:0 !important;
+  z-index:4;
+  font-size:10px !important;
+  letter-spacing:.2px !important;
+  gap:3px !important;
+  padding:4px 3px 5px !important;
+  transform:translateY(calc(-100% - 8px)) !important;
+}
+/* 決賽與狀態標籤對齊基線；季軍戰標題原本較高，向下補齊。 */
+.single-match-tag.final-match-heading,
+.double-tree .de-source.final-match-heading{
+  transform:translate(-50%,2px) !important;
+}
+.bracket-bronze .bracket-round-label{
+  transform:translateY(10px);
+}
+.bracket-match.is-live:not(.final-match)::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  z-index:3;
+  border:1px solid #ff4652;
+  border-radius:10px;
+  box-shadow:none;
+  pointer-events:none;
+  animation:none;
+}
+/*即將上場卡片以同一層黃框補齊底邊，線條不向卡片外延伸。*/
+.bracket-match.is-next:not(.final-match)::before{
+  content:"" !important;
+  position:absolute;
+  inset:-1px;
+  z-index:3;
+  border:1px solid #ffc128;
+  border-radius:10px;
+  box-shadow:none;
+  pointer-events:none;
+}
+.bracket-status-badge.live .bracket-status-dot{
+  background:#ff4652 !important;
+  box-shadow:0 0 6px #ff4652 !important;
+  animation:bmDotPulse 1.1s ease-in-out infinite !important;
+}
+.bracket-status-badge.next .bracket-status-dot{
+  background:#ffc128 !important;
+  box-shadow:none !important;
+  animation:none !important;
 }
 
 /* ===== V3.9：現場操作性、資訊層級與視覺降噪 ===== */
@@ -4048,7 +4268,7 @@ body::before{opacity:.42;}
               <span class="field-label">顏色主題</span>
               <div class="theme-dropdown" id="bracketThemeDropdown">
                 <button type="button" class="theme-dropdown-btn text-input theme-select" id="bracketThemeBtn"
-                        aria-haspopup="listbox" aria-expanded="false" onclick="toggleThemeDropdown()">
+                        aria-haspopup="listbox" aria-expanded="false">
                   <span class="theme-dropdown-dot" id="bracketThemeBtnDot"></span>
                   <span class="theme-dropdown-label" id="bracketThemeBtnLabel"></span>
                   <span class="theme-dropdown-arrow" aria-hidden="true">▾</span>
@@ -4799,7 +5019,7 @@ function populateThemeSelect(){
   const list = document.getElementById('bracketThemeList');
   if(!list) return;
   list.innerHTML = Object.entries(BRACKET_THEMES).map(([key, t]) => `
-    <li class="theme-dropdown-option" role="option" data-key="${key}" onclick="selectBracketTheme('${key}')">
+    <li class="theme-dropdown-option" role="option" tabindex="0" data-key="${key}">
       <span class="theme-dropdown-dot" style="background:${t.hex};"></span>
       <span style="color:${t.hex};">${t.label}</span>
       <span class="theme-dropdown-check">${icon('check',12)}</span>
@@ -4814,6 +5034,29 @@ function toggleThemeDropdown(forceOpen){
   const willOpen = forceOpen !== undefined ? forceOpen : list.classList.contains('hidden');
   list.classList.toggle('hidden', !willOpen);
   btn.setAttribute('aria-expanded', String(willOpen));
+}
+
+function bindBracketThemeControls(){
+  const btn = document.getElementById('bracketThemeBtn');
+  const list = document.getElementById('bracketThemeList');
+  if(!btn || !list || btn.dataset.themeBound) return;
+  btn.dataset.themeBound = 'true';
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleThemeDropdown();
+  });
+  list.addEventListener('click', e => {
+    const option = e.target.closest('[data-key]');
+    if(option && list.contains(option)) selectBracketTheme(option.dataset.key);
+  });
+  list.addEventListener('keydown', e => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const option = e.target.closest('[data-key]');
+    if(!option) return;
+    e.preventDefault();
+    selectBracketTheme(option.dataset.key);
+    btn.focus();
+  });
 }
 
 function closeThemeDropdownOnOutsideClick(e){
@@ -4862,6 +5105,7 @@ function setBracketTheme(key){
 
 function initBracketTheme(){
   populateThemeSelect();
+  bindBracketThemeControls();
   let saved = BRACKET_THEME_DEFAULT;
   try{ saved = localStorage.getItem(BRACKET_THEME_KEY) || BRACKET_THEME_DEFAULT; }catch(e){}
   applyBracketTheme(saved, false);
@@ -8910,7 +9154,7 @@ function renderDoubleBracket(){
         const sourceLabel = bracket === 'final'
           ? `${icon('trophy',14)}<span>${escapeHtml(matchLabel)}</span>`
           : doubleMatchLabelHtml(m);
-        html+=`<div class="de-source ${bracket === 'final' ? 'final-match-heading' : ''}" style="top:${p.y-55}px" title="${escapeHtml(matchLabel)}">${sourceLabel}</div>`;
+        html+=`<div class="de-source ${bracket === 'final' ? 'final-match-heading' : ''}" style="top:${p.y-63}px" title="${escapeHtml(matchLabel)}">${sourceLabel}</div>`;
         html+=bracketMatchBoxHtml(m,p.y-37,live,nextIds,bracket==='final');
       });
       html+='</div></div>';
@@ -9867,7 +10111,8 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal){
   const bBye = m.playerB === 'BYE';
   const aLose = m.status === 'completed' && !aWin && !aBye && !aWd;
   const bLose = m.status === 'completed' && !bWin && !bBye && !bWd;
-  const showPts = !m.quickWin && !state.tournament.quickMode;
+  const hasRecordedPoints = Number(m.pointsA) > 0 || Number(m.pointsB) > 0;
+  const showPts = !m.quickWin && (hasRecordedPoints || (m.status === 'completed' && !state.tournament.quickMode));
 
   const status = m.status === 'completed' ? null
     : (liveIds && liveIds.has(m.id)) ? 'live'
@@ -9889,14 +10134,14 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal){
       ${sparkles}
       ${statusBadge}
       <div class="bracket-slot ${aWin?'winner':''} ${aLose?'loser':''} ${(aBye||aWd)?'bye':''}" data-player-id="${(m.playerA && !aBye) ? m.playerA : ''}">
-        <span class="bslot-pts">${(m.playerA && !aBye && showPts) ? m.pointsA : ''}</span>
         <span class="bslot-name">${aName}</span>
-        ${aWin ? `<span class="bslot-check">${icon('check',12)}</span>` : ''}
+        ${aWin ? `<span class="bslot-check" aria-label="勝者">勝</span>` : ''}
+        ${m.playerA && !aBye && showPts ? `<span class="bslot-pts" aria-label="比分 ${Number(m.pointsA) || 0}">${Number(m.pointsA) || 0}</span>` : ''}
       </div>
       <div class="bracket-slot ${bWin?'winner':''} ${bLose?'loser':''} ${(bBye||bWd)?'bye':''}" data-player-id="${(m.playerB && !bBye) ? m.playerB : ''}">
-        <span class="bslot-pts">${(m.playerB && !bBye && showPts) ? m.pointsB : ''}</span>
         <span class="bslot-name">${bName}</span>
-        ${bWin ? `<span class="bslot-check">${icon('check',12)}</span>` : ''}
+        ${bWin ? `<span class="bslot-check" aria-label="勝者">勝</span>` : ''}
+        ${m.playerB && !bBye && showPts ? `<span class="bslot-pts" aria-label="比分 ${Number(m.pointsB) || 0}">${Number(m.pointsB) || 0}</span>` : ''}
       </div>
     </div>`;
 }
@@ -9923,7 +10168,7 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal){
 const BRACKET_BOX_H = 74;   // px height of a normal match card
 const BRACKET_BYE_H = 30;   // invisible layout anchor; intentionally not rendered
 const BRACKET_ROW_GAP = 30; // px gap: reserves room for the small match-number label
-const BRACKET_TAG_H = 18;
+const BRACKET_TAG_H = 26; // 標籤高度 18px + 標籤與卡片間距 8px
 
 function computeBracketLayout(rounds, byRound){
   const visibleByRound = {};
