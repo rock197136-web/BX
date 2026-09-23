@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -2031,6 +2031,9 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket-scroll{
   overflow-x:auto; overflow-y:hidden; padding:4px 4px 14px; margin:-4px -4px 0;
   -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; cursor:grab; user-select:none;
+  /* 左右邊緣淡出，提示手機使用者此區塊可左右滑動 */
+  -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image:linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
 }
 .bracket-scroll.dragging{ cursor:grabbing; }
 .bracket-zoom-wrap{ display:inline-block; transform-origin:0 0; }
@@ -10040,10 +10043,9 @@ function renderBracket(){
     // column, rather than centered under the whole tree — so it always
     // lines up with the last (rightmost) column regardless of round count.
     if(isFinalRound && bronzeMatch){
-      const bronzeNumberLabel = formatMatchNumberLabel(singleMatchNumbers.get(bronzeMatch.id));
       html += `
         <div class="bracket-bronze">
-          <div class="bracket-round-label">${icon('medal',14)} 季軍戰${bronzeNumberLabel ? `・${bronzeNumberLabel}` : ''}</div>
+          <div class="bracket-round-label">${icon('medal',14)} 季軍戰</div>
           <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextIds)}</div>
         </div>`;
     }
