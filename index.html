@@ -11797,7 +11797,7 @@ function renderPlayerNextMatchCard(){
     card.type = 'button';
     card.className = 'player-next-match-card';
     card.dataset.matchId = match.id;
-    card.setAttribute('aria-label', `${metaText}，${versusText}，前往對戰紀錄`);
+    card.setAttribute('aria-label', `${metaText}，${versusText}，前往對戰樹狀圖`);
     card.addEventListener('click', () => openPlayerNextMatch(match.id));
 
     const copy = document.createElement('span');
@@ -11822,19 +11822,16 @@ function renderPlayerNextMatchCard(){
 function openPlayerNextMatch(matchId){
   if(!matchId) return;
 
-  matchStatusFilter = 'all';
-  switchTab('matches');
-  renderMatches();
-  matchesDirty = false;
+  switchTab('standings');
 
   requestAnimationFrame(() => {
-    const target = document.querySelector(`#matchList .match[data-match-id="${cssEscapeId(matchId)}"]`);
+    const target = document.querySelector(`#bracketTree .bracket-match[data-match-id="${cssEscapeId(matchId)}"]`);
     if(!target) return;
-    target.scrollIntoView({behavior:'smooth', block:'center'});
-    target.classList.remove('match-highlight');
+    target.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
+    target.classList.remove('search-hit');
     void target.offsetWidth;
-    target.classList.add('match-highlight');
-    setTimeout(() => target.classList.remove('match-highlight'), 1600);
+    target.classList.add('search-hit');
+    setTimeout(() => target.classList.remove('search-hit'), 2000);
   });
 }
 
