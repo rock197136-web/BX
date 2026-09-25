@@ -3884,75 +3884,6 @@ body::before{opacity:.42;}
   white-space:nowrap;
 }
 </style>
-<style id="ux-polish-2026">
-/* =========================================================
-   UX POLISH PASS — 2026
-   Non-destructive refinements on top of the existing gaming
-   identity (no color/typography system change, no markup or
-   script changes). Two fixes, applied only where audited:
-   1) Touch targets under ~40px on real touch devices get
-      bumped toward the 44px accessibility minimum.
-   2) The few sub-11px labels that carry real information
-      (not decorative eyebrows) get a small, layout-safe bump
-      so they stay legible without breaking their one-line /
-      no-wrap layouts.
-   ========================================================= */
-
-/* --- Legibility: hint / helper text was low-contrast on the dark panel --- */
-.cloud-status-hint{ opacity:.85; }
-
-/* --- Legibility: smallest functional labels bumped ~0.5-1px ---
-   (matched at the same .tabs .tab specificity used by the bottom
-   nav bar's own rule, so it actually wins the cascade) --- */
-.draw-count-badge{ font-size:11px; }
-.draw-copy-btn{ font-size:11px; }
-@media (max-width:700px){
-  .tabs .tab{ font-size:11px; }
-}
-
-/* --- Touch targets: bump toward 44px only on touch/coarse-pointer
-   devices, so mouse/desktop density is unaffected --- */
-@media (hover:none) and (pointer:coarse){
-  .pwa-install-btn{ min-height:44px; }
-  .match-filter-btn{ min-height:44px; }
-  .draw-copy-btn{ min-height:40px; padding-block:8px; }
-  .draw-text-btn{ min-height:40px; padding-block:9px; }
-}
-</style>
-<style id="bracket-stage-meta-layout">
-/* 決賽／季軍戰把賽事名稱與即時狀態固定在同一資訊列，避免兩個浮動標籤互相碰撞。 */
-.bracket-stage-meta{
-  position:absolute;left:2px;right:2px;height:20px;z-index:6;
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  min-width:0;pointer-events:none;box-sizing:border-box;
-}
-.bracket-bronze .bracket-stage-meta{
-  position:relative;left:auto;right:auto;top:auto;align-self:flex-start;
-  width:190px;max-width:100%;
-}
-.bracket-stage-title{
-  display:inline-flex;align-items:center;gap:5px;min-width:0;
-  font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;
-  font-size:12px;font-weight:800;line-height:20px;letter-spacing:.02em;
-  white-space:nowrap;
-}
-.bracket-stage-title .btn-icon{width:14px;height:14px;flex:0 0 14px;}
-.bracket-stage-title.final{color:#efc877;text-shadow:0 0 6px rgba(245,196,66,.2);}
-.bracket-stage-title.bronze{color:#d89a69;}
-.bracket-stage-meta .bracket-status-badge{
-  position:static!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
-  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
-  min-height:0;padding:3px 7px!important;border-radius:999px;
-  transform:none!important;box-shadow:none!important;
-  font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;
-  font-size:11px!important;font-weight:800;line-height:1.2;letter-spacing:0!important;
-  white-space:nowrap;
-}
-@media(max-width:700px){
-  .bracket-stage-title{font-size:12px;}
-  .bracket-stage-meta .bracket-status-badge{font-size:11px!important;}
-}
-</style>
 </head>
 <body>
 
@@ -10287,23 +10218,7 @@ function bracketNameSizeClass(name){
   return '';
 }
 
-function bracketStageMetaHtml(m, liveIds, nextIds, stage){
-  const status = m.status === 'completed' ? null
-    : (liveIds && liveIds.has(m.id)) ? 'live'
-    : (nextIds && nextIds.has(m.id)) ? 'next'
-    : null;
-  const title = stage === 'final'
-    ? `<span class="bracket-stage-title final">${icon('trophy',14)}<span>決賽</span></span>`
-    : `<span class="bracket-stage-title bronze">${icon('medal',14)}<span>季軍戰</span></span>`;
-  const statusLabel = status === 'live'
-    ? `<span class="bracket-status-badge live"><span class="bracket-status-dot" aria-hidden="true"></span>進行中</span>`
-    : status === 'next'
-      ? `<span class="bracket-status-badge next"><span class="bracket-status-dot" aria-hidden="true"></span>即將上場</span>`
-      : '';
-  return `${title}${statusLabel}`;
-}
-
-function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal, hideStatusBadge = false){
+function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal){
   const aWd = isWithdrawn(m.playerA);
   const bWd = isWithdrawn(m.playerB);
   const aDisplayName = nameOf(m.playerA) + (aWd ? '（棄權）' : '');
@@ -10326,9 +10241,9 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal, hideStatusBadge 
     : (nextIds && nextIds.has(m.id)) ? 'next'
     : null;
   const statusClass = status === 'live' ? 'is-live' : status === 'next' ? 'is-next' : '';
-  const statusBadge = !hideStatusBadge && status === 'live'
+  const statusBadge = status === 'live'
     ? `<div class="bracket-status-badge live ${isFinal ? 'with-final' : ''}"><span class="bracket-status-dot" aria-hidden="true"></span>進行中</div>`
-    : !hideStatusBadge && status === 'next'
+    : status === 'next'
       ? `<div class="bracket-status-badge next ${isFinal ? 'with-final' : ''}"><span class="bracket-status-dot" aria-hidden="true"></span>即將上場</div>`
       : '';
   const finalClass = isFinal ? 'final-match' : '';
@@ -10485,9 +10400,9 @@ function renderBracket(){
       if(!m.isBye){
         const matchNumberLabel = formatMatchNumberLabel(singleMatchNumbers.get(m.id));
         html += isFinalRound
-          ? `<div class="bracket-stage-meta final" style="top:${centerY - HALF - 28}px;">${bracketStageMetaHtml(m, liveIds, nextIds, 'final')}</div>`
+          ? `<div class="single-match-tag final-match-heading" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${icon('trophy',14)}<span>決賽</span></div>`
           : (matchNumberLabel ? `<div class="single-match-tag" style="top:${centerY - HALF - BRACKET_TAG_H}px;">${matchNumberLabel}</div>` : '');
-        html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound, isFinalRound);
+        html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound);
       }
     });
     html += `</div>`;
@@ -10498,8 +10413,8 @@ function renderBracket(){
     if(isFinalRound && bronzeMatch){
       html += `
         <div class="bracket-bronze">
-          <div class="bracket-stage-meta bronze">${bracketStageMetaHtml(bronzeMatch, liveIds, nextIds, 'bronze')}</div>
-          <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextIds, false, true)}</div>
+          <div class="bracket-round-label">${icon('medal',14)} 季軍戰</div>
+          <div class="bracket-bronze-body">${bracketMatchBoxHtml(bronzeMatch, 0, liveIds, nextIds)}</div>
         </div>`;
     }
     html += `</div>`;
