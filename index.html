@@ -4150,7 +4150,21 @@ body::before{background:none;}
 
 </style>
 <style id="reference-header-layout">
-/* Match the compact mobile header rhythm shown in the reference image. */
+/* V3.33 header: seamless status transition and a quiet amber technical grid. */
+.header{border-bottom:0;}
+.header .identity-card{
+  background-color:var(--panel);
+  background-image:
+    radial-gradient(ellipse at 50% 48%,rgba(20,20,20,.98) 12%,rgba(20,20,20,.78) 48%,rgba(20,20,20,.06) 100%),
+    linear-gradient(135deg,transparent 65%,rgba(255,159,36,.045) 65.2%,transparent 88%),
+    linear-gradient(rgba(255,159,36,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,159,36,.10) 1px,transparent 1px),
+    linear-gradient(rgba(255,159,36,.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,159,36,.06) 1px,transparent 1px),
+    radial-gradient(ellipse at 0 100%,rgba(255,159,36,.08),transparent 65%);
+  background-size:auto,auto,24px 24px,24px 24px,96px 96px,96px 96px,auto;
+  background-position:center,center,-1px -1px,-1px -1px,-1px -1px,-1px -1px,center;
+}
 @media(max-width:700px){
   .header .header-top{margin-bottom:18px;}
   .header .identity-card{min-height:88px;}
