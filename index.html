@@ -875,7 +875,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .match-summary-toggle:focus-visible{ outline:2px solid var(--hdr-blue); outline-offset:5px; border-radius:6px; }
 .match-toggle-icon{ display:inline-flex; margin-left:7px; color:var(--muted); transition:transform .18s ease; }
 .match.expanded .match-toggle-icon{ transform:rotate(180deg); }
-.match-collapsible{ overflow:hidden; }
+.match-collapsible{ overflow:visible; }
 .match-collapsible.hidden{ display:none; }
 .mr-name.match-winner{ display:inline-flex; align-items:center; gap:5px; color:var(--hdr-blue-soft); font-weight:900; }
 .mr-name.match-loser{ color:#aaaeb7; font-weight:600; }
@@ -887,13 +887,16 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   font-size:11px; font-weight:800; line-height:1; letter-spacing:.08em; white-space:nowrap;
 }
 .match-more{ position:relative; flex:1; max-width:160px; }
+.match-more[open]{z-index:40;}
 .match-more > summary{ list-style:none; }
 .match-more > summary{ display:flex; align-items:center; justify-content:center; width:100%; }
 .match-more > summary::-webkit-details-marker{ display:none; }
 .match-more-menu{
-  position:absolute; z-index:35; right:0; bottom:calc(100% + 6px); width:145px; padding:5px;
+  position:absolute; z-index:35; right:0; bottom:calc(100% + 6px);
+  box-sizing:border-box;width:min(220px,calc(100vw - 48px));padding:8px;
   border:1px solid var(--border); border-radius:9px; background:#141922; box-shadow:0 12px 28px rgba(0,0,0,.5);
 }
+.match-more-description{margin:1px 4px 7px;color:var(--muted);font-size:12px;line-height:1.5;}
 .match-more-menu button{ width:100%; min-height:40px; border:0; border-radius:6px; background:transparent; color:#ffb06e; font-weight:800; }
 .match-more-menu button:hover{ background:var(--panel-2); }
 .match.match-highlight{
@@ -4154,7 +4157,7 @@ body::before{background:none;}
   .header .identity-copy{min-height:88px;}
   .header-release-row{flex-wrap:nowrap;gap:8px;}
   .header-release-row .pwa-install-btn{flex:0 0 auto;min-height:42px;}
-  .header-release-row .version-info{flex:0 1 auto;min-width:0;white-space:nowrap;font-size:11px;}
+  .header-release-row .version-info{flex:0 1 auto;min-width:0;margin-left:auto;white-space:nowrap;font-size:11px;}
   .cloud-status-wrap{padding-top:2px;}
 }
 @media(max-width:359px){
@@ -11310,7 +11313,7 @@ function renderMatches(){
           </div>` : ''}
           <div class="match-actions">
             <button class="btn btn-primary goto-referee-btn" onclick="goToReferee('${m.id}')">${completed ? '查看 / 修改' : '前往裁判台'}</button>
-            ${completed ? `<details class="match-more referee-only-btn"><summary class="btn btn-ghost">更多 ⋯</summary><div class="match-more-menu"><button type="button" onclick="this.closest('details').removeAttribute('open');resetMatch('${m.id}')">重新這場</button></div></details>` : ''}
+            ${completed ? `<details class="match-more referee-only-btn"><summary class="btn btn-ghost">更多 ⋯</summary><div class="match-more-menu"><p class="match-more-description">重開會清除此場紀錄，以及受影響的後續賽果。</p><button type="button" onclick="this.closest('details').removeAttribute('open');resetMatch('${m.id}')">重新這場</button></div></details>` : ''}
           </div>
         </div>
         </div>`;
@@ -12432,6 +12435,7 @@ function openUpdateNotes(){
         <ul class="update-notes-list">
           <li>各裁判台共用賽程佇列；跳過的場次仍可由其他台接手。</li>
           <li>手機操作加入觸覺回饋，可加入主畫面快速開啟；版本更新會保留賽事資料。</li>
+          <li>修正手機版對戰紀錄「更多」選單被裁切，並補上重新這場的影響說明。</li>
         </ul>
       </section>
     </div>`;
