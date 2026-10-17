@@ -3999,6 +3999,19 @@ body::before{opacity:.42;}
 .referee-bracket-mode .bracket-slot.bracket-win-pick:hover{filter:brightness(1.2);}
 .referee-bracket-mode .bracket-slot.bracket-win-pick:focus-visible{outline:2px solid #ffc857;outline-offset:-3px;z-index:5;}
 #customModal .modal-box{max-height:calc(100dvh - 36px);overflow-y:auto;}
+/* Empty brackets should read as a compact setup prompt, not shrink to one character per line. */
+#refereeBracketViewport .bracket-empty.referee-bracket-empty{
+  box-sizing:border-box;width:min(520px,calc(100vw - 100px));max-width:100%;
+  display:grid;justify-items:center;gap:9px;margin:8px auto;padding:22px 18px;
+  border:1px dashed #675134;border-radius:12px;background:#0f0f0f;
+  color:var(--muted);text-align:center;line-height:1.6;overflow-wrap:anywhere;
+}
+.referee-bracket-empty-title{color:#fff6e9;font-size:15px;font-weight:800;}
+.referee-bracket-empty p{max-width:38em;margin:0;font-size:13px;}
+.referee-bracket-empty .btn{min-height:44px;margin-top:2px;}
+.referee-bracket-help ol{margin:4px 0 12px;padding-left:22px;}
+.referee-bracket-help li{padding-left:2px;margin:4px 0;}
+.referee-bracket-help li::marker{color:#ffc857;font-weight:800;}
 </style>
 <style id="iphone-optimizations">
 /* ===== iPhone / iOS Safari optimizations (V3.33) ===== */
@@ -4710,7 +4723,7 @@ body::before{background:none;}
     <div class="referee-tree-mode-entry" id="refereeBracketToggleWrap">
       <div class="referee-tree-mode-copy">
         <div class="referee-tree-mode-title">樹狀圖模式</div>
-        <div class="referee-tree-mode-note" id="refereeBracketModeNote">切換到 LIVE 對戰樹，點選選手姓名即可判定勝者</div>
+        <div class="referee-tree-mode-note" id="refereeBracketModeNote">點場次開始；比賽結束後，點勝者姓名確認晉級</div>
       </div>
       <label class="master-mode-switch referee-bracket-toggle" title="切換裁判台樹狀圖操作模式">
         <input type="checkbox" id="refereeBracketModeCheckbox" aria-label="開啟樹狀圖模式" onchange="switchRefereeViewMode(this.checked ? 'bracket' : 'classic')">
@@ -4728,7 +4741,7 @@ body::before{background:none;}
           <div class="card-title" style="margin:0;">場次控制</div>
           <div class="referee-status-summary" id="refereeBracketSummary" role="status" aria-live="polite"></div>
         </div>
-        <div class="referee-bracket-controls">
+        <div class="referee-bracket-controls" id="refereeBracketControls">
           <button class="btn btn-dark btn-sm" type="button" onclick="openBracketCourtCountDialog()" id="bracketCourtCountBtn">設定台數</button>
           <button class="btn btn-dark btn-sm referee-current-btn" type="button" onclick="jumpToCurrentBracketMatch()">定位目前場次</button>
           <div class="referee-zoom-group" role="group" aria-label="樹狀圖縮放">
@@ -4739,7 +4752,7 @@ body::before{background:none;}
           </div>
         </div>
       </div>
-      <details class="referee-bracket-help"><summary>操作說明<span>啟動・取消・判勝</span></summary><p><strong>點場次</strong>啟動，再點一次取消（尚未計分時）。<br><strong>點選手姓名</strong>確認勝者；即將上場會自動安排，完賽場次鎖定啟動。</p></details>
+      <details class="referee-bracket-help"><summary>怎麼操作？<span>開始・取消・判勝</span></summary><ol><li>點未開始的對戰卡或場次編號，設為進行中；再點一次可取消（已有比分時不能取消）。</li><li>比賽結束後，點勝者姓名並按「確認勝者」；勝者會自動晉級，完賽場次不能再啟動或取消進行中。</li><li>系統會依裁判台數，自動標示即將上場的場次。</li></ol></details>
       <div id="refereeBracketViewport"></div>
     </div>
   </section>
@@ -10749,8 +10762,8 @@ function renderBracket(){
   wrap.classList.remove('double-tree');
   if(state.matches.length === 0){
     wrap.innerHTML = currentRole === 'viewer'
-      ? `<div class="bracket-empty">正在等待裁判建立賽事中...</div>`
-      : `<div class="bracket-empty">尚未產生賽事，請先前往「賽事設定」建立賽事。</div>`;
+      ? `<div class="bracket-empty referee-bracket-empty"><div class="referee-bracket-empty-title">賽程尚未建立</div><p>等待裁判建立賽事後，對戰樹會顯示在這裡。</p></div>`
+      : `<div class="bracket-empty referee-bracket-empty"><div class="referee-bracket-empty-title">先建立賽程</div><p>到「賽事設定」建立單淘汰賽，完成後就能在這裡開始場次並登錄勝者。</p><button type="button" class="btn btn-primary btn-sm" onclick="switchTab('setup')">前往賽事設定</button></div>`;
     return;
   }
 
@@ -11413,14 +11426,14 @@ function syncRefereeViewModeControls(){
   if(bracketCheckbox) bracketCheckbox.setAttribute('aria-label', bracketMode ? '切回計分模式' : '開啟樹狀圖模式');
   const toggleNote = document.getElementById('refereeBracketModeNote');
   if(toggleNote) toggleNote.textContent = supported
-    ? '切換到 LIVE 對戰樹，點選選手姓名即可判定勝者'
-    : '目前賽制不支援；請切換為單淘汰賽後使用';
+    ? '點場次開始；比賽結束後，點勝者姓名確認晉級'
+    : '樹狀圖裁判模式僅適用單淘汰賽';
   document.getElementById('refereeClassicView')?.classList.toggle('hidden', bracketMode);
   document.getElementById('refereeClassicControls')?.classList.toggle('hidden', bracketMode);
   document.getElementById('refereeBracketView')?.classList.toggle('hidden', !bracketMode);
   const subtitle = document.getElementById('refereeCardSub');
   if(subtitle) subtitle.textContent = bracketMode
-    ? '從對戰樹狀圖直接管理場次狀態與勝者。'
+    ? '點場次開始；比賽結束後，點勝者姓名確認晉級。'
     : '多桌並行時可各自新增裁判面板，分頭計分・資料會即時同步。';
   return bracketMode;
 }
@@ -11754,6 +11767,12 @@ function renderReferee(){
 
   if(syncRefereeViewModeControls()){
     moveBracketTreeToReferee();
+    const hasMatches = state.matches.length > 0;
+    const bracketHeading = document.querySelector('#refereeBracketView .referee-bracket-head .card-title');
+    if(bracketHeading) bracketHeading.textContent = hasMatches ? '場次控制' : '建立賽程後即可操作';
+    document.getElementById('refereeBracketSummary')?.classList.toggle('hidden', !hasMatches);
+    document.getElementById('refereeBracketControls')?.classList.toggle('hidden', !hasMatches);
+    document.querySelector('#refereeBracketView .referee-bracket-help')?.classList.toggle('hidden', !hasMatches);
     renderBracket();
     applyBracketZoom();
     updateRefereeBracketSummary();
@@ -12388,7 +12407,7 @@ function openUpdateNotes(){
         <ul class="update-notes-list">
           <li>維持 V3.33 與原本橘色風格，統一頁面底色，微調手機頁首間距與同步列位置。</li>
           <li>裁判樹狀圖新增目前場次定位、縮放比例與狀態摘要，手機操作區重新排版。</li>
-          <li>補上啟動／取消操作提示、建立賽事流程，並支援減少動態效果。</li>
+          <li>空白賽程改為清楚提示與設定入口；裁判說明改成開始、取消、判勝的直白步驟。</li>
         </ul>
       </section>
       <section class="update-notes-section">
