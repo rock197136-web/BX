@@ -4000,15 +4000,17 @@ body::before{opacity:.42;}
 .referee-bracket-mode .bracket-slot.bracket-win-pick:focus-visible{outline:2px solid #ffc857;outline-offset:-3px;z-index:5;}
 #customModal .modal-box{max-height:calc(100dvh - 36px);overflow-y:auto;}
 /* Empty brackets should read as a compact setup prompt, not shrink to one character per line. */
-#refereeBracketViewport .bracket-empty.referee-bracket-empty{
+#refereeBracketViewport .bracket-empty.referee-bracket-empty,
+.referee-bracket-empty-card{
   box-sizing:border-box;width:min(520px,calc(100vw - 100px));max-width:100%;
   display:grid;justify-items:center;gap:9px;margin:8px auto;padding:22px 18px;
   border:1px dashed #675134;border-radius:12px;background:#0f0f0f;
   color:var(--muted);text-align:center;line-height:1.6;overflow-wrap:anywhere;
 }
+.referee-bracket-empty-card{width:100%;max-width:520px;}
 .referee-bracket-empty-title{color:#fff6e9;font-size:15px;font-weight:800;}
-.referee-bracket-empty p{max-width:38em;margin:0;font-size:13px;}
-.referee-bracket-empty .btn{min-height:44px;margin-top:2px;}
+.referee-bracket-empty p,.referee-bracket-empty-card p{max-width:38em;margin:0;font-size:13px;}
+.referee-bracket-empty .btn,.referee-bracket-empty-card .btn{min-height:44px;margin-top:2px;}
 .referee-bracket-help ol{margin:4px 0 12px;padding-left:22px;}
 .referee-bracket-help li{padding-left:2px;margin:4px 0;}
 .referee-bracket-help li::marker{color:#ffc857;font-weight:800;}
@@ -4753,6 +4755,11 @@ body::before{background:none;}
         </div>
       </div>
       <details class="referee-bracket-help"><summary>怎麼操作？<span>開始・取消・判勝</span></summary><ol><li>點未開始的對戰卡或場次編號，設為進行中；再點一次可取消（已有比分時不能取消）。</li><li>比賽結束後，點勝者姓名並按「確認勝者」；勝者會自動晉級，完賽場次不能再啟動或取消進行中。</li><li>系統會依裁判台數，自動標示即將上場的場次。</li></ol></details>
+      <div class="referee-bracket-empty-card hidden" id="refereeBracketEmpty">
+        <div class="referee-bracket-empty-title">先建立賽程</div>
+        <p>到「賽事設定」建立單淘汰賽，完成後就能在這裡開始場次並登錄勝者。</p>
+        <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('setup')">前往賽事設定</button>
+      </div>
       <div id="refereeBracketViewport"></div>
     </div>
   </section>
@@ -11773,6 +11780,8 @@ function renderReferee(){
     document.getElementById('refereeBracketSummary')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketControls')?.classList.toggle('hidden', !hasMatches);
     document.querySelector('#refereeBracketView .referee-bracket-help')?.classList.toggle('hidden', !hasMatches);
+    document.getElementById('refereeBracketEmpty')?.classList.toggle('hidden', hasMatches);
+    document.getElementById('refereeBracketViewport')?.classList.toggle('hidden', !hasMatches);
     renderBracket();
     applyBracketZoom();
     updateRefereeBracketSummary();
