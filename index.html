@@ -4466,6 +4466,17 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 .toolbox-heading-icon,.prize-heading-icon{color:var(--cyan-soft);border-color:rgba(var(--ui-ff9f24),.42);background:rgba(var(--ui-ff9f24),.08)}
 .draw-fullscreen-bar{background:linear-gradient(90deg,var(--cyan),var(--cyan-soft))}
 </style>
+<style id="compact-theme-corner">
+#bracketSection .bracket-title-row{position:relative;min-height:44px}
+#bracketSection .bracket-title-row>div:first-child{width:100%}
+#bracketSection .bracket-title-row .card-title{padding-right:104px}
+#bracketSection .bracket-title-row>#bracketThemeRow{position:absolute;top:0;right:0;width:94px;max-width:94px;margin:0;display:block}
+#bracketThemeRow>.field-label{display:none}
+#bracketThemeRow .theme-dropdown{width:100%;max-width:100%;display:block}
+#bracketThemeBtn{width:94px;min-height:44px;height:44px;padding:0 10px;gap:6px;font-size:12px;border-radius:9px;background:var(--panel);color:var(--muted)}
+#bracketThemeBtnDot{width:9px;height:9px}
+#bracketThemeList{left:auto;right:0;width:190px;max-width:calc(100vw - 56px);box-sizing:border-box}
+</style>
 </head>
 <body>
 
@@ -5855,7 +5866,9 @@ function applyBracketTheme(key, persist){
   const dot = document.getElementById('bracketThemeBtnDot');
   const label = document.getElementById('bracketThemeBtnLabel');
   if(dot) dot.style.background = t.hex;
-  if(label){ label.textContent = t.label; label.style.color = t.hex; }
+  if(label){ label.textContent = '主題'; label.style.color = ''; }
+  const themeButton = document.getElementById('bracketThemeBtn');
+  if(themeButton){ themeButton.setAttribute('aria-label', '網站主題，目前：'+t.label); themeButton.title = '網站主題：'+t.label; }
 
   const list = document.getElementById('bracketThemeList');
   if(list){
@@ -11023,8 +11036,10 @@ function syncDrawActions(){
     if(playing) refMore.open=false;
     target.append(group);
   }
-  refMore.classList.toggle('hidden',!(ref&&playing&&allowed));
-  group.classList.toggle('hidden',!(ref&&allowed));
+  refMore.classList.add('hidden');
+  const refereeHelp=document.querySelector('.referee-bracket-help');
+  if(refereeHelp) refereeHelp.classList.toggle('hidden',playing);
+  group.classList.toggle('hidden',!(ref&&allowed&&!playing));
   group.querySelector('p').textContent=playing?'保留名單，重抽會清除所有比分與對戰紀錄。':'保留名單，重新安排對戰。';
   document.getElementById('setupDrawActions').classList.toggle('hidden',!drawAllowed('setup'));
 }
