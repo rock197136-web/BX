@@ -4477,6 +4477,15 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #bracketThemeBtnDot{width:9px;height:9px}
 #bracketThemeList{left:auto;right:0;width:190px;max-width:calc(100vw - 56px);box-sizing:border-box}
 </style>
+<style id="cloud-dialog-fixed-controls">
+#cloudModal>.modal-box{display:flex;flex-direction:column;overflow:hidden;padding:16px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));}
+#cloudModal .cloud-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;padding-bottom:8px;}
+#cloudModal .cloud-dialog-header .modal-title{margin:0;min-width:0;}
+#cloudModal .cloud-dialog-close{flex:0 0 48px;width:48px;height:48px;padding:0;font-size:22px;}
+#cloudModal .cloud-dialog-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+#cloudModal .cloud-dialog-footer{flex-shrink:0;padding-top:12px;background:var(--panel);}
+#cloudModal .cloud-dialog-footer button{margin:0;min-height:48px;}
+</style>
 </head>
 <body>
 
@@ -5398,7 +5407,11 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 
 <div class="modal" id="cloudModal" role="dialog" aria-modal="true" aria-labelledby="cloudModalTitle">
   <div class="modal-box" style="max-width:440px;">
-    <div class="modal-title" id="cloudModalTitle"><span id="cloudModalIcon"></span> 連線賽事</div>
+    <div class="cloud-dialog-header">
+      <div class="modal-title" id="cloudModalTitle"><span id="cloudModalIcon"></span> 連線賽事</div>
+      <button type="button" class="btn btn-ghost cloud-dialog-close" onclick="hideCloudModal()" aria-label="關閉連線賽事視窗">✕</button>
+    </div>
+    <div class="cloud-dialog-scroll">
 
     <div id="cloudNotConfigured" class="hidden">
       <div class="text-muted" style="font-size:13px; line-height:1.75;">
@@ -5471,7 +5484,8 @@ body:not(.referee-view) .header .logo-img{height:48px;}
       <div id="cloudError" role="status" aria-live="polite" aria-atomic="true" style="margin-top:12px; font-size:12px; color:#ff8f8f;"></div>
     </div>
 
-    <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="hideCloudModal()">關閉</button>
+    </div>
+    <div class="cloud-dialog-footer"><button type="button" class="btn btn-dark btn-block" onclick="hideCloudModal()">關閉</button></div>
   </div>
 </div>
 
