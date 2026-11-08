@@ -4403,7 +4403,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .rotate-codes{width:100%;min-height:44px;margin-top:6px;padding:6px 9px;border:1px dashed rgb(var(--ui-926c3b));border-radius:8px;background:transparent;color:rgb(var(--ui-ffc37b));font:600 14px/1.3 sans-serif;cursor:pointer}
 #cloudModal .rotate-codes:disabled{opacity:.6}
 #cloudPaneCreate:has(#cloudCreatedResult:not(.hidden))>.text-muted{display:none}
-#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"兩組代碼一起更新，賽況保留；舊選手連結仍可查閱，舊裁判代碼失效。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
+#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"更新兩組代碼，保留賽況。舊選手連結可用，舊裁判碼失效。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
 @media(max-width:700px){
 #cloudModal .cloud-code-item:has(.rotate-codes) .cloud-share-btn{grid-area:3/1/4/2}
 #cloudModal .rotate-codes{grid-area:3/2/4/3;margin:0}
@@ -4485,6 +4485,20 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .cloud-dialog-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 #cloudModal .cloud-dialog-footer{flex-shrink:0;padding-top:12px;background:var(--panel);}
 #cloudModal .cloud-dialog-footer button{margin:0;min-height:48px;}
+</style>
+<style id="cloud-codes-compact">
+#cloudModal .cloud-dialog-close{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;}
+#cloudModal .cloud-dialog-scroll{padding-bottom:2px;}
+#cloudModal .cloud-code-row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;}
+#cloudModal .cloud-code-row .cloud-code-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);order:0;}
+#cloudModal .cloud-code-row .cloud-code-tag{grid-area:1/1/2/2!important;padding:0;margin:0;text-align:left;font-size:13px!important;line-height:1.5;align-self:center;}
+#cloudModal .cloud-code-row .cloud-code-display{grid-area:1/2/2/3!important;justify-self:end;padding:0;margin:0;border:0;background:none;font-size:25px;line-height:1.2;letter-spacing:.1em;color:var(--cyan-soft);}
+#cloudModal .cloud-code-row .code-purpose{grid-area:2/1/3/3!important;margin:0;font-size:12px;line-height:1.6;color:var(--muted);}
+#cloudModal .cloud-code-row .cloud-code-item .cloud-share-btn{grid-area:3/1/4/2!important;width:100%;margin:0;padding:8px;min-height:44px;font-size:13px;}
+#cloudModal .cloud-code-row .cloud-code-item .rotate-codes,
+#cloudModal .cloud-code-row .cloud-code-item .cloud-qr-btn{grid-area:3/2/4/3!important;width:100%;margin:0;padding:8px 12px;min-height:44px;font-size:13px;}
+#cloudModal .cloud-code-row .cloud-code-item:has(.rotate-codes)::after{grid-area:4/1/5/3!important;margin:0;font-size:11px;line-height:1.6;color:var(--muted);}
+@media(max-width:350px){#cloudModal .cloud-code-row .cloud-code-tag{font-size:12px!important;}#cloudModal .cloud-code-row .cloud-code-display{font-size:22px;}}
 </style>
 </head>
 <body>
@@ -5409,7 +5423,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
   <div class="modal-box" style="max-width:440px;">
     <div class="cloud-dialog-header">
       <div class="modal-title" id="cloudModalTitle"><span id="cloudModalIcon"></span> 連線賽事</div>
-      <button type="button" class="btn btn-ghost cloud-dialog-close" onclick="hideCloudModal()" aria-label="關閉連線賽事視窗">✕</button>
+      <button type="button" class="btn btn-ghost cloud-dialog-close" onclick="hideCloudModal()" aria-label="關閉連線賽事視窗"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="cloud-dialog-scroll">
 
@@ -5442,14 +5456,14 @@ body:not(.referee-view) .header .logo-img{height:48px;}
           <div class="cloud-code-row">
             <div class="cloud-code-item">
               <div class="cloud-code-tag">裁判用（完整功能）</div>
-              <p class="code-purpose">限主辦與裁判使用，可計分、判勝及修改設定。</p>
+              <p class="code-purpose">僅供主辦與裁判：計分、判勝、設定。</p>
               <div class="cloud-code-display" id="cloudResultRefCode">---</div>
               <button class="cloud-share-btn" id="cloudResultRefShareBtn" onclick="copyShareLink(document.getElementById('cloudResultRefCode').innerText, this)">複製裁判連結</button>
               <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
             </div>
             <div class="cloud-code-item">
               <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
-              <p class="code-purpose">可公開分享。選手可查看戰況與紀錄，無法計分或修改設定。</p>
+              <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
               <div class="cloud-code-display" id="cloudResultViewerCode">---</div>
               <button class="cloud-share-btn" id="cloudResultViewerShareBtn" onclick="copyShareLink(document.getElementById('cloudResultViewerCode').innerText, this)">複製選手連結</button>
               <button class="cloud-share-btn cloud-qr-btn" id="cloudResultQrBtn" onclick="showQRCode(document.getElementById('cloudResultViewerCode').innerText)">顯示 QR 碼</button>
@@ -5485,7 +5499,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
     </div>
 
     </div>
-    <div class="cloud-dialog-footer"><button type="button" class="btn btn-dark btn-block" onclick="hideCloudModal()">關閉</button></div>
+
   </div>
 </div>
 
@@ -9001,7 +9015,7 @@ function openCloudModal(){
       codesEl.innerHTML = `
         <div class="cloud-code-item">
           <div class="cloud-code-tag">裁判用（完整功能）</div>
-              <p class="code-purpose">限主辦與裁判使用，可計分、判勝及修改設定。</p>
+              <p class="code-purpose">僅供主辦與裁判：計分、判勝、設定。</p>
           <div class="cloud-code-display">${escapeHtml(shareRefCode||'已更換')}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${shareRefCode||''}', this)">${icon('link',14)} 複製裁判連結</button>
               <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
@@ -9009,7 +9023,7 @@ function openCloudModal(){
         ${currentViewerCode ? `
         <div class="cloud-code-item">
           <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
-              <p class="code-purpose">可公開分享。選手可查看戰況與紀錄，無法計分或修改設定。</p>
+              <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode)}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">${icon('link',14)} 複製選手連結</button>
           <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode('${currentViewerCode}')">${icon('qr-code',14)} 顯示 QR 碼</button>
@@ -9019,7 +9033,7 @@ function openCloudModal(){
       codesEl.innerHTML = `
         <div class="cloud-code-item">
           <div class="cloud-code-tag">目前身分：選手／觀眾（唯讀）</div>
-              <p class="code-purpose">可分享給其他選手與觀眾，一起查看即時戰況和對戰紀錄；此代碼不能計分或修改設定。</p>
+              <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode || '---')}</div>
           ${currentViewerCode ? `
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">${icon('link',14)} 複製選手連結</button>
