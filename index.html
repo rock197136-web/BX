@@ -8961,7 +8961,7 @@ function openCloudModal(){
   const sameCreatedEvent = !!currentEventCode && !result.classList.contains('hidden')
     && document.getElementById('cloudResultRefCode').innerText === shareRefCode;
   result.classList.toggle('hidden', !sameCreatedEvent);
-  document.getElementById('cloudCreateBtn').classList.toggle('hidden', sameCreatedEvent);
+  document.getElementById('cloudCreateBtn').classList.toggle('hidden', !!currentEventCode);
   const cur = document.getElementById('cloudCurrent');
   if(currentEventCode){
     cur.classList.toggle('hidden', sameCreatedEvent);
@@ -9156,6 +9156,7 @@ function joinCloudEvent(refCode, role, viewerCode){
   shareRefCode=refCode;loadedCodeRevision=0;
   currentEventCode = refCode;
   document.getElementById('cloudNewEventAction').classList.remove('hidden');
+  document.getElementById('cloudCreateBtn').classList.add('hidden');
   currentRole = role || 'referee';
   currentViewerCode = viewerCode || currentViewerCode || null;
   window.cloudSync.join(refCode, onCloudMeta, onCloudMatches);
