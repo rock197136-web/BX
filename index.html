@@ -4403,7 +4403,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .rotate-codes{width:100%;min-height:44px;margin-top:6px;padding:6px 9px;border:1px dashed rgb(var(--ui-926c3b));border-radius:8px;background:transparent;color:rgb(var(--ui-ffc37b));font:600 14px/1.3 sans-serif;cursor:pointer}
 #cloudModal .rotate-codes:disabled{opacity:.6}
 #cloudPaneCreate:has(#cloudCreatedResult:not(.hidden))>.text-muted{display:none}
-#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"更新兩組代碼，保留賽況。新舊裁判與選手代碼皆可使用。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
+#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:none;display:none;}
 @media(max-width:700px){
 #cloudModal .cloud-code-item:has(.rotate-codes) .cloud-share-btn{grid-area:3/1/4/2}
 #cloudModal .rotate-codes{grid-area:3/2/4/3;margin:0}
@@ -4508,6 +4508,10 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .cloud-code-row .cloud-code-item .rotate-codes,
 #cloudModal .cloud-code-row .cloud-code-item .cloud-qr-btn{grid-area:4/2/5/3!important;}
 #cloudModal .cloud-code-row .cloud-code-item:has(.rotate-codes)::after{grid-area:5/1/6/3!important;}
+</style>
+<style id="cloud-created-gold">
+#cloudModal .cloud-created-status,#cloudModal .cloud-created-status #cloudCreatedIcon{color:#ffd166!important;}
+#cloudModal .cloud-created-status{display:flex;align-items:center;gap:6px;font-weight:800;margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -5461,7 +5465,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
         <button class="btn btn-primary btn-block" id="cloudCreateBtn" style="margin-top:14px;" onclick="handleCreateEvent()">建立並產生賽事代碼</button>
 
         <div id="cloudCreatedResult" class="hidden" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
-          <div class="field-label"><span id="cloudCreatedIcon"></span> 賽事已建立</div>
+          <div class="field-label cloud-created-status"><span id="cloudCreatedIcon"></span> 賽事已建立</div>
           <div class="cloud-code-row">
             <div class="cloud-code-item">
               <div class="cloud-code-tag">裁判用（完整功能）</div>
