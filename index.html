@@ -4403,7 +4403,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .rotate-codes{width:100%;min-height:44px;margin-top:6px;padding:6px 9px;border:1px dashed rgb(var(--ui-926c3b));border-radius:8px;background:transparent;color:rgb(var(--ui-ffc37b));font:600 14px/1.3 sans-serif;cursor:pointer}
 #cloudModal .rotate-codes:disabled{opacity:.6}
 #cloudPaneCreate:has(#cloudCreatedResult:not(.hidden))>.text-muted{display:none}
-#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"兩組代碼一起更新，賽況保留。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
+#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"兩組代碼一起更新，賽況保留；舊選手連結仍可查閱，舊裁判代碼失效。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
 @media(max-width:700px){
 #cloudModal .cloud-code-item:has(.rotate-codes) .cloud-share-btn{grid-area:3/1/4/2}
 #cloudModal .rotate-codes{grid-area:3/2/4/3;margin:0}
@@ -4583,7 +4583,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
               const route=directSnap.data();
               if(!['viewer','ref'].includes(route.kind)||typeof route.target!=='string'||!route.target||!Number.isInteger(route.revision)||route.revision<1)return null;
               const parent=await getDoc(doc(db,'events',route.target));
-              if(!parent.exists() || parent.data().codeRevision!==route.revision)return null;
+              if(!parent.exists() || (route.kind==='ref' && parent.data().codeRevision!==route.revision))return null;
               return {role:route.kind==='viewer'?'viewer':'referee',eventCode:parent.id,data:parent.data()};
             }
             if(directSnap.exists() && !directSnap.data().codeRevision){
@@ -4615,10 +4615,12 @@ body:not(.referee-view) .header .logo-img{height:48px;}
             const ev=doc(db,'events',id);
             return runTransaction(db,async tx=>{
               const ra=doc(db,'events',a),rb=doc(db,'events',b);
-              const [live,...used]=await Promise.all([ev,ra,rb].map(r=>tx.get(r)));
+              const oldRoute=oldViewer && oldViewer!==id ? doc(db,'events',oldViewer) : null;
+              const [live,...used]=await Promise.all([ev,ra,rb,...(oldRoute?[oldRoute]:[])].map(r=>tx.get(r)));
               if(!live.exists() || live.data().viewerCode!==oldViewer)throw new Error('stale');
-              if(used.some(x=>x.exists()))return false;
+              if(used.slice(0,2).some(x=>x.exists()))return false;
               const revision=(Number(live.data().codeRevision)||0)+1;
+              if(oldRoute && !used[2].exists())tx.set(oldRoute,{bxCodeRoute:1,kind:'viewer',target:id,revision});
               tx.set(ra,{bxCodeRoute:1,kind:'ref',target:id,revision});
               tx.set(rb,{bxCodeRoute:1,kind:'viewer',target:id,revision});
               tx.update(ev,{viewerCode:b,codeRevision:revision,codeRouteFormat:1});
@@ -5457,6 +5459,11 @@ body:not(.referee-view) .header .logo-img{height:48px;}
         <button class="btn btn-dark btn-block" style="margin-top:10px;" onclick="leaveCloudEvent()">離開此賽事／改建立新的</button>
       </div>
 
+      <details style="margin-top:14px" ontoggle="if(this.open)renderRecentEvents()">
+        <summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700">最近賽事 · 查看舊紀錄</summary>
+        <p class="text-muted" style="font-size:12px">保留這個瀏覽器曾開啟的賽事，點選以選手模式查看。建立新賽事不會刪除舊賽果；跨裝置請使用選手代碼或賽事典藏。</p>
+        <div id="cloudRecentList" style="max-height:240px;overflow-y:auto"></div>
+      </details>
       <div id="cloudError" role="status" aria-live="polite" aria-atomic="true" style="margin-top:12px; font-size:12px; color:#ff8f8f;"></div>
     </div>
 
@@ -6609,7 +6616,7 @@ async function createNextTournament(clearRoster){
   };
   // Finish writes to the previous event before switching the cloud client's code.
   await Promise.allSettled([...pendingCloudSaves]);
-  if(currentEventCode && !await pushToCloud()){showAlert('本場賽果尚未同步。請確認網路後再開下一場。');return;}
+  try{await preserveEventBeforeSwitch();}catch{showAlert('本場賽果尚未同步。請確認網路後再開下一場。');return;}
   let refCode, viewerCode;
   try{
     [refCode,viewerCode] = await createEventWithFreshCodes({
@@ -8806,6 +8813,7 @@ async function joinEventByCode(code, reportErrors=false){
       new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Object.assign(new Error('timeout'),{code:'deadline-exceeded'})),15000);})
     ]).finally(()=>clearTimeout(timeout));
     if(!result) return false;
+    await preserveEventBeforeSwitch();
     const viewerCode = result.role === 'viewer' ? code : (result.data && result.data.viewerCode) || null;
     sessionStorage.setItem(EVENT_CODE_KEY, result.eventCode);
     sessionStorage.setItem(EVENT_ROLE_KEY, result.role);
@@ -8870,6 +8878,37 @@ async function createEventWithFreshCodes(meta,matches=[]){
   throw new Error('無法產生不重複的賽事代碼');
 }
 
+
+const RECENT_EVENTS_KEY='bx-recent-events-v1';
+function readRecentEvents(){
+  try{const rows=JSON.parse(localStorage.getItem(RECENT_EVENTS_KEY)||'[]');return Array.isArray(rows)?rows.filter(r=>r&&typeof r.id==='string'&&isValidEventCode(r.viewerCode)):[];}catch{return [];}
+}
+function rememberCurrentEvent(){
+  if(!currentEventCode || !isValidEventCode(currentViewerCode))return;
+  const rows=readRecentEvents();
+  const entry={id:currentEventCode,name:state.tournament.name||DEFAULT_TOURNAMENT_NAME,viewerCode:currentViewerCode,visitedAt:Date.now()};
+  // Store only the read-only code; never persist referee access in this list.
+  try{localStorage.setItem(RECENT_EVENTS_KEY,JSON.stringify([entry,...rows.filter(r=>r.id!==entry.id)]));}catch{showToast('此瀏覽器無法保存最近賽事，請另行記下選手代碼。');}
+}
+function renderRecentEvents(){
+  const box=document.getElementById('cloudRecentList');if(!box)return;
+  const rows=readRecentEvents();
+  box.innerHTML=rows.length?rows.map((r,i)=>`<button type="button" class="btn btn-dark" style="width:100%;min-height:48px;text-align:left;display:block;white-space:normal;overflow-wrap:anywhere;margin-top:8px" onclick="openRecentEvent(${i})"><strong>${escapeHtml(r.name)}</strong><br><small>${escapeHtml(r.viewerCode)} · ${new Date(r.visitedAt).toLocaleDateString('zh-TW')} · ${r.id===currentEventCode?'目前賽事':'查看賽況與紀錄'}</small></button>`).join(''):'<p class="text-muted">尚無紀錄。加入或建立賽事後，會保留在這裡。</p>';
+}
+async function preserveEventBeforeSwitch(){
+  if(cloudNameSaveTimer){clearTimeout(cloudNameSaveTimer);cloudNameSaveTimer=null;}
+  await Promise.allSettled([...pendingCloudSaves]);
+  if(currentEventCode && currentRole==='referee' && !await pushToCloud())throw new Error('bx-unsaved-event');
+  rememberCurrentEvent();
+}
+async function openRecentEvent(index){
+  if(cloudConnectionBusy)return;
+  const entry=readRecentEvents()[index];if(!entry)return;
+  document.getElementById('cloudJoinCode').value=entry.viewerCode;
+  switchCloudTab('join');
+  await handleJoinEvent();
+}
+
 async function refreshShareCodes(btn){
   if(cloudConnectionBusy || currentRole!=='referee' || !currentEventCode)return;
   const id=currentEventCode,old=currentViewerCode;
@@ -8895,6 +8934,7 @@ async function refreshShareCodes(btn){
 }
 function openCloudModal(){
   document.getElementById('cloudError').innerText = '';
+  renderRecentEvents();
   const result = document.getElementById('cloudCreatedResult');
   const sameCreatedEvent = !!currentEventCode && !result.classList.contains('hidden')
     && document.getElementById('cloudResultRefCode').innerText === shareRefCode;
@@ -9009,6 +9049,7 @@ function cloudActionError(error,action){
   if(code==='bx-not-ready')return '連線元件尚未就緒，請稍候再試；若持續出現，請重新整理。';
   if(code.includes('deadline-exceeded'))return '查詢逾時，請確認網路後再試一次。';
   if(code.includes('unavailable'))return '目前無法連線，請確認網路後再試。原有賽事資料未清除。';
+  if(error?.message==='bx-unsaved-event')return '原賽事尚未同步完成，已暫停切換。請確認網路後再試，舊資料仍保留。';
   return action+'失敗，請確認網路後重試；若持續發生，請聯絡主辦。';
 }
 let cloudConnectionBusy = false;
@@ -9042,6 +9083,7 @@ async function handleCreateEvent(){
   const name = document.getElementById('cloudNewName').value.trim() || DEFAULT_TOURNAMENT_NAME;
   try{
     requireCloudReady();
+    await preserveEventBeforeSwitch();
     const [refCode, viewerCode] = await createEventWithFreshCodes({
       name, pointsToWin: state.tournament.pointsToWin,
       format: state.tournament.format, status: state.tournament.status,
@@ -9077,6 +9119,7 @@ async function handleJoinEvent(){
   try{
     const ok = await joinEventByCode(code, true);
     if(!ok){ errEl.innerText = '找不到這組賽事代碼，請確認是否輸入正確。'; return; }
+    setCloudConnectionBusy(null);
     hideCloudModal();
   }catch(e){
     errEl.innerText = cloudActionError(e, '加入');
@@ -9110,7 +9153,11 @@ function applyRoleUI(){
 
 function leaveCloudEvent(){
   if(cloudConnectionBusy)return;
-  showConfirm('離開此賽事後，這台裝置會回到「僅本機」模式，之後可再輸入代碼重新加入。確定要離開嗎？', () => {
+  showConfirm('舊賽事會保留，可從「最近賽事」查看，或使用原代碼重新加入。確定離開嗎？', async () => {
+    if(cloudConnectionBusy)return;
+    setCloudConnectionBusy('leave');
+    try{await preserveEventBeforeSwitch();}catch(e){setCloudConnectionBusy(null);showAlert(cloudActionError(e,'離開'));return;}
+    setCloudConnectionBusy(null);
     if(window.cloudSync && window.cloudSync.leave) window.cloudSync.leave();
     currentEventCode = null;
     currentRole = 'referee';
@@ -9221,6 +9268,7 @@ function onCloudMeta(data){
   if(!isOwnShuffleEcho && (metaViewChanged || shuffleIsFresh)) renderAll();
   updateCloudStatusUI();
   applyingRemote = false;
+  rememberCurrentEvent();
 
   // Start the spin only AFTER renderAll() has (re)built the bracket DOM —
   // starting it earlier would grab name elements that renderAll() then
