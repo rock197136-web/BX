@@ -5456,16 +5456,16 @@ body:not(.referee-view) .header .logo-img{height:48px;}
       <div id="cloudCurrent" class="hidden" style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border);">
         <div class="field-label">目前連線狀態</div>
         <div class="cloud-code-row" id="cloudCurrentCodes"></div>
-        <button class="btn btn-dark btn-block" style="margin-top:10px;" onclick="leaveCloudEvent()">離開此賽事</button>
       </div>
 
       <div id="cloudNewEventAction" class="hidden" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
         <button type="button" class="btn btn-primary btn-block" id="cloudNewEventBtn" style="min-height:48px" onclick="askCreateSeparateEvent()">＋ 建立新賽事</button>
-        <p class="text-muted" style="font-size:12px;margin-top:8px">產生新的賽事代碼，舊賽事與對戰紀錄完整保留，可從「最近賽事」查看。</p>
+        <button type="button" class="btn btn-dark btn-block" style="min-height:48px;margin-top:10px" onclick="leaveCloudEvent()">離開賽事／切換單機</button>
+        <p class="text-muted" style="font-size:12px;margin-top:8px">建立新賽事或切換單機，都會保留原雲端賽果與代碼。</p>
       </div>
       <details style="margin-top:14px" ontoggle="if(this.open)renderRecentEvents()">
         <summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700">最近賽事 · 查看舊紀錄</summary>
-        <p class="text-muted" style="font-size:12px">保留這個瀏覽器曾開啟的賽事，點選以選手模式查看。建立新賽事不會刪除舊賽果；跨裝置請使用選手代碼或賽事典藏。</p>
+        <p class="text-muted" style="font-size:12px">保留這個瀏覽器曾開啟的賽事，點選以選手模式查看。刪除只移除本機查閱紀錄，不刪除雲端賽果；目前賽事請先離開再刪除。跨裝置請使用選手代碼或賽事典藏。</p>
         <div id="cloudRecentList" style="max-height:240px;overflow-y:auto"></div>
       </details>
       <div id="cloudError" role="status" aria-live="polite" aria-atomic="true" style="margin-top:12px; font-size:12px; color:#ff8f8f;"></div>
@@ -8864,7 +8864,7 @@ function updateCloudStatusUI(){
       : `已連線・<span class="cloud-role">${icon('gavel',14)}裁判模式</span>　代碼 ${escapeHtml(shown)}`;
   } else {
     dot.className = 'cloud-dot off';
-    text.innerText = '尚未加入任何賽事';
+    text.innerText = '單機模式・未連線賽事';
   }
 }
 
@@ -8914,7 +8914,24 @@ function rememberCurrentEvent(){
 function renderRecentEvents(){
   const box=document.getElementById('cloudRecentList');if(!box)return;
   const rows=readRecentEvents();
-  box.innerHTML=rows.length?rows.map((r,i)=>`<button type="button" class="btn btn-dark" style="width:100%;min-height:48px;text-align:left;display:block;white-space:normal;overflow-wrap:anywhere;margin-top:8px" onclick="openRecentEvent(${i})"><strong>${escapeHtml(r.name)}</strong><br><small>${escapeHtml(r.viewerCode)} · ${new Date(r.visitedAt).toLocaleDateString('zh-TW')} · ${r.id===currentEventCode?'目前賽事':'查看賽況與紀錄'}</small></button>`).join(''):'<p class="text-muted">尚無紀錄。加入或建立賽事後，會保留在這裡。</p>';
+  box.innerHTML=rows.length?rows.map((r,i)=>`<div style="display:flex;gap:8px;align-items:stretch;margin-top:8px">
+    <button type="button" class="btn btn-dark" style="flex:1;min-width:0;min-height:48px;text-align:left;display:block;white-space:normal;overflow-wrap:anywhere" onclick="openRecentEvent(${i})"><strong>${escapeHtml(r.name)}</strong><br><small>${escapeHtml(r.viewerCode)} · ${new Date(r.visitedAt).toLocaleDateString('zh-TW')} · ${r.id===currentEventCode?'目前賽事':'查看賽況與紀錄'}</small></button>
+    <button type="button" class="btn btn-dark" style="flex:0 0 56px;min-height:48px;padding:8px" onclick="removeRecentEvent(${i})" ${r.id===currentEventCode?'disabled title="請先離開此賽事再刪除紀錄"':''} aria-label="刪除這筆本機查閱紀錄">刪除</button>
+  </div>`).join(''):'<p class="text-muted">尚無紀錄。加入或建立賽事後，會保留在這裡。</p>';
+}
+function removeRecentEvent(index){
+  if(cloudConnectionBusy)return;
+  const entry=readRecentEvents()[index];if(!entry || entry.id===currentEventCode)return;
+  document.getElementById('cloudModal').classList.remove('show');
+  showModal('將「'+entry.name+'」從這台裝置的最近賽事移除？雲端賽果不會刪除，仍可用原代碼重新加入。',[
+    {label:'取消',className:'btn-dark',action:openCloudModal},
+    {label:'刪除紀錄',className:'btn-danger',action:()=>{
+      if(entry.id===currentEventCode){openCloudModal();return;}
+      try{localStorage.setItem(RECENT_EVENTS_KEY,JSON.stringify(readRecentEvents().filter(r=>r.id!==entry.id)));}
+      catch{openCloudModal();showToast('無法刪除，請檢查瀏覽器儲存設定。');return;}
+      openCloudModal();showToast('已移除這筆本機紀錄');
+    }}
+  ],'刪除查閱紀錄');
 }
 async function preserveEventBeforeSwitch(){
   if(cloudNameSaveTimer){clearTimeout(cloudNameSaveTimer);cloudNameSaveTimer=null;}
@@ -9176,23 +9193,31 @@ function applyRoleUI(){
 }
 
 function leaveCloudEvent(){
-  if(cloudConnectionBusy)return;
-  showConfirm('舊賽事會保留，可從「最近賽事」查看，或使用原代碼重新加入。確定離開嗎？', async () => {
-    if(cloudConnectionBusy)return;
-    setCloudConnectionBusy('leave');
-    try{await preserveEventBeforeSwitch();}catch(e){setCloudConnectionBusy(null);showAlert(cloudActionError(e,'離開'));return;}
-    setCloudConnectionBusy(null);
-    if(window.cloudSync && window.cloudSync.leave) window.cloudSync.leave();
-    currentEventCode = null;
-    currentRole = 'referee';
-    currentViewerCode = null;
-    sessionStorage.removeItem(EVENT_CODE_KEY);
-    sessionStorage.removeItem(EVENT_ROLE_KEY);
-    sessionStorage.removeItem(EVENT_VIEWER_KEY);
-    document.body.classList.remove('viewer-mode');
-    updateCloudStatusUI();
-    hideCloudModal();
-  });
+  if(cloudConnectionBusy || !currentEventCode)return;
+  document.getElementById('cloudModal').classList.remove('show');
+  showModal('離開後改為單機操作，保留目前畫面資料；後續修改不會同步到原賽事。原雲端賽果與代碼仍保留。',[
+    {label:'取消',className:'btn-dark',action:openCloudModal},
+    {label:'切換單機',className:'btn-primary',action:async()=>{
+      if(cloudConnectionBusy)return;
+      setCloudConnectionBusy('leave');
+      try{
+        await preserveEventBeforeSwitch();
+        window.cloudSync?.leave?.();
+        currentEventCode=null;currentViewerCode=null;shareRefCode=null;loadedCodeRevision=0;
+        currentRole='referee';
+        clearTimeout(cloudRetryTimer);cloudRetryTimer=null;
+        dirtyMatchIds.clear();editBase.clear();cloudMatchBase.clear();cloudNeedsFullReplace=false;
+        clearDrawMeter();
+        sessionStorage.removeItem(EVENT_CODE_KEY);
+        sessionStorage.removeItem(EVENT_ROLE_KEY);
+        sessionStorage.removeItem(EVENT_VIEWER_KEY);
+        sessionStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+        applyRoleUI();updateCloudStatusUI();
+        showToast('已切換單機，後續操作僅儲存在這台裝置');
+      }catch(e){openCloudModal();document.getElementById('cloudError').innerText=cloudActionError(e,'離開');}
+      finally{setCloudConnectionBusy(null);}
+    }}
+  ],'離開賽事');
 }
 
 function onCloudMeta(data){
