@@ -5498,7 +5498,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
         <div class="cloud-code-row" id="cloudCurrentCodes"></div>
       </div>
 
-      <details style="margin-top:14px" ontoggle="if(this.open)renderRecentEvents()">
+      <details id="cloudRecentEvents" style="margin-top:14px" ontoggle="if(this.open)renderRecentEvents()">
         <summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700">最近賽事 · 查看舊紀錄</summary>
         <p class="text-muted" style="font-size:12px">保留這個瀏覽器曾開啟的賽事，點選以選手模式查看。刪除只移除本機查閱紀錄，不刪除雲端賽果；目前賽事請先離開再刪除。跨裝置請使用選手代碼或賽事典藏。</p>
         <div id="cloudRecentList" style="max-height:240px;overflow-y:auto"></div>
@@ -9054,6 +9054,7 @@ function openCloudModal(){
   } else {
     cur.classList.add('hidden');
   }
+  syncCloudSupplementVisibility();
   document.getElementById('cloudModal').classList.add('show');
 }
 function hideCloudModal(){
@@ -9076,6 +9077,15 @@ function switchCloudTab(which){
   document.getElementById('cloudTabBtnJoin').classList.toggle('active', which==='join');
   document.getElementById('cloudPaneCreate').classList.toggle('hidden', which!=='create');
   document.getElementById('cloudPaneJoin').classList.toggle('hidden', which!=='join');
+  syncCloudSupplementVisibility();
+}
+function syncCloudSupplementVisibility(){
+  const joining = document.getElementById('cloudTabBtnJoin').classList.contains('active');
+  const result = document.getElementById('cloudCreatedResult');
+  const sameCreatedEvent = !!currentEventCode && !result.classList.contains('hidden')
+    && document.getElementById('cloudResultRefCode').innerText === shareRefCode;
+  document.getElementById('cloudCurrent').classList.toggle('hidden', joining || !currentEventCode || sameCreatedEvent);
+  document.getElementById('cloudRecentEvents').classList.toggle('hidden', joining);
 }
 
 let cloudNameSaveTimer = null;
