@@ -5498,11 +5498,6 @@ body:not(.referee-view) .header .logo-img{height:48px;}
         <div class="cloud-code-row" id="cloudCurrentCodes"></div>
       </div>
 
-      <div id="cloudNewEventAction" class="hidden" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-        <button type="button" class="btn btn-primary btn-block" id="cloudNewEventBtn" style="min-height:48px" onclick="askCreateSeparateEvent()">＋ 建立新賽事</button>
-        <button type="button" class="btn btn-dark btn-block" style="min-height:48px;margin-top:10px" onclick="leaveCloudEvent()">離開賽事／切換單機</button>
-        <p class="text-muted" style="font-size:12px;margin-top:8px">建立新賽事或切換單機，都會保留原雲端賽果與代碼。</p>
-      </div>
       <details style="margin-top:14px" ontoggle="if(this.open)renderRecentEvents()">
         <summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700">最近賽事 · 查看舊紀錄</summary>
         <p class="text-muted" style="font-size:12px">保留這個瀏覽器曾開啟的賽事，點選以選手模式查看。刪除只移除本機查閱紀錄，不刪除雲端賽果；目前賽事請先離開再刪除。跨裝置請使用選手代碼或賽事典藏。</p>
@@ -9014,12 +9009,14 @@ async function refreshShareCodes(btn){
 function openCloudModal(){
   document.getElementById('cloudError').innerText = '';
   renderRecentEvents();
-  document.getElementById('cloudNewEventAction').classList.toggle('hidden',!currentEventCode);
   const result = document.getElementById('cloudCreatedResult');
   const sameCreatedEvent = !!currentEventCode && !result.classList.contains('hidden')
     && document.getElementById('cloudResultRefCode').innerText === shareRefCode;
   result.classList.toggle('hidden', !sameCreatedEvent);
-  document.getElementById('cloudCreateBtn').classList.toggle('hidden', !!currentEventCode);
+  const createButton = document.getElementById('cloudCreateBtn');
+  createButton.classList.remove('hidden');
+  createButton.textContent = currentEventCode ? '建立新賽事' : '建立並產生賽事代碼';
+  createButton.onclick = currentEventCode ? askCreateSeparateEvent : handleCreateEvent;
   const cur = document.getElementById('cloudCurrent');
   if(currentEventCode){
     cur.classList.toggle('hidden', sameCreatedEvent);
@@ -9150,7 +9147,7 @@ function setCloudConnectionBusy(kind){
     button.textContent = kind === action ? (action === 'create' ? '建立中…' : '加入中…') : label;
     button.setAttribute('aria-busy', String(kind === action));
   }
-  for(const id of ['cloudNewName','cloudJoinCode','cloudTabBtnCreate','cloudTabBtnJoin','cloudNewEventBtn']){
+  for(const id of ['cloudNewName','cloudJoinCode','cloudTabBtnCreate','cloudTabBtnJoin']){
     document.getElementById(id).disabled = cloudConnectionBusy;
   }
 }
@@ -9213,7 +9210,6 @@ function joinCloudEvent(refCode, role, viewerCode){
   if(currentEventCode!==refCode){clearDrawMeter();dirtyMatchIds.clear();editBase.clear();cloudMatchBase.clear();cloudNeedsFullReplace=false;clearTimeout(cloudRetryTimer);cloudRetryTimer=null;}
   shareRefCode=refCode;loadedCodeRevision=0;
   currentEventCode = refCode;
-  document.getElementById('cloudNewEventAction').classList.remove('hidden');
   document.getElementById('cloudCreateBtn').classList.add('hidden');
   currentRole = role || 'referee';
   currentViewerCode = viewerCode || currentViewerCode || null;
