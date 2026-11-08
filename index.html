@@ -4403,7 +4403,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .rotate-codes{width:100%;min-height:44px;margin-top:6px;padding:6px 9px;border:1px dashed rgb(var(--ui-926c3b));border-radius:8px;background:transparent;color:rgb(var(--ui-ffc37b));font:600 14px/1.3 sans-serif;cursor:pointer}
 #cloudModal .rotate-codes:disabled{opacity:.6}
 #cloudPaneCreate:has(#cloudCreatedResult:not(.hidden))>.text-muted{display:none}
-#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"更新兩組代碼，保留賽況。舊選手連結可用，舊裁判碼失效。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
+#cloudModal .cloud-code-item:has(.rotate-codes)::after{content:"更新兩組代碼，保留賽況。新舊裁判與選手代碼皆可使用。";display:block;margin-top:4px;color:#bdb3a6;font-size:12px;text-align:left}
 @media(max-width:700px){
 #cloudModal .cloud-code-item:has(.rotate-codes) .cloud-share-btn{grid-area:3/1/4/2}
 #cloudModal .rotate-codes{grid-area:3/2/4/3;margin:0}
@@ -4499,6 +4499,15 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .cloud-code-row .cloud-code-item .cloud-qr-btn{grid-area:3/2/4/3!important;width:100%;margin:0;padding:8px 12px;min-height:44px;font-size:13px;}
 #cloudModal .cloud-code-row .cloud-code-item:has(.rotate-codes)::after{grid-area:4/1/5/3!important;margin:0;font-size:11px;line-height:1.6;color:var(--muted);}
 @media(max-width:350px){#cloudModal .cloud-code-row .cloud-code-tag{font-size:12px!important;}#cloudModal .cloud-code-row .cloud-code-display{font-size:22px;}}
+</style>
+<style id="cloud-code-centered">
+#cloudModal .cloud-code-row .cloud-code-item{grid-template-columns:repeat(2,minmax(0,1fr));}
+#cloudModal .cloud-code-row .cloud-code-tag{grid-area:1/1/2/3!important;}
+#cloudModal .cloud-code-row .cloud-code-display{grid-area:3/1/4/3!important;justify-self:stretch;text-align:center;font-size:30px;line-height:1.3;letter-spacing:.14em;padding:5px 0 7px;font-weight:800;}
+#cloudModal .cloud-code-row .cloud-code-item .cloud-share-btn{grid-area:4/1/5/2!important;}
+#cloudModal .cloud-code-row .cloud-code-item .rotate-codes,
+#cloudModal .cloud-code-row .cloud-code-item .cloud-qr-btn{grid-area:4/2/5/3!important;}
+#cloudModal .cloud-code-row .cloud-code-item:has(.rotate-codes)::after{grid-area:5/1/6/3!important;}
 </style>
 </head>
 <body>
@@ -4606,10 +4615,10 @@ body:not(.referee-view) .header .logo-img{height:48px;}
               const route=directSnap.data();
               if(!['viewer','ref'].includes(route.kind)||typeof route.target!=='string'||!route.target||!Number.isInteger(route.revision)||route.revision<1)return null;
               const parent=await getDoc(doc(db,'events',route.target));
-              if(!parent.exists() || (route.kind==='ref' && parent.data().codeRevision!==route.revision))return null;
+              if(!parent.exists())return null;
               return {role:route.kind==='viewer'?'viewer':'referee',eventCode:parent.id,data:parent.data()};
             }
-            if(directSnap.exists() && !directSnap.data().codeRevision){
+            if(directSnap.exists() && directSnap.data().bxCodeRoute!==1){
               return { role:'referee', eventCode:codeEntered, data:directSnap.data() };
             }
             const q = query(collection(db, 'events'), where('viewerCode', '==', codeEntered), limit(1));
@@ -4625,7 +4634,7 @@ body:not(.referee-view) .header .logo-img{height:48px;}
             const key=alias.exists() && alias.data();
             if(key && key.kind==='ref' && key.target && key.revision){
               const event=await getDoc(doc(db,'events',key.target));
-              if(event.exists() && event.data().codeRevision===key.revision)
+              if(event.exists())
                 return {role:'referee',eventCode:event.id,data:event.data()};
             }
             return null;
