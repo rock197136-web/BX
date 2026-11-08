@@ -5456,9 +5456,13 @@ body:not(.referee-view) .header .logo-img{height:48px;}
       <div id="cloudCurrent" class="hidden" style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border);">
         <div class="field-label">目前連線狀態</div>
         <div class="cloud-code-row" id="cloudCurrentCodes"></div>
-        <button class="btn btn-dark btn-block" style="margin-top:10px;" onclick="leaveCloudEvent()">離開此賽事／改建立新的</button>
+        <button class="btn btn-dark btn-block" style="margin-top:10px;" onclick="leaveCloudEvent()">離開此賽事</button>
       </div>
 
+      <div id="cloudNewEventAction" class="hidden" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <button type="button" class="btn btn-primary btn-block" id="cloudNewEventBtn" style="min-height:48px" onclick="askCreateSeparateEvent()">＋ 建立新賽事</button>
+        <p class="text-muted" style="font-size:12px;margin-top:8px">產生新的賽事代碼，舊賽事與對戰紀錄完整保留，可從「最近賽事」查看。</p>
+      </div>
       <details style="margin-top:14px" ontoggle="if(this.open)renderRecentEvents()">
         <summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700">最近賽事 · 查看舊紀錄</summary>
         <p class="text-muted" style="font-size:12px">保留這個瀏覽器曾開啟的賽事，點選以選手模式查看。建立新賽事不會刪除舊賽果；跨裝置請使用選手代碼或賽事典藏。</p>
@@ -6588,6 +6592,15 @@ function maybeOfferNextTournament(){
   ], '比賽完成');
 }
 
+function askCreateSeparateEvent(){
+  if(cloudConnectionBusy)return;
+  document.getElementById('cloudModal').classList.remove('show');
+  showModal('新賽事會產生獨立代碼，比分與賽程重新開始。原賽事的名單、比分與對戰紀錄不會被覆蓋。',[
+    {label:'返回',className:'btn-dark',action:openCloudModal},
+    {label:'使用空白名單',className:'btn-primary',action:()=>{openCloudModal();createNextTournament(true);}},
+    {label:'沿用參賽名單',className:'btn-dark',action:()=>{openCloudModal();createNextTournament(false);}}
+  ],'建立新賽事');
+}
 function askNextTournamentRoster(){
   showModal('下一場賽事會產生新的裁判與選手代碼。要沿用這場的選手名單，還是清空後重新輸入？本場賽果仍留在原賽事代碼。', [
     {label:'返回',className:'btn-dark'},
@@ -6597,6 +6610,13 @@ function askNextTournamentRoster(){
 }
 
 async function createNextTournament(clearRoster){
+  if(cloudConnectionBusy)return;
+  setCloudConnectionBusy('create');
+  try{await createNextTournamentCore(clearRoster);}
+  catch(e){document.getElementById('cloudError').innerText=cloudActionError(e,'建立');}
+  finally{setCloudConnectionBusy(null);}
+}
+async function createNextTournamentCore(clearRoster){
   if(!window.cloudSync?.ready){
     openCloudModal(); switchCloudTab('create');
     document.getElementById('cloudError').innerText='目前尚未連上賽事同步，請連線後再建立新賽事。';
@@ -6652,6 +6672,7 @@ async function createNextTournament(clearRoster){
   joinCloudEvent(refCode,'referee',viewerCode);
   saveState(true);
   switchTab('setup');
+  setCloudConnectionBusy(null);
   openCloudModal();
   switchCloudTab('create');
   document.getElementById('cloudNewName').value='';
@@ -8935,6 +8956,7 @@ async function refreshShareCodes(btn){
 function openCloudModal(){
   document.getElementById('cloudError').innerText = '';
   renderRecentEvents();
+  document.getElementById('cloudNewEventAction').classList.toggle('hidden',!currentEventCode);
   const result = document.getElementById('cloudCreatedResult');
   const sameCreatedEvent = !!currentEventCode && !result.classList.contains('hidden')
     && document.getElementById('cloudResultRefCode').innerText === shareRefCode;
@@ -9070,7 +9092,7 @@ function setCloudConnectionBusy(kind){
     button.textContent = kind === action ? (action === 'create' ? '建立中…' : '加入中…') : label;
     button.setAttribute('aria-busy', String(kind === action));
   }
-  for(const id of ['cloudNewName','cloudJoinCode','cloudTabBtnCreate','cloudTabBtnJoin']){
+  for(const id of ['cloudNewName','cloudJoinCode','cloudTabBtnCreate','cloudTabBtnJoin','cloudNewEventBtn']){
     document.getElementById(id).disabled = cloudConnectionBusy;
   }
 }
@@ -9133,6 +9155,7 @@ function joinCloudEvent(refCode, role, viewerCode){
   if(currentEventCode!==refCode){clearDrawMeter();dirtyMatchIds.clear();editBase.clear();cloudMatchBase.clear();cloudNeedsFullReplace=false;clearTimeout(cloudRetryTimer);cloudRetryTimer=null;}
   shareRefCode=refCode;loadedCodeRevision=0;
   currentEventCode = refCode;
+  document.getElementById('cloudNewEventAction').classList.remove('hidden');
   currentRole = role || 'referee';
   currentViewerCode = viewerCode || currentViewerCode || null;
   window.cloudSync.join(refCode, onCloudMeta, onCloudMatches);
