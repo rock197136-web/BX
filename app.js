@@ -1260,7 +1260,10 @@ function startDrawReel(candidates, winners, kind, onFinish){
     index++;
     if(!reduced && reel.animate){
       if(animation) animation.cancel();
-      animation = reel.animate([{transform:'translateY(32px)',opacity:.65},{transform:'translateY(0)',opacity:1}],{duration:speed,easing:'cubic-bezier(.16,.65,.32,1)'});
+      animation = reel.animate(
+        [{transform:'translateY(10%)'}, {transform:'translateY(0)'}],
+        {duration:speed,easing:elapsed < .45 ? 'linear' : 'cubic-bezier(.18,.65,.32,1)'}
+      );
     }
     if(!reduced) drawAnimationInterval = window.setTimeout(tick,speed);
   }
@@ -5664,7 +5667,9 @@ function startScheduleSpin(){
   stopScheduleSpin();
   const pool = state.players.map(p => p.name).filter(Boolean);
   if(pool.length === 0) return false;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   scheduleSpinTimer = setInterval(() => {
+    if(reducedMotion.matches || document.hidden) return;
     for(const el of scheduleSpinLabels.keys()){
       if(!el.isConnected)scheduleSpinLabels.delete(el);
     }

@@ -4536,223 +4536,140 @@ body:not(.referee-view) .header .logo-img{height:48px;}
   body::before{animation:none;}
 }
 
-/* Tournament surfaces and typography */
-:root {
-  --bg: #0d0f12;
-  --panel: #191c21;
-  --panel-2: #20242a;
-  --border: #363b42;
-  --text: #f6f5f1;
-  --muted: #b7bbc0;
-  --arena-accent: rgb(var(--ui-ff9f24));
-  --arena-light: rgb(var(--ui-ffda91));
-  --arena-line: rgba(225,232,240,.14);
-}
-body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; }
-.card, .card:hover, #tab-standings > .card, #tab-setup .setup-card {
-  border-color: var(--arena-line);
-  box-shadow: inset 0 1px rgba(255,255,255,.025);
-}
-:is(.card-sub,.setup-hint,.setup-roster-meta,.toolbox-subtitle,.bx-manual-entry p) { color: var(--muted); }
-.card-title, #tab-setup .setup-title, .toolbox-title, .bx-manual-entry h2 {
-  color: var(--text);
-  letter-spacing: .015em;
-}
-.btn-primary, .match .btn-primary {
-  background: rgb(var(--ui-ffa726));
-  border-color: transparent;
-  color: #17130e;
-  box-shadow: none;
-}
-:where(button, summary, select, input, textarea):focus-visible {
-  outline: 2px solid var(--arena-light);
-  outline-offset: 2px;
-}
-
-/* An original tournament graphic fills one side of the masthead. */
+/* Tournament frame. Keep the original black, warm surfaces and centred title. */
 body:not(.referee-view) .header .identity-card {
-  background: linear-gradient(105deg, rgba(var(--theme-rgb),.10), transparent 48%), #121419;
-  border-color: var(--arena-line);
-  border-radius: 12px;
-  min-height: clamp(104px, 13vw, 146px);
-}
-body:not(.referee-view) .header .identity-card::before {
-  inset: 0;
-  opacity: 1;
-  background: repeating-linear-gradient(118deg, transparent 0 9px, rgba(var(--theme-rgb),.12) 9px 10px);
-  width: 23%;
-  -webkit-mask-image: linear-gradient(90deg,#000,transparent);
-  mask-image: linear-gradient(90deg,#000,transparent);
+  border-radius: 3px 15px;
+  border-color: rgba(var(--theme-rgb), .34);
+  background-color: #100e0c;
 }
 body:not(.referee-view) .header .identity-card::after {
-  content: '';
-  inset: 0 0 0 auto;
-  width: min(48%,380px);
-  height: 100%;
-  background: linear-gradient(90deg,rgba(15,17,20,.6),transparent 90%), url("assets/arena-x.webp") center 48% / cover no-repeat;
-  -webkit-mask-image: linear-gradient(90deg,transparent,#000 65%);
-  mask-image: linear-gradient(90deg,transparent,#000 65%);
-  opacity: .77;
-  transform: none;
+  color: rgba(var(--theme-rgb),.025);
+  -webkit-text-stroke-color: rgba(var(--theme-rgb),.16);
 }
-body:not(.referee-view) .header .identity-copy { z-index: 1; }
-body:not(.referee-view) .header .identity-name {
-  color: #fff;
-  font-weight: 850;
-  text-shadow: 0 2px 8px #08090b;
+body:not(.referee-view) .header .identity-card::before {
+  inset: 6px;
+  background:
+    repeating-linear-gradient(118deg, transparent 0 4px, var(--cyan) 4px 7px) left 8px top 2px / 34px 4px no-repeat,
+    repeating-linear-gradient(118deg, transparent 0 4px, var(--cyan) 4px 7px) right 8px bottom 2px / 34px 4px no-repeat,
+    linear-gradient(var(--cyan),var(--cyan)) top left / 2px 13px no-repeat,
+    linear-gradient(var(--cyan),var(--cyan)) bottom right / 2px 13px no-repeat;
 }
-body:not(.referee-view) .header .identity-copy::before {
-  content: '';
-  width: 24px;
-  height: 3px;
-  background: var(--arena-accent);
-  transform: skewX(-28deg);
+#tab-standings .welcome-card {
+  border-radius: 4px 16px;
+  border-color: rgba(var(--theme-rgb),.25);
+  background: radial-gradient(ellipse at 50% 0, rgba(var(--theme-rgb),.09), transparent 65%),var(--panel);
 }
-
-/* The empty standings view doubles as the organizer's starting point. */
-#tab-standings #welcomeV38 {
-  text-align: left;
-  padding: clamp(18px,4vw,36px);
-  background: linear-gradient(125deg,rgba(var(--theme-rgb),.055),transparent 60%),var(--panel);
-}
-#welcomeV38 .card-title {
-  font-size: clamp(24px,5vw,32px);
-  line-height: 1.25;
-  margin: 0 0 8px;
-}
-#welcomeV38 p { margin: 0; color: var(--muted); }
-#welcomeV38 .setup-steps {
-  justify-content: flex-start;
-  margin: 20px 0;
-  padding: 14px 0;
-  border-block: 1px solid var(--arena-line);
-  color: var(--text);
-}
-#welcomeV38 .setup-steps b {
-  background: rgba(var(--theme-rgb),.09);
-  border: 0;
-  border-radius: 5px;
-  color: var(--arena-light);
-  font-variant-numeric: tabular-nums;
-}
-#welcomeV38 .btn { min-height: 48px; }
-.tabs .tab {
-  background: transparent;
-  color: var(--muted);
-  border-color: transparent;
-  box-shadow: none;
-}
-.tabs .tab.active {
-  color: var(--arena-light);
-  background: rgba(var(--theme-rgb),.095);
-  border-color: transparent;
-  box-shadow: inset 0 -2px var(--arena-accent);
+.setup-card h3::before { width: 4px; border-radius: 1px; transform: skewX(-12deg); }
+#welcomeV38 .btn-primary, #tab-setup #startBtn { border-radius: 4px 11px; }
+@media(max-width:700px) {
+  body.setup-view .header .identity-card { justify-content:center; }
+  .tabs .tab.active { border-radius: 3px 11px; }
 }
 
-/* Give form sections a shared heading and a recessed field surface. */
-#tab-setup .setup-card {
-  background: var(--panel);
-  border-radius: 14px;
+/* Draw stage: an indexed stadium ring and a stationary nameplate. */
+.draw-fullscreen {
+  --draw-metal: rgb(var(--ui-ffda91));
+  background:
+    radial-gradient(ellipse at 50% 48%,rgba(var(--theme-rgb),.10),transparent 53%),
+    repeating-linear-gradient(128deg,transparent 0 59px,#ffffff04 59px 60px),
+    #090908;
 }
-.setup-card h3 {
-  border-bottom: 1px solid var(--arena-line);
-  padding-bottom: 12px;
-  margin-bottom: 14px;
+.draw-fullscreen::before,.draw-fullscreen::after {
+  width: clamp(35px,8vw,68px); height: 16px;
+  border-color: rgba(var(--theme-rgb),.72);
 }
-.setup-card h3::before {
-  width: 5px;
-  margin-block: 4px;
-  transform: skewX(-12deg);
-  border-radius: 1px;
+.draw-fullscreen-inner { width: min(100%,500px); }
+.draw-fullscreen-kicker {
+  display: inline-flex; align-items:center; gap: 10px;
+  color: var(--draw-metal); font-size: 12px;
 }
-#tab-setup :is(.text-input,.chip-input-wrap), .bracket-search-box {
-  background-color: #101216;
-  border-color: #464b52;
+.draw-fullscreen-kicker::before,.draw-fullscreen-kicker::after {
+  content:''; width:25px; height:5px;
+  background:repeating-linear-gradient(115deg,transparent 0 3px,var(--cyan) 3px 6px);
 }
-#tab-setup .field-label { color: #d6d7d7; }
-#tab-setup :is(.setup-disclosure,.setup-quick) { background-color: var(--panel-2); }
-#tab-setup .setup-reset { background: transparent; }
-#tab-setup .attendance-toggle { box-shadow: none; }
-
-#tab-matches .match-status-filter {
-  padding: 3px;
-  border-color: var(--arena-line);
-  background: #101216;
+.draw-fullscreen-title { font-size:clamp(26px,6vw,36px); letter-spacing:.05em; }
+.draw-spin-meta { margin-top:10px; color:#c7c0b4; font-variant-numeric:tabular-nums; }
+.draw-fullscreen-stage {
+  isolation:isolate; display:grid; align-items:stretch;
+  height:clamp(184px,30dvh,254px); margin:22px 0 16px;
+  border:1px solid rgba(var(--theme-rgb),.48);
+  border-radius:3px 22px;
+  background:
+    linear-gradient(90deg,#060606,transparent 22% 78%,#060606),
+    radial-gradient(circle closest-side at center,transparent 76%,rgba(var(--theme-rgb),.2) 77%,transparent 78% 96%,rgba(var(--theme-rgb),.24) 97%,transparent 98%),
+    radial-gradient(ellipse at 50% 50%,rgba(var(--theme-rgb),.13),transparent 69%),#11100e;
+  box-shadow:inset 0 1px rgba(255,255,255,.06),0 8px 30px #0007;
 }
-#tab-matches .match-filter-btn {
-  min-height: 44px;
-  color: var(--muted);
+.draw-fullscreen-stage::before {
+  /* Radial masks keep tick marks out of the text area. */
+  inset:50% auto auto 50%; width:min(78%,270px); height:auto; aspect-ratio:1;
+  transform:translate(-50%,-50%); z-index:-1;
+  border:0; border-radius:50%; box-shadow:none; opacity:.75;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(var(--theme-rgb),.64) 0 1deg,transparent 1deg 6deg);
+  -webkit-mask-image:radial-gradient(circle,transparent 0 57%,#000 57.5% 60%,transparent 60.5% 64%,#000 64.5% 70%,transparent 70.5%);
+  mask-image:radial-gradient(circle,transparent 0 57%,#000 57.5% 60%,transparent 60.5% 64%,#000 64.5% 70%,transparent 70.5%);
 }
-#tab-matches .match-filter-btn.active {
-  color: var(--arena-light);
-  background: var(--panel-2);
-  box-shadow: inset 0 -2px var(--arena-accent);
+.draw-fullscreen.active .draw-fullscreen-stage::before {
+  animation:drawRotor 1.5s cubic-bezier(.14,.61,.22,1) both;
 }
-#tab-tools .bx-manual-entry .btn {
-  background: transparent;
-  border-color: var(--arena-line);
-  color: var(--arena-light);
+@keyframes drawRotor {
+  from { transform:translate(-50%,-50%) rotate(-160deg); }
+  to { transform:translate(-50%,-50%) rotate(0); }
 }
-.toolbox-card .draw-pane { background: #121519; }
-.score-console .quick-win-btn.side-blue { --quick-rgb: 111,173,229; }
-.score-console .quick-win-btn.side-red { --quick-rgb: 229,132,141; }
-.score-console .quick-win-btn:is(.side-blue,.side-red) {
-  border-color: rgba(var(--quick-rgb),.42);
-  background: linear-gradient(155deg,rgba(var(--quick-rgb),.14),transparent 70%),#171a1e;
-  box-shadow: inset 0 3px rgb(var(--quick-rgb));
+.draw-fullscreen-stage::after {
+  inset:33.333% 4%; z-index:-1;
+  border-block:1px solid rgba(var(--theme-rgb),.62);
+  background:
+    linear-gradient(90deg,var(--cyan),var(--cyan)) left center / 4px 18px no-repeat,
+    linear-gradient(90deg,var(--cyan),var(--cyan)) right center / 4px 18px no-repeat,
+    linear-gradient(105deg,#1f190fe8,#14120ff7 48%,#211b11ed);
+  transform:skew(-8deg);
 }
-.score-console .quick-win-btn:is(.side-blue,.side-red) .quick-win-label {
-  color: rgb(var(--quick-rgb)) !important;
-  border-color: rgba(var(--quick-rgb),.45) !important;
-  background: #15181c !important;
+.draw-fullscreen-reel { min-height:0; grid-template-rows:repeat(3,minmax(0,1fr)); }
+.draw-fullscreen-name.current {
+  color:#fff7e8; font-weight:900; font-size:clamp(24px,7.5vw,44px);
+  text-shadow:0 2px 5px #000; padding-inline:14px;
 }
-
-/* The bracket canvas is recessed; match geometry and semantic frames are shared by both roles. */
-.bracket-scroll {
-  background-color: #101216;
-  background-image: radial-gradient(circle, rgba(221,229,237,.12) .8px,transparent 1px);
-  background-size: 16px 16px;
-  border-radius: 8px;
+.draw-fullscreen-name.side { color:#d5c5aa; opacity:.54; }
+.draw-fullscreen.is-revealed .draw-fullscreen-stage { border-color:var(--draw-metal); }
+.draw-fullscreen.is-revealed .draw-fullscreen-stage::after {
+  background:linear-gradient(105deg,rgb(var(--ui-ff9f24)),rgb(var(--ui-ffe4a1)) 55%,rgb(var(--ui-ffba62)));
 }
-#tab-standings .stats-bar { background: var(--panel); border-color: var(--arena-line); }
-.sb-value, .bslot-pts, .battery-value, .finish-pts, .mr-score { font-variant-numeric: tabular-nums; }
-#tab-matches .match { background: #121519; }
-#tab-matches .round-heading {
-  background: transparent;
-  padding-inline: 0;
-  color: var(--arena-light);
-  letter-spacing: .04em;
+.draw-fullscreen.is-revealed .draw-fullscreen-name.current {
+  color:#1b140b; text-shadow:none;
+  animation:drawNameLock .28s cubic-bezier(.15,.72,.3,1) both;
 }
-.score-console .finish-btn { background: #20242a; }
-.score-console .ring-wrap { --score-tint: 111,173,229; }
-.score-console .ring-wrap:last-child { --score-tint: 229,132,141; }
-.score-console .ring-row .ring-wrap {
-  border-top: 3px solid rgb(var(--score-tint)) !important;
-  background: linear-gradient(150deg,rgba(var(--score-tint),.12),transparent 72%),#171a1e !important;
+@keyframes drawNameLock { from { transform:translateY(5px) scale(.94); } to { transform:none; } }
+.draw-fullscreen-track { height:4px; border-radius:0; }
+.draw-fullscreen.active .draw-fullscreen-bar { border-radius:0; background:linear-gradient(90deg,var(--cyan),var(--draw-metal)); }
+.draw-fullscreen.is-revealed .draw-fullscreen-name.side { opacity:.72; }
+.draw-result-row { min-height:42px; gap:7px; }
+.draw-result-index {
+  padding-block:4px; text-align:center; color:var(--cyan-soft);
+  background:rgba(var(--theme-rgb),.09); border-left:2px solid var(--cyan);
+  font-weight:700; font-size:12px;
 }
-.score-console .ring-row .battery-value { font-variant-numeric: tabular-nums !important; }
-.referee-tree-mode-entry, .referee-panel, .toolbox-card .draw-pane {
-  border-color: var(--arena-line);
+.draw-result-name { white-space:normal; overflow-wrap:anywhere; font-size:15px; }
+.draw-progress {
+  border-color:rgba(var(--theme-rgb),.55); border-radius:3px 14px;
+  background:linear-gradient(110deg,rgba(var(--theme-rgb),.11),transparent 68%),#13110e;
 }
-@media (max-width:700px) {
-  body.setup-view .header .identity-card {
-    min-height: 54px;
-    padding: 8px 16px;
-    justify-content: center;
-  }
-  body.setup-view .header .identity-card::after {
-    width: 24%;
-    background: repeating-linear-gradient(118deg,transparent 0 9px,rgba(var(--theme-rgb),.26) 9px 11px);
-  }
-  body.setup-view .header .identity-copy::before { content: none; }
-  .tabs {
-    background: #15181c;
-    border-top: 1px solid var(--arena-line);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-  .tabs .tab.active { box-shadow: inset 0 2px var(--arena-accent); }
-  #welcomeV38 .setup-steps { flex-direction: column; gap: 10px; }
-  #welcomeV38 .btn { width: 100%; }
-  .score-console .finish-btn, .master-mode .score-console .finish-btn { min-height: 48px !important; }
+.draw-progress output { color:var(--cyan-soft); font-weight:800; }
+.draw-progress .draw-meter { position:relative; height:11px; border-radius:1px; }
+.draw-progress .draw-meter::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(90deg,transparent 0 calc(20% - 3px),#16130f calc(20% - 3px) 20%);
+}
+.draw-progress .draw-meter i { border-radius:0; }
+.bracket .name-flicker { animation:none; color:var(--cyan-soft); }
+@media(max-height:550px) {
+  .draw-fullscreen-stage { height:138px; margin:8px 0; }
+  .draw-fullscreen-title { font-size:21px; margin-top:4px; }
+  .draw-spin-meta,.draw-spin-status { margin-top:4px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .draw-fullscreen.active .draw-fullscreen-stage::before,
+  .draw-fullscreen.is-revealed .draw-fullscreen-name.current,
+  .draw-result-row { animation:none; }
 }
