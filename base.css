@@ -961,8 +961,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 
 /* ===== Referee ===== */
 .ref-picker{ margin-bottom:18px; }
-.referee-panels{ display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; align-items:start; }
-.referee-panel{ margin:0; }
+.referee-panels{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap:16px; align-items:start; }
+.referee-panel{ margin:0; min-width:0; }
 /* 季軍戰載入裁判台時，整張面板改用青銅色氛圍（外框＋脈動光暈），取代預設灰框 */
 .referee-panel.referee-panel-bronze{
   border-color:rgba(211,138,82,.55);
@@ -4534,4 +4534,225 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 }
 @media(pointer:coarse){
   body::before{animation:none;}
+}
+
+/* Tournament surfaces and typography */
+:root {
+  --bg: #0d0f12;
+  --panel: #191c21;
+  --panel-2: #20242a;
+  --border: #363b42;
+  --text: #f6f5f1;
+  --muted: #b7bbc0;
+  --arena-accent: rgb(var(--ui-ff9f24));
+  --arena-light: rgb(var(--ui-ffda91));
+  --arena-line: rgba(225,232,240,.14);
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; }
+.card, .card:hover, #tab-standings > .card, #tab-setup .setup-card {
+  border-color: var(--arena-line);
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+}
+:is(.card-sub,.setup-hint,.setup-roster-meta,.toolbox-subtitle,.bx-manual-entry p) { color: var(--muted); }
+.card-title, #tab-setup .setup-title, .toolbox-title, .bx-manual-entry h2 {
+  color: var(--text);
+  letter-spacing: .015em;
+}
+.btn-primary, .match .btn-primary {
+  background: rgb(var(--ui-ffa726));
+  border-color: transparent;
+  color: #17130e;
+  box-shadow: none;
+}
+:where(button, summary, select, input, textarea):focus-visible {
+  outline: 2px solid var(--arena-light);
+  outline-offset: 2px;
+}
+
+/* An original tournament graphic fills one side of the masthead. */
+body:not(.referee-view) .header .identity-card {
+  background: linear-gradient(105deg, rgba(var(--theme-rgb),.10), transparent 48%), #121419;
+  border-color: var(--arena-line);
+  border-radius: 12px;
+  min-height: clamp(104px, 13vw, 146px);
+}
+body:not(.referee-view) .header .identity-card::before {
+  inset: 0;
+  opacity: 1;
+  background: repeating-linear-gradient(118deg, transparent 0 9px, rgba(var(--theme-rgb),.12) 9px 10px);
+  width: 23%;
+  -webkit-mask-image: linear-gradient(90deg,#000,transparent);
+  mask-image: linear-gradient(90deg,#000,transparent);
+}
+body:not(.referee-view) .header .identity-card::after {
+  content: '';
+  inset: 0 0 0 auto;
+  width: min(48%,380px);
+  height: 100%;
+  background: linear-gradient(90deg,rgba(15,17,20,.6),transparent 90%), url("assets/arena-x.webp") center 48% / cover no-repeat;
+  -webkit-mask-image: linear-gradient(90deg,transparent,#000 65%);
+  mask-image: linear-gradient(90deg,transparent,#000 65%);
+  opacity: .77;
+  transform: none;
+}
+body:not(.referee-view) .header .identity-copy { z-index: 1; }
+body:not(.referee-view) .header .identity-name {
+  color: #fff;
+  font-weight: 850;
+  text-shadow: 0 2px 8px #08090b;
+}
+body:not(.referee-view) .header .identity-copy::before {
+  content: '';
+  width: 24px;
+  height: 3px;
+  background: var(--arena-accent);
+  transform: skewX(-28deg);
+}
+
+/* The empty standings view doubles as the organizer's starting point. */
+#tab-standings #welcomeV38 {
+  text-align: left;
+  padding: clamp(18px,4vw,36px);
+  background: linear-gradient(125deg,rgba(var(--theme-rgb),.055),transparent 60%),var(--panel);
+}
+#welcomeV38 .card-title {
+  font-size: clamp(24px,5vw,32px);
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+#welcomeV38 p { margin: 0; color: var(--muted); }
+#welcomeV38 .setup-steps {
+  justify-content: flex-start;
+  margin: 20px 0;
+  padding: 14px 0;
+  border-block: 1px solid var(--arena-line);
+  color: var(--text);
+}
+#welcomeV38 .setup-steps b {
+  background: rgba(var(--theme-rgb),.09);
+  border: 0;
+  border-radius: 5px;
+  color: var(--arena-light);
+  font-variant-numeric: tabular-nums;
+}
+#welcomeV38 .btn { min-height: 48px; }
+.tabs .tab {
+  background: transparent;
+  color: var(--muted);
+  border-color: transparent;
+  box-shadow: none;
+}
+.tabs .tab.active {
+  color: var(--arena-light);
+  background: rgba(var(--theme-rgb),.095);
+  border-color: transparent;
+  box-shadow: inset 0 -2px var(--arena-accent);
+}
+
+/* Give form sections a shared heading and a recessed field surface. */
+#tab-setup .setup-card {
+  background: var(--panel);
+  border-radius: 14px;
+}
+.setup-card h3 {
+  border-bottom: 1px solid var(--arena-line);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+.setup-card h3::before {
+  width: 5px;
+  margin-block: 4px;
+  transform: skewX(-12deg);
+  border-radius: 1px;
+}
+#tab-setup :is(.text-input,.chip-input-wrap), .bracket-search-box {
+  background-color: #101216;
+  border-color: #464b52;
+}
+#tab-setup .field-label { color: #d6d7d7; }
+#tab-setup :is(.setup-disclosure,.setup-quick) { background-color: var(--panel-2); }
+#tab-setup .setup-reset { background: transparent; }
+#tab-setup .attendance-toggle { box-shadow: none; }
+
+#tab-matches .match-status-filter {
+  padding: 3px;
+  border-color: var(--arena-line);
+  background: #101216;
+}
+#tab-matches .match-filter-btn {
+  min-height: 44px;
+  color: var(--muted);
+}
+#tab-matches .match-filter-btn.active {
+  color: var(--arena-light);
+  background: var(--panel-2);
+  box-shadow: inset 0 -2px var(--arena-accent);
+}
+#tab-tools .bx-manual-entry .btn {
+  background: transparent;
+  border-color: var(--arena-line);
+  color: var(--arena-light);
+}
+.toolbox-card .draw-pane { background: #121519; }
+.score-console .quick-win-btn.side-blue { --quick-rgb: 111,173,229; }
+.score-console .quick-win-btn.side-red { --quick-rgb: 229,132,141; }
+.score-console .quick-win-btn:is(.side-blue,.side-red) {
+  border-color: rgba(var(--quick-rgb),.42);
+  background: linear-gradient(155deg,rgba(var(--quick-rgb),.14),transparent 70%),#171a1e;
+  box-shadow: inset 0 3px rgb(var(--quick-rgb));
+}
+.score-console .quick-win-btn:is(.side-blue,.side-red) .quick-win-label {
+  color: rgb(var(--quick-rgb)) !important;
+  border-color: rgba(var(--quick-rgb),.45) !important;
+  background: #15181c !important;
+}
+
+/* The bracket canvas is recessed; match geometry and semantic frames are shared by both roles. */
+.bracket-scroll {
+  background-color: #101216;
+  background-image: radial-gradient(circle, rgba(221,229,237,.12) .8px,transparent 1px);
+  background-size: 16px 16px;
+  border-radius: 8px;
+}
+#tab-standings .stats-bar { background: var(--panel); border-color: var(--arena-line); }
+.sb-value, .bslot-pts, .battery-value, .finish-pts, .mr-score { font-variant-numeric: tabular-nums; }
+#tab-matches .match { background: #121519; }
+#tab-matches .round-heading {
+  background: transparent;
+  padding-inline: 0;
+  color: var(--arena-light);
+  letter-spacing: .04em;
+}
+.score-console .finish-btn { background: #20242a; }
+.score-console .ring-wrap { --score-tint: 111,173,229; }
+.score-console .ring-wrap:last-child { --score-tint: 229,132,141; }
+.score-console .ring-row .ring-wrap {
+  border-top: 3px solid rgb(var(--score-tint)) !important;
+  background: linear-gradient(150deg,rgba(var(--score-tint),.12),transparent 72%),#171a1e !important;
+}
+.score-console .ring-row .battery-value { font-variant-numeric: tabular-nums !important; }
+.referee-tree-mode-entry, .referee-panel, .toolbox-card .draw-pane {
+  border-color: var(--arena-line);
+}
+@media (max-width:700px) {
+  body.setup-view .header .identity-card {
+    min-height: 54px;
+    padding: 8px 16px;
+    justify-content: center;
+  }
+  body.setup-view .header .identity-card::after {
+    width: 24%;
+    background: repeating-linear-gradient(118deg,transparent 0 9px,rgba(var(--theme-rgb),.26) 9px 11px);
+  }
+  body.setup-view .header .identity-copy::before { content: none; }
+  .tabs {
+    background: #15181c;
+    border-top: 1px solid var(--arena-line);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .tabs .tab.active { box-shadow: inset 0 2px var(--arena-accent); }
+  #welcomeV38 .setup-steps { flex-direction: column; gap: 10px; }
+  #welcomeV38 .btn { width: 100%; }
+  .score-console .finish-btn, .master-mode .score-console .finish-btn { min-height: 48px !important; }
 }
