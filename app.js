@@ -7954,37 +7954,14 @@ function openUpdateNotes(){
   const message = document.getElementById('customModalMessage');
   message.innerHTML = `
     <div class="update-notes">
-      <div class="update-notes-date">更新日期 2026/11/18</div>
+      <div class="update-notes-date">更新日期 2026/11/20</div>
       <section class="update-notes-section">
         <h4 class="update-notes-heading">V3.45 更新重點</h4>
         <ul class="update-notes-list">
           <li>裁判台減少重複同步，比分更新只處理變動場次。</li>
           <li>設定頁重新排版，手機可快速找到比賽規則、名單和點名。</li>
-        </ul>
-      </section>
-      <section class="update-notes-section"><h4 class="update-notes-heading">V3.44 更新重點</h4><ul class="update-notes-list"><li>選手觀看賽程時減少重連與記分造成的重複繪製；對戰紀錄在開啟時才載入，提升多人同時觀看的流暢度。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.43 更新重點</h4><ul class="update-notes-list"><li>多裁判同時計分時保留尚未同步的比分，快速連點依序送出；同場衝突會提醒核對雲端結果。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.42 更新重點</h4><ul class="update-notes-list"><li>手機返回網頁時以精簡版本資訊檢查更新，減少重複下載整頁造成的等待。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.41 更新重點</h4><ul class="update-notes-list"><li>裁判記分只同步變動的場次，減少多人觀看時的重複讀取。</li><li>連線狀態顯示伺服器確認與同步異常，可手動重試。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.40 更新重點</h4><ul class="update-notes-list"><li>統一全站主題配色，補齊點名區塊、工具圖示及抽籤特效；選手與裁判皆可切換主題。「即將上場」維持固定黃色。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.38 更新重點</h4><ul class="update-notes-list"><li>開打前可直接重抽對戰，開打後收進更多設定；五次連抽每秒一次，裁判與選手都能查看進度。</li><li>季軍戰移到決賽右側，手機可沿同一列查看。</li><li>精簡選手首頁；裁判可刷新分享代碼，保留原有賽況。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.37・雙敗淘汰教學</h4><ul class="update-notes-list"><li>使用說明新增雙敗淘汰圖解，說清勝部、敗部、冠軍決賽與加賽條件。</li><li>裁判台點場次標題開賽，判勝後自動更新晉級與即將上場；完賽可續開新賽事。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">使用說明與候補抽籤</h4><ul class="update-notes-list"><li>工具新增可搜尋的逐步圖解教學，涵蓋賽事同步、候補抽籤、裁判操作與戰報典藏。</li><li>抽籤輪播加入減速、候選人數與結果揭曉，支援減少動態效果設定。</li><li>抽籤名單用途改為清楚說明候補／參賽資格抽選，附總名額 32 人、已確定 20 人，從 30 位候補抽出 12 人的範例。</li></ul></section>
-      <section class="update-notes-section">
-        <h4 class="update-notes-heading">介面與裁判操作優化</h4>
-        <ul class="update-notes-list">
-          <li>延續原本橘色風格，統一頁面底色並優化手機頁首。</li>
-          <li>裁判樹狀圖新增目前場次定位、縮放比例與狀態摘要，手機操作區重新排版。</li>
-          <li>空白賽程改為清楚提示與設定入口；裁判說明改成開始、取消、判勝的直白步驟。</li>
-        </ul>
-      </section>
-      <section class="update-notes-section">
-        <h4 class="update-notes-heading">單淘汰・樹狀圖裁判模式</h4>
-        <ul class="update-notes-list">
-          <li>單淘汰與雙敗淘汰可用樹狀圖裁判模式；設定台數後自動標示即將上場。</li><li>所有有效場次完成後，可結束本場或建立新賽事代碼，並選擇沿用或清空選手名單。</li>
-          <li>點擊可開賽場次的上方標題即可設為進行中，再點同一標題可取消；點選勝者後自動更新晉級與即將上場。</li>
-          <li>已有比分的場次不可取消進行中狀態；完賽場次會鎖定啟動操作並恢復一般標示。</li>
-        </ul>
-      </section>
-      <section class="update-notes-section">
-        <h4 class="update-notes-heading">多裁判台與手機操作</h4>
-        <ul class="update-notes-list">
-          <li>各裁判台共用賽程佇列；跳過的場次仍可由其他台接手。</li>
-          <li>手機操作加入觸覺回饋，可加入主畫面快速開啟；版本更新會保留賽事資料。</li>
-          <li>修正手機版對戰紀錄「更多」選單被裁切，並補上重新這場的影響說明。</li>
+          <li>中籤名單可直接複製，也可全螢幕放大查看。</li>
+          <li>重新抽籤使用高品質亂數；抽選時姓名與樹狀圖對局同步跳動，五次抽籤採用第 5 次結果。</li>
         </ul>
       </section>
     </div>`;
