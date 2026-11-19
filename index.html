@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="base.css?v=3.45.2">
+<link rel="stylesheet" href="base.css?v=3.45.3">
 </head>
 <body>
 
@@ -761,7 +761,6 @@
         <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('setup')">前往賽事設定</button>
       </div>
       <div id="refDrawOutside">            <div id="treeDrawActions" class="hidden">
-              <p class="bracket-danger-note">保留名單，重新安排對戰。</p>
               <div class="draw-pair"><button class="btn btn-warning undo-btn" id="shuffleScheduleBtn" onclick="randomizeSchedule('tree')">重新抽籤對戰</button><button type="button" class="btn btn-danger" onclick="randomizeSchedule('tree',5)">重新抽籤5次</button></div>
             </div>
 </div><details id="refDrawMore" class="hidden"><summary class="bracket-more-btn">更多設定</summary></details><div id="refereeBracketViewport"></div>
@@ -1392,7 +1391,7 @@
 </div>
 
 
-<script src="app.js?v=3.45.2"></script>
+<script src="app.js?v=3.45.3"></script>
 
 
 <dialog id="bxManual" aria-labelledby="bxGuideTitle">
