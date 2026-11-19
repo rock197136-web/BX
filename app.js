@@ -3828,7 +3828,8 @@ function onCloudMeta(data){
   if(data.shuffleCount===5 && data.shuffleAt!==lastLocalShuffleAt){
     receiveRemoteShuffle(data);
   }else if(shuffleIsFresh && data.shuffleCount!==5){
-    startScheduleSpin();
+    try{previewScheduleShuffle(generateScheduleShufflePreview(),520);}
+    catch(error){console.warn('抽籤樹狀圖預覽更新失敗',error);startScheduleSpin();}
     setTimeout(()=>{if(lastAppliedShuffleAt===data.shuffleAt)stopScheduleSpin();},4000);
   }
 }
@@ -5023,7 +5024,7 @@ function generateKnockoutBracket(players){
     if(byeMatchIdxs.has(i)){
       const real = shuffledPlayers[cursor++];
       const bye = { id: 'BYE', name: '輪空' };
-      if(Math.random() < 0.5){ ordered[i*2] = real; ordered[i*2+1] = bye; }
+      if(secureRandomIndex(2) === 0){ ordered[i*2] = real; ordered[i*2+1] = bye; }
       else { ordered[i*2] = bye; ordered[i*2+1] = real; }
     } else {
       ordered[i*2] = shuffledPlayers[cursor++];
@@ -5652,9 +5653,10 @@ function undoLastMatch(){
    RANDOMIZE SCHEDULE (knockout bracket) — slot-machine reshuffle
 ========================================================= */
 function shuffleArray(arr){
+  // Fisher–Yates with rejection-sampled Web Crypto indices gives each ordering equal probability.
   const a = arr.slice();
   for(let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = secureRandomIndex(i + 1);
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -5676,7 +5678,6 @@ function syncDrawActions(){
   }
   refMore.classList.add('hidden');
   group.classList.toggle('hidden',!(ref&&allowed&&!playing));
-  group.querySelector('p').textContent=playing?'保留名單，重抽會清除所有比分與對戰紀錄。':'保留名單，重新安排對戰。';
   document.getElementById('setupDrawActions').classList.toggle('hidden',!drawAllowed('setup'));
 }
 let drawInProgress=false;
@@ -5706,8 +5707,10 @@ function randomizeSchedule(source,count=1){
 const NAME_FLICKER_MS = 80;
 let scheduleSpinLabels = new Map();
 let scheduleSpinObserver = null;
-function startScheduleSpin(){
+let scheduleSpinNameHoldUntil = 0;
+function startScheduleSpin(holdNamesMs=0){
   stopScheduleSpin();
+  scheduleSpinNameHoldUntil=Date.now()+holdNamesMs;
   const pool = state.players.map(p => p.name).filter(Boolean);
   if(!pool.length) return false;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -5721,6 +5724,7 @@ function startScheduleSpin(){
     }
   },{rootMargin:'80px'}) : null;
   scheduleSpinObserver = observer;
+  if(wrap){wrap.classList.add('schedule-shuffling');wrap.setAttribute('aria-busy','true');}
   function tick(){
     if(wrap && !reducedMotion.matches && !document.hidden && wrap.getClientRects().length){
       if(treeRoot !== wrap.firstElementChild || !cells){
@@ -5738,8 +5742,10 @@ function startScheduleSpin(){
           scheduleSpinLabels.set(el,el.textContent);
           el.classList.add('name-flicker');
         }
-        const i = Math.floor(Math.random() * pool.length);
-        el.textContent = pool[i] === el.textContent ? pool[(i + 1) % pool.length] : pool[i];
+        if(Date.now() >= scheduleSpinNameHoldUntil){
+          const i = Math.floor(Math.random() * pool.length);
+          el.textContent = pool[i] === el.textContent ? pool[(i + 1) % pool.length] : pool[i];
+        }
       }
     }
     scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS);
@@ -5752,12 +5758,51 @@ function stopScheduleSpin(restoreLabels = true){
   scheduleSpinObserver = null;
   clearTimeout(scheduleSpinTimer);
   scheduleSpinTimer = null;
+  scheduleSpinNameHoldUntil=0;
+  const wrap = document.getElementById('bracketTree');
+  if(wrap){wrap.classList.remove('schedule-shuffling');wrap.removeAttribute('aria-busy');}
   if(restoreLabels){
     for(const [el,label] of scheduleSpinLabels){
       if(el.isConnected){el.textContent=label;el.classList.remove('name-flicker');}
     }
   }
   scheduleSpinLabels.clear();
+}
+
+function generateScheduleShufflePreview(){
+  return state.tournament.format === 'double_elimination'
+    ? generateDoubleElimination(state.players)
+    : generateKnockoutBracket(state.players);
+}
+function previewScheduleShuffle(matches, holdNamesMs=360){
+  const wrap=document.getElementById('bracketTree');
+  if(!wrap || !wrap.getClientRects().length || document.hidden)return false;
+  const oldRects=new Map(Array.from(wrap.querySelectorAll('.bracket-match[data-match-id]'),el=>[
+    el.dataset.matchId,el.getBoundingClientRect()
+  ]));
+  stopScheduleSpin(false);
+  const currentMatches=state.matches;
+  state.matches=matches;
+  try{renderBracket();}
+  finally{state.matches=currentMatches;syncDrawActions();}
+
+  startScheduleSpin(holdNamesMs);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return true;
+  for(const el of wrap.querySelectorAll('.bracket-match[data-match-id]')){
+    if(!el.animate)continue;
+    const before=oldRects.get(el.dataset.matchId);
+    const after=el.getBoundingClientRect();
+    const dx=before ? before.left-after.left : 0;
+    const dy=before ? before.top-after.top : 10;
+    const keyframes=before && Math.abs(dx)+Math.abs(dy)<1
+      ? [{opacity:.55,transform:'scale(.96)'},{opacity:1,transform:'scale(1)'}]
+      : [{opacity:.35,transform:`translate(${dx}px,${dy}px) scale(.96)`},{opacity:1,transform:'translate(0,0) scale(1)'}];
+    el.animate(keyframes,{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
+  for(const path of wrap.querySelectorAll('.conn-path')){
+    path.animate?.([{opacity:.25},{opacity:.95},{opacity:.65}],{duration:240,easing:'ease-out'});
+  }
+  return true;
 }
 
 let remoteShuffle=null;
@@ -5785,7 +5830,10 @@ function receiveRemoteShuffle(data){
     if(remoteShuffle.resultReady && !remoteShuffle.revealed){remoteShuffle.revealed=true;revealShuffleResult();}
     return;
   }
-  if(scheduleSpinTimer===null)startScheduleSpin();
+  if(changed){
+    try{previewScheduleShuffle(generateScheduleShufflePreview(),520);}
+    catch(error){console.warn('抽籤樹狀圖預覽更新失敗',error);if(scheduleSpinTimer===null)startScheduleSpin();}
+  }else if(scheduleSpinTimer===null)startScheduleSpin();
   if(changed){
     clearTimeout(remoteShuffle.timer);
     remoteShuffle.timer=setTimeout(()=>{
@@ -5867,8 +5915,11 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
         showToast('賽況已變動，請重新確認');return;
       }
       result=originalFormat==='double_elimination'?generateDoubleElimination(state.players):generateKnockoutBracket(state.players);
+      try{previewScheduleShuffle(result,i===count?700:320);}
+      catch(error){console.warn('抽籤樹狀圖預覽更新失敗',error);}
       if(count===5 && i<5) broadcast(i);
     }
+    await new Promise(resolve=>setTimeout(resolve,260));
     finalizeScheduleShuffle(count,result);finished=true;if(count===5)broadcast(5);
   }finally{
     stopScheduleSpin();if(!finished && count===5){clearDrawMeter();broadcast(-1);}drawInProgress=false;
