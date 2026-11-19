@@ -4679,3 +4679,114 @@ body:not(.referee-view) .header .identity-card::after {
   .draw-fullscreen.is-revealed .draw-fullscreen-name.current,
   .draw-result-row { animation:none; }
 }
+
+/* The records toolbar becomes useful as soon as a schedule exists. */
+.container:has(#welcomeV38:not(.hidden)) #tab-matches .match-record-actions { display:none; }
+
+/* Match-day navigation and reading hierarchy */
+.header .header-top {
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:0 8px;
+}
+.header-top .header-release-row {
+  margin-left:auto;
+  padding:0;
+  border:0;
+}
+.header-top .version-info { color:var(--muted); }
+#tab-standings #welcomeV38 { padding:clamp(20px,4vw,32px); }
+#welcomeV38 .card-title { margin-bottom:0; font-size:clamp(22px,4vw,28px); }
+#welcomeV38 .setup-steps {
+  width:min(100%,440px);
+  margin:20px auto;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+}
+#welcomeV38 .setup-steps li {
+  position:relative;
+  flex-direction:column;
+  gap:8px;
+  font-size:14px;
+  color:var(--text);
+}
+#welcomeV38 .setup-steps li + li::before {
+  content:'';
+  position:absolute;
+  top:13px;
+  right:calc(50% + 20px);
+  width:calc(100% - 40px);
+  height:1px;
+  background:rgba(var(--theme-rgb),.29);
+}
+#welcomeV38 .setup-steps b {
+  width:27px; height:27px;
+  color:var(--cyan-soft);
+  background:rgba(var(--theme-rgb),.07);
+  font:700 13px/1 system-ui,sans-serif;
+}
+#welcomeV38 .btn-primary { min-width:min(200px,100%); min-height:48px; }
+#tab-setup .field-label, .draw-pane-title {
+  color:#ded7cf;
+  font-weight:650;
+}
+#tab-setup :is(.text-input,.chip-input-wrap), #tab-tools .draw-name-input {
+  border-color:#514b42;
+  background:#10100f;
+}
+#tab-setup :is(input,select,textarea):focus-visible, #tab-tools textarea:focus-visible {
+  outline:2px solid var(--cyan); outline-offset:1px;
+}
+#tab-setup .setup-card h3 { margin-bottom:14px; }
+#tab-setup .setup-disclosure:not(.setup-reset) { background:#1d1c19; }
+#tab-matches .match-status-filter {
+  background:#100f0e;
+  border-color:#39352e;
+}
+#tab-matches .match-filter-btn { min-height:44px; font-size:14px; }
+#tab-matches .match-filter-btn.active {
+  background:rgba(var(--theme-rgb),.12); color:var(--cyan-soft);
+  box-shadow:inset 0 -2px var(--cyan);
+}
+#tab-referee:has(#refereeBracketView:not(.hidden)) #refereeCardSub { display:none; }
+.referee-tree-mode-note, #tab-referee .card-sub {
+  font-size:13px; line-height:1.6; color:#c2bcb2;
+}
+#tab-tools .bx-manual-entry {
+  display:flex; flex-direction:row; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:4px 12px; padding:12px 16px;
+  background:transparent; border:1px solid #38342d; box-shadow:none;
+}
+#tab-tools .bx-manual-entry h2 { margin:0; font-size:16px; }
+#tab-tools .bx-manual-entry p { font-size:13px; line-height:1.65; }
+#tab-tools .bx-manual-entry .btn {
+  width:auto; min-height:44px; padding:0 5px; margin:0;
+  background:transparent; border:0; box-shadow:none; color:var(--cyan-soft);
+}
+#tab-tools :is(.toolbox-heading-main,.prize-heading-main) { align-items:flex-start; }
+#tab-tools :is(.toolbox-title,.prize-title) {
+  font-size:clamp(20px,4.5vw,25px); line-height:1.3; letter-spacing:.015em;
+}
+#tab-tools :is(.toolbox-subtitle,.prize-subtitle) {
+  max-width:40em; margin-top:5px; font-size:14px; line-height:1.65; color:#c2bcb2;
+}
+#tab-tools .draw-pane { background:#1b1a17; border-color:#3d3931; }
+#tab-tools .draw-name-input { font-size:16px; line-height:1.55; }
+#tab-tools .draw-name-input::placeholder { color:#a6a197; }
+#tab-tools .draw-count-badge { font-size:12px; font-variant-numeric:tabular-nums; }
+@media(max-width:700px) {
+  .header-top .version-info :is(.version-date,span[aria-hidden]) { display:none; }
+  .header-top .header-release-row { gap:6px; }
+  body:not(.referee-view) .header .logo-img { height:clamp(32px,10vw,44px); }
+  .tabs { background:#151412; border-top:1px solid #38342c; }
+  .tabs .tab {
+    background:transparent; border-color:transparent; box-shadow:none;
+    color:#bdb7ae; font-size:12px;
+  }
+  .tabs .tab.active {
+    color:var(--cyan-soft); background:rgba(var(--theme-rgb),.085);
+    border-color:transparent; box-shadow:inset 0 2px var(--cyan);
+  }
+  #tab-tools .draw-name-input { min-height:132px; }
+}

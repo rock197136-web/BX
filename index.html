@@ -510,6 +510,13 @@
   <div class="header-inner">
     <div class="header-top">
       <div class="logo"><img class="logo-img" src="assets/logo.webp" alt="BEYBLADE X 對戰系統" /></div>
+      <div class="header-release-row">
+        <button class="pwa-install-btn" id="pwaInstallBtn" type="button" onclick="requestPWAInstall()" aria-label="將網站安裝到手機主畫面">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6M12 6v7m-3-3 3 3 3-3"/></svg>
+          <span id="pwaInstallLabel">加入主畫面</span>
+        </button>
+        <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="V3.45，11 月 18 日更新，查看更新公告">V3.45 <span aria-hidden="true">·</span> <span class="version-date">更新日期 11/18</span> <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
+      </div>
     </div>
     <div class="identity-card">
       <svg class="identity-bg" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true">
@@ -533,13 +540,7 @@
     </div>
     <button class="app-update-banner" id="appUpdateBanner" type="button" onclick="applyLatestAppUpdate()" aria-live="polite"></button>
     <div class="player-next-match-cards hidden" id="playerNextMatchCards" role="group" aria-label="即將上場對戰"></div>
-    <div class="header-release-row">
-      <button class="pwa-install-btn" id="pwaInstallBtn" type="button" onclick="requestPWAInstall()" aria-label="將網站安裝到手機主畫面">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6M12 6v7m-3-3 3 3 3-3"/></svg>
-        <span id="pwaInstallLabel">加入主畫面</span>
-      </button>
-      <button class="version-info" type="button" onclick="openUpdateNotes()" aria-label="查看目前版本、更新日期與更新公告">V3.45 <span aria-hidden="true">·</span> 更新日期 11/18 <svg class="version-announcement" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></button>
-    </div>
+
   </div>
 </header>
 
@@ -571,7 +572,6 @@
   <section id="tab-standings">
     <div id="welcomeV38" class="card welcome-card hidden">
       <div class="card-title">尚未建立賽事</div>
-      <p class="referee-only-note">三個步驟，準備開始對戰。</p>
       <ol class="setup-steps referee-only-note" aria-label="建立賽事流程"><li><b>1</b>設定賽制</li><li><b>2</b>加入選手</li><li><b>3</b>產生對戰表</li></ol>
       <p class="viewer-only-note hidden">正在等待裁判建立賽事中...</p>
       <button class="btn btn-primary referee-only-btn" onclick="switchTab('setup')">建立賽事 <span aria-hidden="true">→</span></button>
@@ -698,7 +698,7 @@
             <button type="button" class="match-filter-btn" data-filter="pending" onclick="setMatchStatusFilter('pending')">未完成</button>
             <button type="button" class="match-filter-btn" data-filter="completed" onclick="setMatchStatusFilter('completed')">已完成</button>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="jumpToNextPendingMatch()">快速跳轉到未開始場次</button>
+          <button class="btn btn-primary btn-sm" onclick="jumpToNextPendingMatch()">前往未開始場次</button>
         </div>
       </div>
       <div class="match-list" id="matchList"></div>
@@ -892,8 +892,8 @@
   <!-- TOOLS -->
   <section id="tab-tools" class="hidden">
     <div class="card bx-manual-entry">
-      <div><h2>網站使用說明書</h2><p>第一次辦賽也能跟著做。從賽事同步、候補抽籤到裁判計分，逐步圖解。</p></div>
-      <button type="button" class="btn btn-primary" onclick="openBXManual()" aria-haspopup="dialog" aria-controls="bxManual">開啟使用說明 →</button>
+      <div><h2>辦賽指南</h2><p>賽事同步、抽籤與計分圖解。</p></div>
+      <button type="button" class="btn btn-primary" onclick="openBXManual()" aria-haspopup="dialog" aria-controls="bxManual">查看指南 <span aria-hidden="true">→</span></button>
     </div>
 
     <div class="card toolbox-card">
@@ -901,8 +901,8 @@
         <div class="toolbox-heading-main">
           <span class="toolbox-heading-icon" id="toolboxHeadingIcon" aria-hidden="true"></span>
           <div>
-            <h2 class="toolbox-title">抽籤名單（抽候補參賽資格）</h2>
-            <div class="toolbox-subtitle">範例：總名額 32 人、已確定 20 人，還剩 12 個名額。若現場登記候補有 30 人，由主辦輸入這 30 人的姓名，抽選人數填 12，按下「開始抽籤」，中籤者再加入正式名單。</div>
+            <h2 class="toolbox-title">候補資格抽籤</h2>
+            <div class="toolbox-subtitle">貼上候補名單，依剩餘名額抽籤。中籤後，再將選手加入正式名單。</div>
           </div>
         </div>
       </div>
@@ -947,8 +947,8 @@
           <div class="prize-heading-main">
             <span class="prize-heading-icon" id="prizeHeadingIcon" aria-hidden="true"></span>
             <div>
-              <h2 class="prize-title">參賽者抽選（抽選獎品用）</h2>
-              <div class="prize-subtitle">自動帶入參賽玩家；中獎後即從候選名單移除，可連續抽選且不會重複中獎。</div>
+              <h2 class="prize-title">參賽者抽獎</h2>
+              <div class="prize-subtitle">從參賽名單抽出得獎者，已中獎的選手會自動排除。</div>
             </div>
           </div>
         </div>
