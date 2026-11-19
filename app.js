@@ -1119,7 +1119,7 @@ const DRAW_TOOL_STORAGE_KEY = 'beybladeX_drawTool_v1';
 const PRIZE_DRAW_STORAGE_KEY = 'beybladeX_prizeDraw_v1';
 let drawToolResults = [];
 let drawAnimationTimer = null;
-let drawAnimationInterval = null;
+let drawAnimationFrame = null;
 let prizeDrawWinners = [];
 let prizeDrawInitialized = false;
 
@@ -1160,7 +1160,7 @@ function initDrawTool(){
 
 function resetDrawResults(){
   if(drawAnimationTimer){ window.clearTimeout(drawAnimationTimer); drawAnimationTimer = null; }
-  if(drawAnimationInterval){ window.clearInterval(drawAnimationInterval); drawAnimationInterval = null; }
+  if(drawAnimationFrame !== null){ cancelAnimationFrame(drawAnimationFrame); drawAnimationFrame = null; }
   drawToolResults = [];
   const list = document.getElementById('drawResultList');
   const empty = document.getElementById('drawResultEmpty');
@@ -1244,33 +1244,61 @@ function startDrawReel(candidates, winners, kind, onFinish){
   const status = document.getElementById('drawSpinStatus');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   overlay.classList.remove('is-revealed');
-  reel.classList.remove('tick');
+  reel.style.removeProperty('transform');
+  for(const row of [prev,current,next]){row.style.removeProperty('opacity');row.style.removeProperty('transform');}
   document.getElementById('drawSpinMeta').textContent = `${candidates.length} 位${kind === '中籤' ? '候補' : '參賽者'} · 本次抽出 ${winners.length} 位`;
   overlay.querySelector('.draw-fullscreen-kicker').textContent = kind === '中籤' ? '候補資格抽選' : '參賽者獎品抽選';
   status.textContent = reduced ? '抽選處理中，請稍候…' : '名單輪播中，準備揭曉…';
-  let animation = null;
-  let index = secureRandomIndex(candidates.length);
+  const stage = reel.parentElement;
+  const bar = overlay.querySelector('.draw-fullscreen-bar');
+  const rows = [prev, current, next];
+  const duration = 1500;
+  const travel = 12;
+  const landing = candidates.indexOf(winners[0]);
   const started = performance.now();
-  function tick(){
-    const elapsed = Math.min(1,(performance.now()-started)/1500);
-    const speed = Math.round(65+155*Math.pow(elapsed,2));
-    prev.textContent = candidates[index % candidates.length];
-    current.textContent = candidates[(index+1) % candidates.length];
-    next.textContent = candidates[(index+2) % candidates.length];
-    index++;
-    if(!reduced && reel.animate){
-      if(animation) animation.cancel();
-      animation = reel.animate(
-        [{transform:'translateY(10%)'}, {transform:'translateY(0)'}],
-        {duration:speed,easing:elapsed < .45 ? 'linear' : 'cubic-bezier(.18,.65,.32,1)'}
-      );
-    }
-    if(!reduced) drawAnimationInterval = window.setTimeout(tick,speed);
+  let lastCenter = null;
+
+  function paint(progress){
+    // One row of travel advances the dial by one major division (30°).
+    const position = travel * (1 - (1 - progress) ** 2.25);
+    const center = Math.round(position);
+    const fraction = position - center;
+    stage.style.setProperty('--dial-angle', ((position - travel) * 30) + 'deg');
+    bar.style.transform = 'scaleX(' + progress + ')';
+    reel.style.transform = 'translateY(' + (-fraction * 100 / 3) + '%)';
+    rows.forEach((row, i) => {
+      if(center !== lastCenter){
+        const offset = landing - travel + center + i - 1;
+        row.textContent = candidates[((offset % candidates.length) + candidates.length) % candidates.length];
+      }
+      const focus = Math.max(0, 1 - Math.abs(i - 1 - fraction));
+      row.style.opacity = String(.47 + .53 * focus);
+      row.style.transform = 'scale(' + (.72 + .28 * focus) + ')';
+    });
+    lastCenter = center;
   }
-  if(reduced){prev.textContent='';current.textContent='抽選中';next.textContent='';}else tick();
+  function frame(time){
+    const progress = Math.min(1, Math.max(0, (time - started) / duration));
+    paint(progress);
+    if(progress < 1) drawAnimationFrame = requestAnimationFrame(frame);
+  }
+  if(reduced){
+    prev.textContent=''; current.textContent='抽選中'; next.textContent='';
+    stage.style.setProperty('--dial-angle','0deg');
+    bar.style.transform='scaleX(1)';
+  }else{
+    paint(0);
+    drawAnimationFrame = requestAnimationFrame(frame);
+  }
   drawAnimationTimer = window.setTimeout(() => {
-    if(drawAnimationInterval){window.clearTimeout(drawAnimationInterval);drawAnimationInterval=null;}
-    if(animation) animation.cancel();
+    if(drawAnimationFrame !== null) cancelAnimationFrame(drawAnimationFrame);
+    drawAnimationFrame = null;
+    if(!reduced) paint(1);
+    reel.style.removeProperty('transform');
+    rows.forEach(row => {
+      row.style.removeProperty('opacity');
+      row.style.removeProperty('transform');
+    });
     overlay.classList.add('is-revealed');
     title.textContent = '抽選完成';
     prev.textContent = '本次結果';
@@ -1284,7 +1312,7 @@ function startDrawReel(candidates, winners, kind, onFinish){
       unlockDrawViewport();
       onFinish();
     },650);
-  },1500);
+  },duration);
 }
 
 function drawRandomNames(){
@@ -3125,7 +3153,7 @@ let applyingRemote = false;
 // before the new matches themselves are pushed), so every other device can
 // kick off the same visual spin at roughly the same time and only stop it
 // once the real new bracket actually arrives.
-let scheduleSpinTimer = null;   // interval id for the currently-running spin (local or remote-triggered)
+let scheduleSpinTimer = null;   // timer id for the currently-running spin (local or remote-triggered)
 let lastLocalShuffleAt = null;  // stamp of a shuffle *this* device just initiated — used to ignore its own echo
 let lastAppliedShuffleAt = null;// last shuffleAt value already reacted to, so unrelated meta pushes don't re-trigger it
 let metaInitialized = false;    // true once this device has processed its first meta snapshot (its baseline)
@@ -4920,7 +4948,7 @@ function renderDoubleBracket(){
     html+='</div></div></section>';
     sections[bracket]=html;
   });
-  wrap.innerHTML=`<div class="de-championship-row">${sections.winners||''}${sections.final||''}</div>${sections.losers||''}`;
+  setBracketMarkup(wrap, `<div class="de-championship-row">${sections.winners||''}${sections.final||''}</div>${sections.losers||''}`);
   updateBracketSearchVisibility();
 }
 
@@ -5645,53 +5673,63 @@ function randomizeSchedule(source,count=1){
   }}],'重新抽籤對戰');
 }
 
-// Starts the slot-machine name-spin over whatever bracket boxes are
-// currently rendered. Shared by the device that clicks "重新抽籤對戰"
-// AND by every other connected referee/viewer device, which triggers this
-// in response to the shuffleAt broadcast in onCloudMeta — that's what makes
-// the reshuffle animation visible to everyone watching, not just whoever
-// pressed the button. Returns false (and starts nothing) if there's
-// nothing on screen to animate, e.g. the bracket tab was never opened yet.
-//
-// Rather than a slow vertical reel, each name cell just rapidly swaps to a
-// different random name every tick (with a quick colour-flash animation so
-// even a repeated pick still reads as "changing"). Runs for a short, snappy
-// burst (~0.5s total, see runScheduleShuffleAnimation) rather than a long
-// spin-down.
-const NAME_FLICKER_MS = 80; // how often each cell's text swaps
-
-// Keep track of the rendered labels so stopping also restores real names.
-// Query the current tree on each tick: cloud metadata can replace its DOM.
+// Keep original labels for cancellation or for a tree that stays mounted.
+const NAME_FLICKER_MS = 80;
 let scheduleSpinLabels = new Map();
-function startScheduleSpin(){
+let scheduleSpinObserver = null;
+function startScheduleSpin(duration = 0){
   stopScheduleSpin();
   const pool = state.players.map(p => p.name).filter(Boolean);
-  if(pool.length === 0) return false;
+  if(!pool.length) return false;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  scheduleSpinTimer = setInterval(() => {
-    if(reducedMotion.matches || document.hidden) return;
-    for(const el of scheduleSpinLabels.keys()){
-      if(!el.isConnected)scheduleSpinLabels.delete(el);
+  const started = performance.now();
+  const wrap = document.getElementById('bracketTree');
+  let treeRoot, cells;
+  const visible = new Set();
+  const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
+    for(const entry of entries){
+      if(entry.isIntersecting) visible.add(entry.target);
+      else visible.delete(entry.target);
     }
-    const wrap = document.getElementById('bracketTree');
-    const nameEls = wrap ? wrap.querySelectorAll('.bslot-name, .champ-name') : [];
-    nameEls.forEach(el => {
-      if(!scheduleSpinLabels.has(el))scheduleSpinLabels.set(el,el.textContent);
-      el.classList.add('name-flicker');
-      let pick = pool[Math.floor(Math.random() * pool.length)];
-      if(pool.length > 1 && pick === el.textContent){
-        pick = pool[(pool.indexOf(pick) + 1) % pool.length];
+  },{rootMargin:'80px'}) : null;
+  scheduleSpinObserver = observer;
+  function tick(){
+    if(wrap && !reducedMotion.matches && !document.hidden && wrap.offsetWidth){
+      if(treeRoot !== wrap.firstElementChild || !cells){
+        treeRoot = wrap.firstElementChild;
+        cells = wrap.querySelectorAll('.bslot-name, .champ-name');
+        observer?.disconnect();
+        visible.clear();
+        if(observer) cells.forEach(el => observer.observe(el));
+        for(const el of scheduleSpinLabels.keys()){
+          if(!el.isConnected) scheduleSpinLabels.delete(el);
+        }
       }
-      el.textContent = pick;
-    });
-  }, NAME_FLICKER_MS);
+      for(const el of (observer ? visible : cells)){
+        if(!scheduleSpinLabels.has(el)){
+          scheduleSpinLabels.set(el,el.textContent);
+          el.classList.add('name-flicker');
+        }
+        const i = Math.floor(Math.random() * pool.length);
+        el.textContent = pool[i] === el.textContent ? pool[(i + 1) % pool.length] : pool[i];
+      }
+    }
+    const remaining = duration - (performance.now() - started);
+    const easeOut = duration ? Math.max(0, Math.min(1, 1 - remaining / 850)) : 0;
+    scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS + 140 * easeOut ** 2);
+  }
+  scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS);
   return true;
 }
-
-function stopScheduleSpin(){
-  if(scheduleSpinTimer){ clearInterval(scheduleSpinTimer); scheduleSpinTimer = null; }
-  for(const [el,label] of scheduleSpinLabels){
-    if(el.isConnected){el.textContent=label;el.classList.remove('name-flicker');}
+function stopScheduleSpin(restoreLabels = true){
+  scheduleSpinObserver?.disconnect();
+  scheduleSpinObserver = null;
+  clearTimeout(scheduleSpinTimer);
+  scheduleSpinTimer = null;
+  if(restoreLabels){
+    for(const [el,label] of scheduleSpinLabels){
+      if(el.isConnected){el.textContent=label;el.classList.remove('name-flicker');}
+    }
   }
   scheduleSpinLabels.clear();
 }
@@ -5721,7 +5759,7 @@ function receiveRemoteShuffle(data){
     if(remoteShuffle.resultReady && !remoteShuffle.revealed){remoteShuffle.revealed=true;revealShuffleResult();}
     return;
   }
-  if(scheduleSpinTimer===null)startScheduleSpin();
+  if(scheduleSpinTimer===null)startScheduleSpin((5-step)*1000);
   if(changed){
     clearTimeout(remoteShuffle.timer);
     remoteShuffle.timer=setTimeout(()=>{
@@ -5751,7 +5789,15 @@ function paintDrawMeter(run,step){
   m.el.querySelector('output').textContent=step+'／5';
   if(step===5){m.el.classList.add('is-complete');m.el.querySelector('header span').textContent='已完成五次抽籤';}
   m.el.querySelector('.draw-meter').setAttribute('aria-valuenow',step);
-  m.el.querySelector('i').style.width=(step*20)+'%';
+  const fill=m.el.querySelector('i');
+  m.fillAnimation?.cancel();
+  fill.style.transform='scaleX('+(step/5)+')';
+  if(step<5 && fill.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    m.fillAnimation=fill.animate([
+      {transform:'scaleX('+(step/5)+')'},
+      {transform:'scaleX('+((step+1)/5)+')'}
+    ],{duration:1000,easing:'linear',fill:'forwards'});
+  }
   clearTimeout(m.timer);m.timer=setTimeout(clearDrawMeter,step===5?1300:10000);
 }
 async function runScheduleShuffleAnimation(count,source,withPlay){
@@ -5786,7 +5832,7 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
   };
   try{
     lastLocalShuffleAt=run;broadcast(0);
-    startScheduleSpin();
+    startScheduleSpin(count===5 ? 5000 : 480);
     let result;
     for(let i=1;i<=count;i++){
       await new Promise(resolve=>setTimeout(resolve,count===5?1000:480));
@@ -5795,7 +5841,7 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
         showToast('賽況已變動，請重新確認');return;
       }
       result=originalFormat==='double_elimination'?generateDoubleElimination(state.players):generateKnockoutBracket(state.players);
-      if(count===5){if(i<5)broadcast(i);buttons.forEach(btn=>btn.textContent=i+'／5');}
+      if(count===5 && i<5) broadcast(i);
     }
     finalizeScheduleShuffle(count,result);finished=true;if(count===5)broadcast(5);
   }finally{
@@ -5805,15 +5851,20 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
   }
 }
 
+let reconcileShuffleResult=false;
 let shuffleRevealAnimation=null;
 function revealShuffleResult(){
   const tree=document.getElementById('bracketTree');
   shuffleRevealAnimation?.cancel();
-  if(!tree || !tree.animate || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  shuffleRevealAnimation=tree.animate([{opacity:.65},{opacity:1}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
+  if(!tree?.animate || !tree.offsetWidth || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  shuffleRevealAnimation=tree.animate([{opacity:.88},{opacity:1}],{duration:200,easing:'ease-out'});
 }
 function finalizeScheduleShuffle(count,newMatches){
-  stopScheduleSpin();
+  // Visible brackets are replaced in the same task. Restoring their old names
+  // would add a redundant set of DOM writes immediately before replacement.
+  const replacingTree = isTabVisible('standings') ||
+    (isTabVisible('referee') && isRefereeBracketInteractive());
+  stopScheduleSpin(!replacingTree);
   state.matches = newMatches;
   state.currentRound = 1;
   state.tournament.status = 'running';
@@ -5825,7 +5876,9 @@ function finalizeScheduleShuffle(count,newMatches){
   cloudReplaceRevision++;
   saveState();
 
-  renderAll();
+  reconcileShuffleResult=true;
+  try{renderAll({refreshSetup:false});}
+  finally{reconcileShuffleResult=false;}
   revealShuffleResult();
   showToast(count===5?'已採用第 5 次抽籤結果':'已重新抽籤對戰');
 }
@@ -6068,13 +6121,8 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal, hideStatusBadge 
       ? `<div class="bracket-status-badge next ${isFinal ? 'with-final' : ''}"><span class="bracket-status-dot" aria-hidden="true"></span>即將上場</div>`
       : '';
   const finalClass = isFinal ? 'final-match' : '';
-  const sparkles = isFinal
-    ? [0,1,2].map(i => `<span class="final-sparkle" aria-hidden="true" style="animation-delay:${(i*0.7).toFixed(1)}s;"></span>`).join('')
-    : '';
-
   return `
     <div class="bracket-match ${m.status==='completed' ? 'done':''} ${statusClass} ${finalClass}" style="top:${top}px;" data-match-id="${m.id}">
-      ${sparkles}
       ${statusBadge}
       <${slotTag} class="bracket-slot ${aWin?'winner':''} ${aLose?'loser':''} ${(aBye||aWd)?'bye':''} ${editable?'bracket-win-pick':''}" ${editable ? `type="button" data-match-id="${escapeAttr(m.id)}" data-side="A" aria-label="判定 ${escapeAttr(aDisplayName)} 獲勝"` : ''} data-player-id="${(m.playerA && !aBye) ? escapeAttr(m.playerA) : ''}">
         <span class="bslot-name ${aNameSize}" title="${escapeAttr(aDisplayName)}">${aName}</span>
@@ -6164,6 +6212,40 @@ function computeBracketLayout(rounds, byRound){
   }
 
   return { visibleByRound, pos, H, boxHeight };
+}
+
+// A redraw usually keeps the same rounds, controls, and slots. Reuse their
+// DOM on the reveal so the browser only lays out actual draw differences.
+function setBracketMarkup(wrap, html){
+  if(!reconcileShuffleResult){
+    wrap.innerHTML = html;
+    return;
+  }
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  reconcileBracketChildren(wrap,template.content);
+}
+function reconcileBracketChildren(parent,source){
+  let old = parent.firstChild;
+  for(const next of Array.from(source.childNodes)){
+    if(!old){parent.append(next);continue;}
+    const after = old.nextSibling;
+    if(old.nodeName !== next.nodeName){
+      old.replaceWith(next);
+    }else if(old.nodeType === Node.TEXT_NODE){
+      if(old.data !== next.data) old.data = next.data;
+    }else if(old.nodeType === Node.ELEMENT_NODE && !old.isEqualNode(next)){
+      for(const attr of Array.from(old.attributes)){
+        if(!next.hasAttribute(attr.name)) old.removeAttribute(attr.name);
+      }
+      for(const attr of next.attributes){
+        if(old.getAttribute(attr.name) !== attr.value) old.setAttribute(attr.name,attr.value);
+      }
+      reconcileBracketChildren(old,next);
+    }
+    old = after;
+  }
+  while(old){const after = old.nextSibling;old.remove();old = after;}
 }
 
 function renderBracket(){
@@ -6273,32 +6355,9 @@ function renderBracket(){
 
   html += `</div>`;
 
-  wrap.innerHTML = html;
-
-  // Set up the final-match sparkles: each one fades in at a random spot
-  // around the frame, fades out, then jumps to a new random spot for the
-  // next cycle (rather than blinking in a fixed position).
-  wrap.querySelectorAll('.final-sparkle').forEach(el => {
-    randomizeSparklePosition(el);
-    el.addEventListener('animationiteration', () => randomizeSparklePosition(el));
-  });
+  setBracketMarkup(wrap, html);
 
   updateBracketSearchVisibility();
-}
-
-function randomizeSparklePosition(el){
-  const box = el.parentElement;
-  const w = (box && box.offsetWidth) || 186;
-  const h = (box && box.offsetHeight) || 74;
-  const pad = 6;
-  const edge = Math.floor(Math.random() * 4);
-  let top, left;
-  if(edge === 0){ left = Math.random() * w; top = -pad; }
-  else if(edge === 1){ left = w + pad; top = Math.random() * h; }
-  else if(edge === 2){ left = Math.random() * w; top = h + pad; }
-  else { left = -pad; top = Math.random() * h; }
-  el.style.left = `${left}px`;
-  el.style.top = `${top}px`;
 }
 
 /* =========================================================
