@@ -1,0 +1,25 @@
+{
+  "name": "BEYBLADE X 對戰系統",
+  "short_name": "BX 對戰",
+  "description": "BEYBLADE X 賽事管理、即時戰況與對戰紀錄",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0b0b",
+  "theme_color": "#0b0b0b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/app-icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

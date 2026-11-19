@@ -1008,10 +1008,11 @@ async function pushToCloudOnce(){
   const eventId=currentEventCode;
   const fullReplace = cloudNeedsFullReplace;
   const replaceRevision = cloudReplaceRevision;
-  const ids = fullReplace ? state.matches.map(m => m.id) : Array.from(dirtyMatchIds);
-  const toPush=JSON.parse(JSON.stringify(state.matches.filter(m=>ids.includes(m.id))));
+  const outbound = fullReplace ? state.matches : state.matches.filter(m=>dirtyMatchIds.has(m.id));
+  const toPush=JSON.parse(JSON.stringify(outbound));
+  const ids=toPush.map(m=>m.id);
   const bases=new Map(ids.map(id=>[id,editBase.get(id)||'']));
-  const sentSignatures = new Map(state.matches.filter(m => ids.includes(m.id)).map(m => [m.id, matchSignature(m)]));
+  const sentSignatures = new Map(toPush.map(m=>[m.id,matchSignature(m)]));
   try{
     // Only send the court count when this device actually has one. An unconfigured
     // device must never wipe the count another referee already set; 0 is the explicit
@@ -1051,11 +1052,11 @@ async function pushToCloudOnce(){
     updateCloudStatusUI();
     return true;
   }catch(e){
-    if(e.code==='bx-conflict'){
-      if(eventId===currentEventCode){
-        const fresh=await window.cloudSync.reloadMatches(eventId);
+    if(e.code==='bx-conflict' && eventId===currentEventCode){
+      try{
+        const fresh=await window.cloudSync.reloadMatchChanges(eventId,ids);
         if(eventId===currentEventCode){
-          const remote=new Map(fresh.map(m=>[m.id,matchSignature(m)]));
+          const remote=new Map(fresh.map(({id,match})=>[id,matchSignature(match)]));
           const conflicts=ids.filter(id=>(remote.get(id)||'')!==(bases.get(id)||'') && (remote.get(id)||'')!==sentSignatures.get(id));
           conflicts.forEach(id=>{dirtyMatchIds.delete(id);editBase.delete(id);});
           ids.filter(id=>!conflicts.includes(id) && remote.get(id)===sentSignatures.get(id)).forEach(id=>{
@@ -1063,15 +1064,18 @@ async function pushToCloudOnce(){
             if(current && matchSignature(current)===remote.get(id)){dirtyMatchIds.delete(id);editBase.delete(id);}
             else editBase.set(id,remote.get(id));
           });
-          onCloudMatches(fresh);
+          onCloudMatches(fresh,true);
           cloudUnsynced=dirtyMatchIds.size>0 || cloudNeedsFullReplace;
           updateCloudStatusUI();
           if(conflicts.length)showAlert('其他裁判已更新相同場次；衝突場次改以雲端結果顯示，請核對比分。其他待同步場次會繼續送出。');
           if(dirtyMatchIds.size || cloudNeedsFullReplace)void pushToCloud();
         }
+        return false;
+      }catch(error){
+        e=error;
       }
-      return false;
     }
+    if(eventId!==currentEventCode)return false;
     console.error('雲端同步失敗（本機資料仍完整保存）', e);
     cloudUnsynced=true;
     updateCloudStatusUI();
@@ -1115,7 +1119,7 @@ const DRAW_TOOL_STORAGE_KEY = 'beybladeX_drawTool_v1';
 const PRIZE_DRAW_STORAGE_KEY = 'beybladeX_prizeDraw_v1';
 let drawToolResults = [];
 let drawAnimationTimer = null;
-let drawAnimationInterval = null;
+let drawAnimationFrame = null;
 let prizeDrawWinners = [];
 let prizeDrawInitialized = false;
 
@@ -1156,7 +1160,7 @@ function initDrawTool(){
 
 function resetDrawResults(){
   if(drawAnimationTimer){ window.clearTimeout(drawAnimationTimer); drawAnimationTimer = null; }
-  if(drawAnimationInterval){ window.clearInterval(drawAnimationInterval); drawAnimationInterval = null; }
+  if(drawAnimationFrame !== null){ cancelAnimationFrame(drawAnimationFrame); drawAnimationFrame = null; }
   drawToolResults = [];
   const list = document.getElementById('drawResultList');
   const empty = document.getElementById('drawResultEmpty');
@@ -1173,6 +1177,9 @@ function resetDrawResults(){
   if(list){ list.innerHTML = ''; list.classList.add('hidden'); }
   if(empty){ empty.textContent = '抽籤結果會顯示在這裡'; empty.classList.remove('hidden'); }
   if(copyBtn) copyBtn.disabled = true;
+  document.getElementById('drawReaderBtn').disabled = true;
+  const reader = document.getElementById('drawReader');
+  if(reader.open) reader.close();
 }
 
 function updateDrawToolState(clearResults){
@@ -1240,30 +1247,61 @@ function startDrawReel(candidates, winners, kind, onFinish){
   const status = document.getElementById('drawSpinStatus');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   overlay.classList.remove('is-revealed');
-  reel.classList.remove('tick');
+  reel.style.removeProperty('transform');
+  for(const row of [prev,current,next]){row.style.removeProperty('opacity');row.style.removeProperty('transform');}
   document.getElementById('drawSpinMeta').textContent = `${candidates.length} 位${kind === '中籤' ? '候補' : '參賽者'} · 本次抽出 ${winners.length} 位`;
   overlay.querySelector('.draw-fullscreen-kicker').textContent = kind === '中籤' ? '候補資格抽選' : '參賽者獎品抽選';
   status.textContent = reduced ? '抽選處理中，請稍候…' : '名單輪播中，準備揭曉…';
-  let animation = null;
-  let index = secureRandomIndex(candidates.length);
+  const stage = reel.parentElement;
+  const bar = overlay.querySelector('.draw-fullscreen-bar');
+  const rows = [prev, current, next];
+  const duration = 1500;
+  const travel = 12;
+  const landing = candidates.indexOf(winners[0]);
   const started = performance.now();
-  function tick(){
-    const elapsed = Math.min(1,(performance.now()-started)/1500);
-    const speed = Math.round(65+155*Math.pow(elapsed,2));
-    prev.textContent = candidates[index % candidates.length];
-    current.textContent = candidates[(index+1) % candidates.length];
-    next.textContent = candidates[(index+2) % candidates.length];
-    index++;
-    if(!reduced && reel.animate){
-      if(animation) animation.cancel();
-      animation = reel.animate([{transform:'translateY(32px)',opacity:.65},{transform:'translateY(0)',opacity:1}],{duration:speed,easing:'cubic-bezier(.16,.65,.32,1)'});
-    }
-    if(!reduced) drawAnimationInterval = window.setTimeout(tick,speed);
+  let lastCenter = null;
+
+  function paint(progress){
+    // One row of travel advances the dial by one major division (30°).
+    const position = travel * (1 - (1 - progress) ** 2.25);
+    const center = Math.round(position);
+    const fraction = position - center;
+    stage.style.setProperty('--dial-angle', ((position - travel) * 30) + 'deg');
+    bar.style.transform = 'scaleX(' + progress + ')';
+    reel.style.transform = 'translateY(' + (-fraction * 100 / 3) + '%)';
+    rows.forEach((row, i) => {
+      if(center !== lastCenter){
+        const offset = landing - travel + center + i - 1;
+        row.textContent = candidates[((offset % candidates.length) + candidates.length) % candidates.length];
+      }
+      const focus = Math.max(0, 1 - Math.abs(i - 1 - fraction));
+      row.style.opacity = String(.47 + .53 * focus);
+      row.style.transform = 'scale(' + (.72 + .28 * focus) + ')';
+    });
+    lastCenter = center;
   }
-  if(reduced){prev.textContent='';current.textContent='抽選中';next.textContent='';}else tick();
+  function frame(time){
+    const progress = Math.min(1, Math.max(0, (time - started) / duration));
+    paint(progress);
+    if(progress < 1) drawAnimationFrame = requestAnimationFrame(frame);
+  }
+  if(reduced){
+    prev.textContent=''; current.textContent='抽選中'; next.textContent='';
+    stage.style.setProperty('--dial-angle','0deg');
+    bar.style.transform='scaleX(1)';
+  }else{
+    paint(0);
+    drawAnimationFrame = requestAnimationFrame(frame);
+  }
   drawAnimationTimer = window.setTimeout(() => {
-    if(drawAnimationInterval){window.clearTimeout(drawAnimationInterval);drawAnimationInterval=null;}
-    if(animation) animation.cancel();
+    if(drawAnimationFrame !== null) cancelAnimationFrame(drawAnimationFrame);
+    drawAnimationFrame = null;
+    if(!reduced) paint(1);
+    reel.style.removeProperty('transform');
+    rows.forEach(row => {
+      row.style.removeProperty('opacity');
+      row.style.removeProperty('transform');
+    });
     overlay.classList.add('is-revealed');
     title.textContent = '抽選完成';
     prev.textContent = '本次結果';
@@ -1277,7 +1315,7 @@ function startDrawReel(candidates, winners, kind, onFinish){
       unlockDrawViewport();
       onFinish();
     },650);
-  },1500);
+  },duration);
 }
 
 function drawRandomNames(){
@@ -1320,6 +1358,7 @@ function drawRandomNames(){
   empty.textContent = '抽籤進行中…';
   empty.classList.remove('hidden');
   copyBtn.disabled = true;
+  document.getElementById('drawReaderBtn').disabled = true;
   drawBtn.classList.add('is-drawing');
   drawBtn.disabled = true;
   if(label) label.textContent = '抽取中…';
@@ -1351,6 +1390,33 @@ function renderDrawResults(){
   empty.classList.add('hidden');
   list.classList.remove('hidden');
   copyBtn.disabled = drawToolResults.length === 0;
+  document.getElementById('drawReaderBtn').disabled = copyBtn.disabled;
+}
+
+function openDrawReader(){
+  const dialog = document.getElementById('drawReader');
+  if(dialog.open || !drawToolResults.length || drawAnimationTimer) return;
+  const list = document.getElementById('drawReaderList');
+  document.getElementById('drawReaderCount').textContent = '共 ' + drawToolResults.length + ' 位中籤者';
+  const rows = document.createDocumentFragment();
+  drawToolResults.forEach((name, index) => {
+    const row = document.createElement('li');
+    const number = document.createElement('span');
+    number.className = 'draw-reader-number';
+    number.textContent = String(index + 1).padStart(2, '0');
+    const label = document.createElement('span');
+    label.textContent = name;
+    row.append(number, label);
+    rows.append(row);
+  });
+  list.replaceChildren(rows);
+  const trigger = document.getElementById('drawReaderBtn');
+  dialog.addEventListener('close', () => {
+    list.replaceChildren();
+    if(!trigger.disabled) trigger.focus({preventScroll:true});
+  }, {once:true});
+  dialog.showModal();
+  list.parentElement.scrollTop = 0;
 }
 
 function clearDrawNames(){
@@ -2872,6 +2938,8 @@ function openAwardReport(){
   awardImageGeneration += 1;
   awardImageFile = null;
   awardImagePreparePromise = null;
+  const brand = document.getElementById('awardBrandImage');
+  if(!brand.hasAttribute('src'))brand.src = brand.dataset.src;
   document.getElementById('awardModal').classList.add('show');
   fitAwardStage();
   requestAnimationFrame(() => void prepareAwardImage(awardImageGeneration));
@@ -3116,7 +3184,7 @@ let applyingRemote = false;
 // before the new matches themselves are pushed), so every other device can
 // kick off the same visual spin at roughly the same time and only stop it
 // once the real new bracket actually arrives.
-let scheduleSpinTimer = null;   // interval id for the currently-running spin (local or remote-triggered)
+let scheduleSpinTimer = null;   // timer id for the currently-running spin (local or remote-triggered)
 let lastLocalShuffleAt = null;  // stamp of a shuffle *this* device just initiated — used to ignore its own echo
 let lastAppliedShuffleAt = null;// last shuffleAt value already reacted to, so unrelated meta pushes don't re-trigger it
 let metaInitialized = false;    // true once this device has processed its first meta snapshot (its baseline)
@@ -3124,6 +3192,8 @@ let cloudConnectionState = 'connecting';
 let cloudConnectionError = null;
 let lastCloudServerAt = null;
 let cloudStatusWaitTimer = null;
+let lastCloudStatusKey;
+let lastCloudPanelSignature;
 
 function onCloudConnectionStatus({phase,error,lastServerAt}){
   cloudConnectionState=phase;
@@ -3232,8 +3302,16 @@ function updateCloudStatusUI(){
   const text = document.getElementById('cloudStatusText');
   const retry = document.getElementById('cloudStatusRetry');
   if(!dot || !text) return;
+  const configured=window.cloudSync?.isConfigured();
+  const minute=lastCloudServerAt ? Math.floor(lastCloudServerAt/60000) : null;
+  const statusKey=JSON.stringify([
+    configured,currentEventCode,currentRole,currentViewerCode,shareRefCode,navigator.onLine,
+    cloudConnectionState,cloudConnectionError?.code,cloudUnsynced,cloudSaveQueued>0,minute
+  ]);
+  if(statusKey===lastCloudStatusKey)return;
+  lastCloudStatusKey=statusKey;
   if(retry)retry.classList.add('hidden');
-  if(!window.cloudSync || !window.cloudSync.isConfigured()){
+  if(!configured){
     dot.className = 'cloud-dot off';
     text.innerText = '僅本機儲存（未設定雲端）';
   } else if(currentEventCode){
@@ -3581,7 +3659,7 @@ async function handleJoinEvent(){
 }
 
 function joinCloudEvent(refCode, role, viewerCode){
-  if(currentEventCode!==refCode){clearDrawMeter();dirtyMatchIds.clear();editBase.clear();cloudMatchBase.clear();cloudMetaBase=null;cloudMetaPending=null;cloudUnsynced=false;cloudRetryDelay=3000;cloudNeedsFullReplace=false;clearTimeout(cloudRetryTimer);cloudRetryTimer=null;metaInitialized=false;lastAppliedShuffleAt=null;lastCloudServerAt=null;}
+  if(currentEventCode!==refCode){clearDrawMeter();dirtyMatchIds.clear();editBase.clear();cloudMatchBase.clear();cloudMetaBase=null;cloudMetaPending=null;cloudUnsynced=false;cloudRetryDelay=3000;cloudNeedsFullReplace=false;clearTimeout(cloudRetryTimer);cloudRetryTimer=null;metaInitialized=false;lastAppliedShuffleAt=null;lastCloudServerAt=null;lastCloudPanelSignature=undefined;}
   shareRefCode=refCode;loadedCodeRevision=0;
   currentEventCode = refCode;
   document.getElementById('cloudCreateBtn').classList.add('hidden');
@@ -3634,6 +3712,9 @@ function leaveCloudEvent(){
 }
 
 function onCloudMeta(data){
+  const isFirstMeta=!metaInitialized;
+  const previousViewerCode=currentViewerCode;
+  const previousName=state.tournament.name;
   cloudMetaBase=cloudMetaSignature(data);
   if(data.codeRevision && data.codeRevision!==loadedCodeRevision){
     const id=currentEventCode,rev=data.codeRevision;loadedCodeRevision=rev;
@@ -3679,7 +3760,11 @@ function onCloudMeta(data){
   metaInitialized = true;
   if(data.shuffleAt) lastAppliedShuffleAt = data.shuffleAt;
 
-  const beforeMetaView=JSON.stringify([state.tournament,state.players,state.teams,state.currentRound,refereePanels]);
+  const beforeMetaView=JSON.stringify([state.tournament,state.players,state.teams,state.currentRound]);
+  const cloudPanels=Array.isArray(data.refereePanels) && data.refereePanels.length>0 ? data.refereePanels : null;
+  const panelSignature=cloudPanels ? matchSignature(cloudPanels) : undefined;
+  const panelsChanged=!!cloudPanels && panelSignature!==lastCloudPanelSignature;
+  lastCloudPanelSignature=panelSignature;
   const editingNameInput = currentRole === 'referee' && (
     document.activeElement?.id === 'tournamentName'
     || (document.activeElement?.id === 'cloudNewName'
@@ -3705,7 +3790,7 @@ function onCloudMeta(data){
   state.players = Array.isArray(data.players) ? data.players : state.players;
   state.teams = Array.isArray(data.teams) ? data.teams : (state.teams || []);
   state.currentRound = data.currentRound ?? state.currentRound;
-  if(data.viewerCode && currentRole === 'referee'){
+  if(data.viewerCode && data.viewerCode!==currentViewerCode && currentRole === 'referee'){
     currentViewerCode = data.viewerCode;
     sessionStorage.setItem(EVENT_VIEWER_KEY, data.viewerCode);
   }
@@ -3715,23 +3800,25 @@ function onCloudMeta(data){
   // actually live and fell back to guessing its own "next" match — showing
   // "即將上場" for a match that was really "進行中" on the referee's device.
   // Apply the synced copy here so every device agrees.
-  if(Array.isArray(data.refereePanels) && data.refereePanels.length){
+  if(panelsChanged){
     const priorMatchByPanel = new Map(refereePanels.map(panel => [panel.id, panel.matchId]));
-    data.refereePanels.forEach(panel => {
+    cloudPanels.forEach(panel => {
       if(priorMatchByPanel.has(panel.id) && priorMatchByPanel.get(panel.id) !== panel.matchId){
         refereeNextMatchChoices.delete(panel.id);
         refereePanelDisplayPriority.delete(panel.id);
       }
     });
-    refereePanels = data.refereePanels;
+    refereePanels = cloudPanels;
     try{ sessionStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
   }
-  try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-  const metaViewChanged=beforeMetaView!==JSON.stringify([state.tournament,state.players,state.teams,state.currentRound,refereePanels]);
-  if(!isOwnShuffleEcho && (metaViewChanged || shuffleIsFresh)) renderAll();
+  const metaViewChanged=beforeMetaView!==JSON.stringify([state.tournament,state.players,state.teams,state.currentRound]);
+  if(metaViewChanged)try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  if(!isOwnShuffleEcho && (metaViewChanged || panelsChanged || shuffleIsFresh)){
+    renderAll({refreshSetup:metaViewChanged});
+  }
   updateCloudStatusUI();
   applyingRemote = false;
-  rememberCurrentEvent();
+  if(isFirstMeta || previousName!==state.tournament.name || previousViewerCode!==currentViewerCode)rememberCurrentEvent();
 
   // Start the spin only AFTER renderAll() has (re)built the bracket DOM —
   // starting it earlier would grab name elements that renderAll() then
@@ -3787,44 +3874,47 @@ function patchBracketMatchScore(matchId){
   return true;
 }
 
-function onCloudMatches(list){
+function compareCloudMatches(a,b){
+  if(a.round !== b.round)return a.round-b.round;
+  const slot = match => parseInt(String(match.id).split('-')[1] || 0, 10) || 0;
+  return slot(a)-slot(b);
+}
+
+function onCloudMatches(list, incremental=false){
+  // A draw may finish while the stream is receiving its previous schedule.
+  if(cloudNeedsFullReplace)return false;
+  if(!incremental && list.length===0 && state.matches.length>0 && remoteShuffle &&
+     remoteShuffle.event===currentEventCode && Date.now()-remoteShuffle.run<20000)return false;
+
+  const previous=new Map(state.matches.map(m=>[m.id,m]));
+  const merged=incremental ? new Map(previous) : new Map();
+  const changedIds=[];
+  let structureChanged=false;
+  if(!incremental)cloudMatchBase.clear();
+  const changes=incremental ? list : list.map(match=>({id:match.id,match}));
+  for(const {id,match} of changes){
+    const prior=previous.get(id);
+    if(!match){
+      cloudMatchBase.delete(id);
+      if(merged.delete(id))structureChanged=true;
+      continue;
+    }
+    const signature=matchSignature(match);
+    cloudMatchBase.set(id,signature);
+    if(prior && (dirtyMatchIds.has(id) || matchSignature(prior)===signature)){
+      merged.set(id,prior);
+      continue;
+    }
+    merged.set(id,match);
+    if(!prior || prior.round!==match.round)structureChanged=true;
+    else changedIds.push(id);
+  }
+  structureChanged ||= merged.size!==previous.size;
+  if(!structureChanged && !changedIds.length)return true;
+
   applyingRemote = true;
-  const incoming = list.slice().sort((a,b) => {
-    if(a.round !== b.round) return a.round - b.round;
-    const ai = parseInt(String(a.id).split('-')[1] || 0, 10) || 0;
-    const bi = parseInt(String(b.id).split('-')[1] || 0, 10) || 0;
-    return ai - bi;
-  });
-  // Keep the new bracket during the entire replacement transaction. A cached
-  // old snapshot can arrive after the draw, not only an empty snapshot.
-  if(cloudNeedsFullReplace){
-    applyingRemote = false;
-    return;
-  }
-  cloudMatchBase.clear();incoming.forEach(m=>cloudMatchBase.set(m.id,matchSignature(m)));
-  const localPending=new Map(state.matches.filter(m=>dirtyMatchIds.has(m.id)).map(m=>[m.id,m]));
-  const merged=incoming.map(m=>localPending.get(m.id)||m);
-
-  // Perf: a snapshot fires for every push — including the echo of our own
-  // score taps — so diff against what's already rendered and only do the
-  // expensive full rebuild when something actually structural changed
-  // (match count, or more than one match at once). A single changed match
-  // (by far the common case) gets the same lightweight path as local taps.
-  const prevById = new Map(state.matches.map(m => [m.id, m]));
-  let structureChanged = merged.length !== state.matches.length;
-  const changedIds = [];
-  merged.forEach(m => {
-    const prev = prevById.get(m.id);
-    if(!prev){ structureChanged = true; return; }
-    if(matchSignature(prev) !== matchSignature(m)) changedIds.push(m.id);
-  });
-
-  // Replacing the cloud schedule can briefly emit an empty collection.
-  // Keep the visible bracket until the replacement arrives during a draw.
-  if(incoming.length===0 && state.matches.length>0 && remoteShuffle && remoteShuffle.event===currentEventCode && Date.now()-remoteShuffle.run<20000){
-    applyingRemote=false;return;
-  }
-  state.matches = merged;
+  state.matches = structureChanged ? Array.from(merged.values()).sort(compareCloudMatches)
+    : state.matches.map(match=>merged.get(match.id));
   try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
 
   // The real reshuffled bracket has arrived — stop any slot-machine spin
@@ -3836,15 +3926,16 @@ function onCloudMatches(list){
   if(isFullRebuild && !remoteShuffleActive()) stopScheduleSpin();
 
   if(isFullRebuild){
-    renderAll();
+    renderAll({refreshSetup:false});
     if(remoteShuffle && remoteShuffle.event===currentEventCode && Date.now()-remoteShuffle.run<20000){
       remoteShuffle.resultReady=true;
       if(remoteShuffle.step===5 && !remoteShuffle.revealed){remoteShuffle.revealed=true;revealShuffleResult();}
     }
   }
   else if(changedIds.length === 1)
-    refreshAfterScoreChange(changedIds[0],prevById.get(changedIds[0]));
+    refreshAfterScoreChange(changedIds[0],previous.get(changedIds[0]));
   applyingRemote = false;
+  return true;
 }
 
 /* =========================================================
@@ -3866,11 +3957,10 @@ function findDuplicatePlayerChip(name, exceptChip){
 }
 
 function saveRosterDraft(){
-  if(restoringRosterDraft || state.tournament.status === 'running') return;
+  if(!rosterDraftEnabled || restoringRosterDraft || state.tournament.status === 'running') return;
   const players = Array.from(document.querySelectorAll('#playerInputs .player-chip')).map(chip => ({
     name: chip.dataset.name || '', attendance: chip.dataset.attendance || 'pending'
   })).filter(p => p.name.trim());
-  if(!rosterDraftEnabled) return;
   try{
     if(players.length) localStorage.setItem(ROSTER_DRAFT_KEY, JSON.stringify({ consented:true, players, updatedAt:Date.now() }));
     else localStorage.removeItem(ROSTER_DRAFT_KEY);
@@ -3905,12 +3995,10 @@ function restoreRosterDraft(draft){
   if(!draft || !Array.isArray(draft.players)) return;
   restoringRosterDraft = true;
   createPlayerInputs(0);
-  draft.players.forEach(p => addPlayerChip(p.name, p.attendance));
+  addPlayerChips(draft.players);
   restoringRosterDraft = false;
   rosterDraftEnabled = true;
   rosterDraftSavePrompted = true;
-  renumberPlayerRows();
-  renderAttendanceManager();
   showToast(`已恢復 ${draft.players.length} 位選手與點名狀態`);
 }
 
@@ -3927,7 +4015,8 @@ function ensureChipInput(container){
   const input = document.createElement('input');
   input.id = 'playerChipInput';
   input.className = 'chip-text-input';
-  input.placeholder = '輸入玩家名稱後按 Enter 新增';
+  input.placeholder = '輸入選手姓名';
+  input.setAttribute('aria-label','選手姓名');
   input.addEventListener('keydown', onChipInputKeydown);
   container.appendChild(input);
 }
@@ -3951,20 +4040,21 @@ function onChipInputKeydown(e){
   }
 }
 
-function addPlayerChip(name, attendance){
+function addPlayerChip(name, attendance, batch){
   const container = document.getElementById('playerInputs');
   ensureChipInput(container);
   const displayName = String(name || '').trim().replace(/\s+/g, ' ');
   if(!displayName) return false;
-  if(findDuplicatePlayerChip(displayName)){
-    showToast(`已忽略重複姓名：${displayName}`);
+  const normalized=normalizePlayerName(displayName);
+  if(batch ? batch.names.has(normalized) : findDuplicatePlayerChip(displayName)){
+    if(!batch)showToast(`已忽略重複姓名：${displayName}`);
     return false;
   }
   const chip = document.createElement('span');
   chip.className = 'player-chip';
   chip.dataset.name = displayName;
   chip.dataset.attendance = attendance || 'pending';
-  const idx = container.querySelectorAll('.player-chip').length + 1;
+  const idx = batch ? ++batch.count : container.querySelectorAll('.player-chip').length + 1;
   chip.innerHTML = `
     <span class="chip-index">${String(idx).padStart(2,'0')}</span>
     <span class="chip-name" ondblclick="editChip(this)" title="雙擊可重新命名">${escapeHtml(displayName)}</span>
@@ -3972,9 +4062,24 @@ function addPlayerChip(name, attendance){
   `;
   const chipInput = document.getElementById('playerChipInput');
   container.insertBefore(chip, chipInput);
+  if(batch)batch.names.add(normalized);
+  else {
+    renumberPlayerRows();
+    saveRosterDraft();
+  }
+  return true;
+}
+
+function addPlayerChips(players){
+  const existing=Array.from(document.querySelectorAll('#playerInputs .player-chip'));
+  const batch={count:existing.length,names:new Set(existing.map(chip=>normalizePlayerName(chip.dataset.name)))};
+  let added=0;
+  for(const player of players){
+    if(addPlayerChip(player.name,player.attendance,batch))added++;
+  }
   renumberPlayerRows();
   saveRosterDraft();
-  return true;
+  return {added,total:batch.count};
 }
 
 function editChip(nameSpan){
@@ -4022,10 +4127,12 @@ function editChip(nameSpan){
 }
 
 function addPlayerRow(){
-  // 「＋ 新增玩家」現在只需把焦點移到晶片輸入框，讓使用者直接打字 + Enter
-  const container = document.getElementById('playerInputs');
-  ensureChipInput(container);
-  document.getElementById('playerChipInput').focus();
+  ensureChipInput(document.getElementById('playerInputs'));
+  const input=document.getElementById('playerChipInput');
+  if(input.value.trim() && addPlayerChip(input.value)){
+    input.value='';
+    offerRosterDraftSave();
+  }else input.focus();
 }
 
 function addTeamEntry(team){
@@ -4092,17 +4199,15 @@ function onFormatChange(userChanged){
   if(isTeam && document.querySelectorAll('#teamInputs .team-entry').length === 0) renderTeamInputs(state.teams);
   const note = document.getElementById('formatNote');
   if(note){
-    note.innerText = isTeam ? '3v3 團體單淘汰：每名團員有 2 HP；HP 歸零才淘汰並換下一位，勝者留場，雙方剩餘 HP 都不重置。全隊三人淘汰即落敗。' : format === 'double_elimination' ? '雙敗淘汰：首敗進敗部、再敗出局。敗部冠軍須連勝兩場總決賽；輪空自動晉級，不計敗場。' : isKnockout
-      ? '單淘汰賽模式：輸了立刻出局，「即時戰況」頁籤將顯示對戰樹狀圖，方便觀看晉級狀況。'
-      : '';
+    const descriptions = {
+      knockout:'輸一場即出局。輪空選手直接晉級。',
+      double_elimination:'首敗進敗部，再敗出局。敗部冠軍須連贏兩場總決賽。',
+      single:'每兩位選手對戰一次。',
+      double:'每兩位選手對戰兩次。',
+      team3v3:'每位團員有 2 HP。HP 歸零換下一位，勝者帶著剩餘 HP 留場。三人全數淘汰即落敗。'
+    };
+    note.textContent = descriptions[format] || '';
   }
-}
-
-// 相容舊呼叫點（批量套用名單、從 state.players 載入既有名單時使用）
-function appendPlayerRow(container, value, attendance){
-  ensureChipInput(container);
-  const name = String(value || '').trim();
-  if(name) addPlayerChip(name, attendance);
 }
 
 function applyBulkNames(){
@@ -4113,37 +4218,11 @@ function applyBulkNames(){
     return;
   }
 
-  const container = document.getElementById('playerInputs');
-  ensureChipInput(container);
-
-  // 既有名單不清空；所有姓名入口共用 normalizePlayerName 的比較規則。
-  const registeredNames = new Set(
-    Array.from(container.querySelectorAll('.player-chip'))
-      .map(chip => normalizePlayerName(chip.dataset.name))
-      .filter(Boolean)
-  );
-  const addedNames = [];
-  let duplicateCount = 0;
-
-  names.forEach(name => {
-    const normalized = normalizePlayerName(name);
-    if(!normalized || registeredNames.has(normalized)){
-      duplicateCount++;
-      return;
-    }
-    registeredNames.add(normalized);
-    addedNames.push(name);
-    appendPlayerRow(container, name);
-  });
-
-  renumberPlayerRows();
-  renderAttendanceManager();
+  const {added,total}=addPlayerChips(names.map(name=>({name})));
   document.getElementById('bulkNamesInput').value = '';
-  const totalPlayers = container.querySelectorAll('.player-chip').length;
-  const duplicateMessage = duplicateCount > 0
-    ? `，已自動忽略 ${duplicateCount} 筆重複姓名`
-    : '';
-  const resultMessage = `已新增 ${addedNames.length} 位玩家${duplicateMessage}。目前參賽名單共 ${totalPlayers} 位。`;
+  const duplicates=names.length-added;
+  const duplicateMessage=duplicates ? `，已自動忽略 ${duplicates} 筆重複姓名` : '';
+  const resultMessage=`已新增 ${added} 位玩家${duplicateMessage}。目前參賽名單共 ${total} 位。`;
   if(!offerRosterDraftSave(resultMessage)) showAlert(resultMessage);
 }
 
@@ -4164,7 +4243,7 @@ function renumberPlayerRows(){
   const hint = document.getElementById('playerCountHint');
   if(hint) hint.textContent = chips.length > 0 ? `已新增 ${chips.length} 位` : '';
   const chipInput = document.getElementById('playerChipInput');
-  if(chipInput) chipInput.placeholder = chips.length > 0 ? '新增玩家…（輸入名稱按下 ↵）' : '輸入玩家名稱後按 Enter 新增';
+  if(chipInput) chipInput.placeholder = chips.length > 0 ? '新增選手姓名' : '輸入選手姓名';
   if(attendanceManagerOpen) renderAttendanceManager();
   syncPrizeDrawPlayers();
 }
@@ -4184,7 +4263,7 @@ function toggleAttendanceManager(){
   renderAttendanceManager();
 }
 
-function renderAttendanceManager(){
+function renderAttendanceManager(changedIndex){
   const manager = document.getElementById('attendanceManager');
   const panel = document.getElementById('attendancePanel');
   const toggle = document.getElementById('attendanceToggleBtn');
@@ -4215,30 +4294,40 @@ function renderAttendanceManager(){
     return;
   }
 
-  list.innerHTML = chips.map((chip, index) => {
-    const status = chip.dataset.attendance || 'pending';
-    const rowClass = status === 'arrived' ? ' is-arrived' : status === 'absent' ? ' is-absent' : '';
-    return `<div class="attendance-row${rowClass}" data-player-index="${index}">
-      <div class="attendance-player">
-        <span class="attendance-index">${String(index + 1).padStart(2,'0')}</span>
-        <span class="attendance-player-name">${escapeHtml(chip.dataset.name || '')}</span>
-      </div>
-      <div class="attendance-actions">
-        <button type="button" class="attendance-action arrived${status === 'arrived' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'arrived')" aria-pressed="${status === 'arrived'}" title="標記報到">${icon(status === 'arrived' ? 'check' : 'user-check',14)}<span>${status === 'arrived' ? '已報到' : '報到'}</span></button>
-        <button type="button" class="attendance-action absent${status === 'absent' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'absent')" aria-pressed="${status === 'absent'}" title="標記未到">${icon('user-x',14)}<span>未到</span></button>
-        <details class="attendance-more">
-          <summary class="attendance-action" aria-label="更多選手操作" title="更多操作">⋯</summary>
-          <div class="attendance-more-menu">
-            <button type="button" onclick="startAttendanceNameEdit(${index},this);this.closest('details').removeAttribute('open')">${icon('edit-3',14)}<span>編輯姓名</span></button>
-            <button type="button" class="delete" onclick="this.closest('details').removeAttribute('open');deleteAttendancePlayer(${index})">${icon('trash-2',14)}<span>刪除選手</span></button>
-          </div>
-        </details>
-      </div>
-    </div>`;
-  }).join('');
+  const row=Number.isInteger(changedIndex) ? list.children[changedIndex] : null;
+  if(row && chips[changedIndex]){
+    const focused=document.activeElement;
+    const action=focused?.matches('.attendance-action.arrived,.attendance-action.absent') && row.contains(focused)
+      ? (focused.classList.contains('arrived') ? '.arrived' : '.absent') : null;
+    row.outerHTML=attendanceRowMarkup(chips[changedIndex],changedIndex);
+    if(action)list.children[changedIndex].querySelector(action)?.focus({preventScroll:true});
+  }else{
+    list.innerHTML=chips.map(attendanceRowMarkup).join('');
+    const searchInput = document.getElementById('attendanceSearchInput');
+    if(searchInput && searchInput.value.trim()) searchAttendancePlayers(searchInput.value);
+  }
+}
 
-  const searchInput = document.getElementById('attendanceSearchInput');
-  if(searchInput && searchInput.value.trim()) searchAttendancePlayers(searchInput.value);
+function attendanceRowMarkup(chip,index){
+  const status = chip.dataset.attendance || 'pending';
+  const rowClass = status === 'arrived' ? ' is-arrived' : status === 'absent' ? ' is-absent' : '';
+  return `<div class="attendance-row${rowClass}" data-player-index="${index}">
+    <div class="attendance-player">
+      <span class="attendance-index">${String(index + 1).padStart(2,'0')}</span>
+      <span class="attendance-player-name">${escapeHtml(chip.dataset.name || '')}</span>
+    </div>
+    <div class="attendance-actions">
+      <button type="button" class="attendance-action arrived${status === 'arrived' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'arrived')" aria-pressed="${status === 'arrived'}" title="標記報到">${icon(status === 'arrived' ? 'check' : 'user-check',14)}<span>${status === 'arrived' ? '已報到' : '報到'}</span></button>
+      <button type="button" class="attendance-action absent${status === 'absent' ? ' active' : ''}" onclick="setAttendanceStatus(${index},'absent')" aria-pressed="${status === 'absent'}" title="標記未到">${icon('user-x',14)}<span>未到</span></button>
+      <details class="attendance-more">
+        <summary class="attendance-action" aria-label="更多選手操作" title="更多操作">⋯</summary>
+        <div class="attendance-more-menu">
+          <button type="button" onclick="startAttendanceNameEdit(${index},this);this.closest('details').removeAttribute('open')">${icon('edit-3',14)}<span>編輯姓名</span></button>
+          <button type="button" class="delete" onclick="this.closest('details').removeAttribute('open');deleteAttendancePlayer(${index})">${icon('trash-2',14)}<span>刪除選手</span></button>
+        </div>
+      </details>
+    </div>
+  </div>`;
 }
 
 function normalizeAttendanceSearch(text){
@@ -4336,8 +4425,8 @@ function setAttendanceStatus(index, status){
   const chips = document.querySelectorAll('#playerInputs .player-chip');
   const chip = chips[index];
   if(!chip) return;
-  chip.dataset.attendance = status;
-  renderAttendanceManager();
+  chip.dataset.attendance = chip.dataset.attendance === status ? 'pending' : status;
+  renderAttendanceManager(index);
   saveRosterDraft();
 }
 
@@ -4890,7 +4979,7 @@ function renderDoubleBracket(){
     html+='</div></div></section>';
     sections[bracket]=html;
   });
-  wrap.innerHTML=`<div class="de-championship-row">${sections.winners||''}${sections.final||''}</div>${sections.losers||''}`;
+  setBracketMarkup(wrap, `<div class="de-championship-row">${sections.winners||''}${sections.final||''}</div>${sections.losers||''}`);
   updateBracketSearchVisibility();
 }
 
@@ -5586,8 +5675,6 @@ function syncDrawActions(){
     target.append(group);
   }
   refMore.classList.add('hidden');
-  const refereeHelp=document.querySelector('.referee-bracket-help');
-  if(refereeHelp) refereeHelp.classList.toggle('hidden',playing);
   group.classList.toggle('hidden',!(ref&&allowed&&!playing));
   group.querySelector('p').textContent=playing?'保留名單，重抽會清除所有比分與對戰紀錄。':'保留名單，重新安排對戰。';
   document.getElementById('setupDrawActions').classList.toggle('hidden',!drawAllowed('setup'));
@@ -5615,51 +5702,60 @@ function randomizeSchedule(source,count=1){
   }}],'重新抽籤對戰');
 }
 
-// Starts the slot-machine name-spin over whatever bracket boxes are
-// currently rendered. Shared by the device that clicks "重新抽籤對戰"
-// AND by every other connected referee/viewer device, which triggers this
-// in response to the shuffleAt broadcast in onCloudMeta — that's what makes
-// the reshuffle animation visible to everyone watching, not just whoever
-// pressed the button. Returns false (and starts nothing) if there's
-// nothing on screen to animate, e.g. the bracket tab was never opened yet.
-//
-// Rather than a slow vertical reel, each name cell just rapidly swaps to a
-// different random name every tick (with a quick colour-flash animation so
-// even a repeated pick still reads as "changing"). Runs for a short, snappy
-// burst (~0.5s total, see runScheduleShuffleAnimation) rather than a long
-// spin-down.
-const NAME_FLICKER_MS = 80; // how often each cell's text swaps
-
-// Keep track of the rendered labels so stopping also restores real names.
-// Query the current tree on each tick: cloud metadata can replace its DOM.
+// Keep original labels for cancellation or for a tree that stays mounted.
+const NAME_FLICKER_MS = 80;
 let scheduleSpinLabels = new Map();
+let scheduleSpinObserver = null;
 function startScheduleSpin(){
   stopScheduleSpin();
   const pool = state.players.map(p => p.name).filter(Boolean);
-  if(pool.length === 0) return false;
-  scheduleSpinTimer = setInterval(() => {
-    for(const el of scheduleSpinLabels.keys()){
-      if(!el.isConnected)scheduleSpinLabels.delete(el);
+  if(!pool.length) return false;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const wrap = document.getElementById('bracketTree');
+  let treeRoot, cells;
+  const visible = new Set();
+  const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
+    for(const entry of entries){
+      if(entry.isIntersecting) visible.add(entry.target);
+      else visible.delete(entry.target);
     }
-    const wrap = document.getElementById('bracketTree');
-    const nameEls = wrap ? wrap.querySelectorAll('.bslot-name, .champ-name') : [];
-    nameEls.forEach(el => {
-      if(!scheduleSpinLabels.has(el))scheduleSpinLabels.set(el,el.textContent);
-      el.classList.add('name-flicker');
-      let pick = pool[Math.floor(Math.random() * pool.length)];
-      if(pool.length > 1 && pick === el.textContent){
-        pick = pool[(pool.indexOf(pick) + 1) % pool.length];
+  },{rootMargin:'80px'}) : null;
+  scheduleSpinObserver = observer;
+  function tick(){
+    if(wrap && !reducedMotion.matches && !document.hidden && wrap.getClientRects().length){
+      if(treeRoot !== wrap.firstElementChild || !cells){
+        treeRoot = wrap.firstElementChild;
+        cells = wrap.querySelectorAll('.bslot-name, .champ-name');
+        observer?.disconnect();
+        visible.clear();
+        if(observer) cells.forEach(el => observer.observe(el));
+        for(const el of scheduleSpinLabels.keys()){
+          if(!el.isConnected) scheduleSpinLabels.delete(el);
+        }
       }
-      el.textContent = pick;
-    });
-  }, NAME_FLICKER_MS);
+      for(const el of (observer ? visible : cells)){
+        if(!scheduleSpinLabels.has(el)){
+          scheduleSpinLabels.set(el,el.textContent);
+          el.classList.add('name-flicker');
+        }
+        const i = Math.floor(Math.random() * pool.length);
+        el.textContent = pool[i] === el.textContent ? pool[(i + 1) % pool.length] : pool[i];
+      }
+    }
+    scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS);
+  }
+  tick();
   return true;
 }
-
-function stopScheduleSpin(){
-  if(scheduleSpinTimer){ clearInterval(scheduleSpinTimer); scheduleSpinTimer = null; }
-  for(const [el,label] of scheduleSpinLabels){
-    if(el.isConnected){el.textContent=label;el.classList.remove('name-flicker');}
+function stopScheduleSpin(restoreLabels = true){
+  scheduleSpinObserver?.disconnect();
+  scheduleSpinObserver = null;
+  clearTimeout(scheduleSpinTimer);
+  scheduleSpinTimer = null;
+  if(restoreLabels){
+    for(const [el,label] of scheduleSpinLabels){
+      if(el.isConnected){el.textContent=label;el.classList.remove('name-flicker');}
+    }
   }
   scheduleSpinLabels.clear();
 }
@@ -5719,7 +5815,15 @@ function paintDrawMeter(run,step){
   m.el.querySelector('output').textContent=step+'／5';
   if(step===5){m.el.classList.add('is-complete');m.el.querySelector('header span').textContent='已完成五次抽籤';}
   m.el.querySelector('.draw-meter').setAttribute('aria-valuenow',step);
-  m.el.querySelector('i').style.width=(step*20)+'%';
+  const fill=m.el.querySelector('i');
+  m.fillAnimation?.cancel();
+  fill.style.transform='scaleX('+(step/5)+')';
+  if(step<5 && fill.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    m.fillAnimation=fill.animate([
+      {transform:'scaleX('+(step/5)+')'},
+      {transform:'scaleX('+((step+1)/5)+')'}
+    ],{duration:1000,easing:'linear',fill:'forwards'});
+  }
   clearTimeout(m.timer);m.timer=setTimeout(clearDrawMeter,step===5?1300:10000);
 }
 async function runScheduleShuffleAnimation(count,source,withPlay){
@@ -5763,7 +5867,7 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
         showToast('賽況已變動，請重新確認');return;
       }
       result=originalFormat==='double_elimination'?generateDoubleElimination(state.players):generateKnockoutBracket(state.players);
-      if(count===5){if(i<5)broadcast(i);buttons.forEach(btn=>btn.textContent=i+'／5');}
+      if(count===5 && i<5) broadcast(i);
     }
     finalizeScheduleShuffle(count,result);finished=true;if(count===5)broadcast(5);
   }finally{
@@ -5773,15 +5877,22 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
   }
 }
 
+let reconcileShuffleResult=false;
 let shuffleRevealAnimation=null;
 function revealShuffleResult(){
   const tree=document.getElementById('bracketTree');
   shuffleRevealAnimation?.cancel();
-  if(!tree || !tree.animate || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  shuffleRevealAnimation=tree.animate([{opacity:.65},{opacity:1}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
+  if(!tree?.animate || !tree.getClientRects().length || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  shuffleRevealAnimation=tree.animate([
+    {opacity:.85,transform:'translateY(2px)'}, {opacity:1,transform:'translateY(0)'}
+  ],{duration:150,easing:'ease-out'});
 }
 function finalizeScheduleShuffle(count,newMatches){
-  stopScheduleSpin();
+  // Visible brackets are replaced in the same task. Restoring their old names
+  // would add a redundant set of DOM writes immediately before replacement.
+  const replacingTree = isTabVisible('standings') ||
+    (isTabVisible('referee') && isRefereeBracketInteractive());
+  stopScheduleSpin(!replacingTree);
   state.matches = newMatches;
   state.currentRound = 1;
   state.tournament.status = 'running';
@@ -5793,7 +5904,9 @@ function finalizeScheduleShuffle(count,newMatches){
   cloudReplaceRevision++;
   saveState();
 
-  renderAll();
+  reconcileShuffleResult=true;
+  try{renderAll({refreshSetup:false});}
+  finally{reconcileShuffleResult=false;}
   revealShuffleResult();
   showToast(count===5?'已採用第 5 次抽籤結果':'已重新抽籤對戰');
 }
@@ -6036,13 +6149,8 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal, hideStatusBadge 
       ? `<div class="bracket-status-badge next ${isFinal ? 'with-final' : ''}"><span class="bracket-status-dot" aria-hidden="true"></span>即將上場</div>`
       : '';
   const finalClass = isFinal ? 'final-match' : '';
-  const sparkles = isFinal
-    ? [0,1,2].map(i => `<span class="final-sparkle" aria-hidden="true" style="animation-delay:${(i*0.7).toFixed(1)}s;"></span>`).join('')
-    : '';
-
   return `
     <div class="bracket-match ${m.status==='completed' ? 'done':''} ${statusClass} ${finalClass}" style="top:${top}px;" data-match-id="${m.id}">
-      ${sparkles}
       ${statusBadge}
       <${slotTag} class="bracket-slot ${aWin?'winner':''} ${aLose?'loser':''} ${(aBye||aWd)?'bye':''} ${editable?'bracket-win-pick':''}" ${editable ? `type="button" data-match-id="${escapeAttr(m.id)}" data-side="A" aria-label="判定 ${escapeAttr(aDisplayName)} 獲勝"` : ''} data-player-id="${(m.playerA && !aBye) ? escapeAttr(m.playerA) : ''}">
         <span class="bslot-name ${aNameSize}" title="${escapeAttr(aDisplayName)}">${aName}</span>
@@ -6132,6 +6240,40 @@ function computeBracketLayout(rounds, byRound){
   }
 
   return { visibleByRound, pos, H, boxHeight };
+}
+
+// A redraw usually keeps the same rounds, controls, and slots. Reuse their
+// DOM on the reveal so the browser only lays out actual draw differences.
+function setBracketMarkup(wrap, html){
+  if(!reconcileShuffleResult){
+    wrap.innerHTML = html;
+    return;
+  }
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  reconcileBracketChildren(wrap,template.content);
+}
+function reconcileBracketChildren(parent,source){
+  let old = parent.firstChild;
+  for(const next of Array.from(source.childNodes)){
+    if(!old){parent.append(next);continue;}
+    const after = old.nextSibling;
+    if(old.nodeName !== next.nodeName){
+      old.replaceWith(next);
+    }else if(old.nodeType === Node.TEXT_NODE){
+      if(old.data !== next.data) old.data = next.data;
+    }else if(old.nodeType === Node.ELEMENT_NODE && !old.isEqualNode(next)){
+      for(const attr of Array.from(old.attributes)){
+        if(!next.hasAttribute(attr.name)) old.removeAttribute(attr.name);
+      }
+      for(const attr of next.attributes){
+        if(old.getAttribute(attr.name) !== attr.value) old.setAttribute(attr.name,attr.value);
+      }
+      reconcileBracketChildren(old,next);
+    }
+    old = after;
+  }
+  while(old){const after = old.nextSibling;old.remove();old = after;}
 }
 
 function renderBracket(){
@@ -6241,32 +6383,9 @@ function renderBracket(){
 
   html += `</div>`;
 
-  wrap.innerHTML = html;
-
-  // Set up the final-match sparkles: each one fades in at a random spot
-  // around the frame, fades out, then jumps to a new random spot for the
-  // next cycle (rather than blinking in a fixed position).
-  wrap.querySelectorAll('.final-sparkle').forEach(el => {
-    randomizeSparklePosition(el);
-    el.addEventListener('animationiteration', () => randomizeSparklePosition(el));
-  });
+  setBracketMarkup(wrap, html);
 
   updateBracketSearchVisibility();
-}
-
-function randomizeSparklePosition(el){
-  const box = el.parentElement;
-  const w = (box && box.offsetWidth) || 186;
-  const h = (box && box.offsetHeight) || 74;
-  const pad = 6;
-  const edge = Math.floor(Math.random() * 4);
-  let top, left;
-  if(edge === 0){ left = Math.random() * w; top = -pad; }
-  else if(edge === 1){ left = w + pad; top = Math.random() * h; }
-  else if(edge === 2){ left = Math.random() * w; top = h + pad; }
-  else { left = -pad; top = Math.random() * h; }
-  el.style.left = `${left}px`;
-  el.style.top = `${top}px`;
 }
 
 /* =========================================================
@@ -6807,14 +6926,14 @@ function syncRefereeViewModeControls(){
   if(bracketCheckbox) bracketCheckbox.setAttribute('aria-label', bracketMode ? '切回計分模式' : '開啟樹狀圖模式');
   const toggleNote = document.getElementById('refereeBracketModeNote');
   if(toggleNote) toggleNote.textContent = supported
-    ? '點場次標題開始；再點一次取消。比賽結束，點勝者姓名確認。即將上場由系統自動安排。'
+    ? '點場次標題即可標記為「進行中」，同時開賽的場數以裁判台數為限。完賽後，點勝者姓名確認晉級。有空台時，系統會自動將可開賽的場次標記為「即將上場」。'
     : '樹狀圖裁判模式適用單淘汰與雙敗淘汰賽';
   document.getElementById('refereeClassicView')?.classList.toggle('hidden', bracketMode);
   document.getElementById('refereeClassicControls')?.classList.toggle('hidden', bracketMode);
   document.getElementById('refereeBracketView')?.classList.toggle('hidden', !bracketMode);
   const subtitle = document.getElementById('refereeCardSub');
   if(subtitle) subtitle.textContent = bracketMode
-    ? '點場次標題開始；再點一次取消。比賽結束，點勝者姓名確認。即將上場由系統自動安排。'
+    ? '點場次標題即可標記為「進行中」，同時開賽的場數以裁判台數為限。完賽後，點勝者姓名確認晉級。有空台時，系統會自動將可開賽的場次標記為「即將上場」。'
     : '多桌並行時可各自新增裁判面板，分頭計分・資料會即時同步。';
   return bracketMode;
 }
@@ -7041,12 +7160,12 @@ function loadRefereePanels(){
   refereePanelDisplayPriority.clear();
   refereePanels = [{ id: genPanelId(), matchId:null, label:'' }];
 }
-function savePanels(){
+function savePanels({sync=true}={}){
   // Drop legacy per-table next-match pins and pre-start claims. A match enters
   // the shared active set only after scoring has actually begun.
   refereePanels.forEach(panel => { delete panel.nextMatchId; delete panel.matchClaimed; });
   try{ sessionStorage.setItem(PANELS_KEY, JSON.stringify(refereePanels)); }catch(e){}
-  pushPanelsToCloud();
+  if(sync)void pushPanelsToCloud();
 }
 
 // Pushes which match each referee table currently has loaded, so the
@@ -7153,7 +7272,6 @@ function renderReferee(){
     if(bracketHeading) bracketHeading.textContent = hasMatches ? '場次控制' : '建立賽程後即可操作';
     document.getElementById('refereeBracketSummary')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketControls')?.classList.toggle('hidden', !hasMatches);
-    document.querySelector('#refereeBracketView .referee-bracket-help')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketEmpty')?.classList.toggle('hidden', hasMatches);
     document.getElementById('refereeBracketViewport')?.classList.toggle('hidden', !hasMatches);
     renderBracket();
@@ -7180,7 +7298,8 @@ function renderReferee(){
   // Unstarted assignments are preview cards only; keep them unique without
   // allowing one table's preview to reserve a match from another table.
   reconcileRefereePanelPreviews();
-  savePanels();
+  // Preview allocation is local. Deliberate panel edits are saved separately.
+  savePanels({sync:false});
 
   // Match scoring activity drives the bracket's "進行中 / 即將上場" badges,
   // while panel previews remain non-binding; refresh the bracket now
@@ -7780,11 +7899,19 @@ function hideModal(){
 
 
 function openUpdateNotes(){
-  showModal('', [{label:'知道了',className:'btn-primary'}], 'V3.44 更新摘要');
+  showModal('', [{label:'知道了',className:'btn-primary'}], `${APP_VERSION} 更新摘要`);
   const message = document.getElementById('customModalMessage');
   message.innerHTML = `
     <div class="update-notes">
-      <div class="update-notes-date">更新日期 2026/11/18</div><section class="update-notes-section"><h4 class="update-notes-heading">V3.44 更新重點</h4><ul class="update-notes-list"><li>選手觀看賽程時減少重連與記分造成的重複繪製；對戰紀錄在開啟時才載入，提升多人同時觀看的流暢度。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.43 更新重點</h4><ul class="update-notes-list"><li>多裁判同時計分時保留尚未同步的比分，快速連點依序送出；同場衝突會提醒核對雲端結果。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.42 更新重點</h4><ul class="update-notes-list"><li>手機返回網頁時以精簡版本資訊檢查更新，減少重複下載整頁造成的等待。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.41 更新重點</h4><ul class="update-notes-list"><li>裁判記分只同步變動的場次，減少多人觀看時的重複讀取。</li><li>連線狀態顯示伺服器確認與同步異常，可手動重試。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.40 更新重點</h4><ul class="update-notes-list"><li>統一全站主題配色，補齊點名區塊、工具圖示及抽籤特效；選手與裁判皆可切換主題。「即將上場」維持固定黃色。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.38 更新重點</h4><ul class="update-notes-list"><li>開打前可直接重抽對戰，開打後收進更多設定；五次連抽每秒一次，裁判與選手都能查看進度。</li><li>季軍戰移到決賽右側，手機可沿同一列查看。</li><li>精簡選手首頁；裁判可刷新分享代碼，保留原有賽況。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.37・雙敗淘汰教學</h4><ul class="update-notes-list"><li>使用說明新增雙敗淘汰圖解，說清勝部、敗部、冠軍決賽與加賽條件。</li><li>裁判台點場次標題開賽，判勝後自動更新晉級與即將上場；完賽可續開新賽事。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">使用說明與候補抽籤</h4><ul class="update-notes-list"><li>工具新增可搜尋的逐步圖解教學，涵蓋賽事同步、候補抽籤、裁判操作與戰報典藏。</li><li>抽籤輪播加入減速、候選人數與結果揭曉，支援減少動態效果設定。</li><li>抽籤名單用途改為清楚說明候補／參賽資格抽選，附總名額 32 人、已確定 20 人，從 30 位候補抽出 12 人的範例。</li></ul></section>
+      <div class="update-notes-date">更新日期 2026/11/18</div>
+      <section class="update-notes-section">
+        <h4 class="update-notes-heading">V3.45 更新重點</h4>
+        <ul class="update-notes-list">
+          <li>裁判台減少重複同步，比分更新只處理變動場次。</li>
+          <li>設定頁重新排版，手機可快速找到比賽規則、名單和點名。</li>
+        </ul>
+      </section>
+      <section class="update-notes-section"><h4 class="update-notes-heading">V3.44 更新重點</h4><ul class="update-notes-list"><li>選手觀看賽程時減少重連與記分造成的重複繪製；對戰紀錄在開啟時才載入，提升多人同時觀看的流暢度。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.43 更新重點</h4><ul class="update-notes-list"><li>多裁判同時計分時保留尚未同步的比分，快速連點依序送出；同場衝突會提醒核對雲端結果。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.42 更新重點</h4><ul class="update-notes-list"><li>手機返回網頁時以精簡版本資訊檢查更新，減少重複下載整頁造成的等待。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.41 更新重點</h4><ul class="update-notes-list"><li>裁判記分只同步變動的場次，減少多人觀看時的重複讀取。</li><li>連線狀態顯示伺服器確認與同步異常，可手動重試。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.40 更新重點</h4><ul class="update-notes-list"><li>統一全站主題配色，補齊點名區塊、工具圖示及抽籤特效；選手與裁判皆可切換主題。「即將上場」維持固定黃色。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.38 更新重點</h4><ul class="update-notes-list"><li>開打前可直接重抽對戰，開打後收進更多設定；五次連抽每秒一次，裁判與選手都能查看進度。</li><li>季軍戰移到決賽右側，手機可沿同一列查看。</li><li>精簡選手首頁；裁判可刷新分享代碼，保留原有賽況。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">V3.37・雙敗淘汰教學</h4><ul class="update-notes-list"><li>使用說明新增雙敗淘汰圖解，說清勝部、敗部、冠軍決賽與加賽條件。</li><li>裁判台點場次標題開賽，判勝後自動更新晉級與即將上場；完賽可續開新賽事。</li></ul></section><section class="update-notes-section"><h4 class="update-notes-heading">使用說明與候補抽籤</h4><ul class="update-notes-list"><li>工具新增可搜尋的逐步圖解教學，涵蓋賽事同步、候補抽籤、裁判操作與戰報典藏。</li><li>抽籤輪播加入減速、候選人數與結果揭曉，支援減少動態效果設定。</li><li>抽籤名單用途改為清楚說明候補／參賽資格抽選，附總名額 32 人、已確定 20 人，從 30 位候補抽出 12 人的範例。</li></ul></section>
       <section class="update-notes-section">
         <h4 class="update-notes-heading">介面與裁判操作優化</h4>
         <ul class="update-notes-list">
@@ -7918,8 +8045,7 @@ function loadSetupInputs(){
     renderTeamInputs(state.teams);
   } else if(showDetail && state.players.length > 0){
     createPlayerInputs(0);
-    const container = document.getElementById('playerInputs');
-    state.players.forEach(p => appendPlayerRow(container, p.name));
+    addPlayerChips(state.players);
   } else if(showDetail && document.getElementById('playerInputs').children.length === 0){
     createPlayerInputs(0);
   }
@@ -7938,7 +8064,7 @@ function loadSetupInputs(){
   const note = document.getElementById('setupNote');
   const startBtn = document.getElementById('startBtn');
   if(isRunning){
-    note.innerText = '賽事進行中：重新按下「開始比賽」將會清除目前所有對戰紀錄並重新產生賽程。';
+    note.textContent = '重新產生賽程會清除這場賽事的所有比分與對戰紀錄。';
     startBtn.innerText = '重新產生賽程';
   } else {
     note.innerText = '';
@@ -7986,8 +8112,7 @@ function togglePlayerSetupSection(){
     }
     // 展開時把目前正式名單重新填入晶片清單，方便直接編輯後按「重新產生賽程」
     createPlayerInputs(0);
-    const container = document.getElementById('playerInputs');
-    state.players.forEach(p => appendPlayerRow(container, p.name));
+    addPlayerChips(state.players);
   }
   updatePlayerSetupVisibility();
 }
@@ -8131,6 +8256,7 @@ function switchTab(tab){
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
   document.body.classList.toggle('referee-view', tab === 'referee');
+  document.body.classList.toggle('setup-view', tab === 'setup');
   document.querySelectorAll('.tab').forEach(btn => {
     if(btn.dataset.tab === tab) btn.setAttribute('aria-current','page'); else btn.removeAttribute('aria-current');
   });
@@ -8145,7 +8271,7 @@ function switchTab(tab){
 /* =========================================================
    RENDER ALL
 ========================================================= */
-function renderAll(){
+function renderAll({refreshSetup=true}={}){
   if(isTabVisible('standings')){renderStandings();standingsDirty=false;}
   else standingsDirty=true;
   if(isTabVisible('matches')){renderMatches();matchesDirty=false;}
@@ -8155,8 +8281,8 @@ function renderAll(){
   if(currentRole !== 'viewer'){
     const setupHasFocus = applyingRemote && document.activeElement &&
       document.getElementById('tab-setup').contains(document.activeElement);
-    if(!setupHasFocus) loadSetupInputs();
-    syncPrizeDrawPlayers();
+    if(refreshSetup && !setupHasFocus) loadSetupInputs();
+    if(refreshSetup) syncPrizeDrawPlayers();
   }
   if(!document.getElementById('tab-referee').classList.contains('hidden')) renderReferee();
 }
@@ -8185,12 +8311,14 @@ function updateRefereePanelsForMatch(matchId){
 // on screen. Tabs that aren't visible are marked dirty and catch up in
 // switchTab() once the user actually looks at them.
 function refreshAfterScoreChange(matchId,previousMatch){
-  renderStats();
-  renderPlayerNextMatchCard();
+  const current=state.matches.find(m=>m.id===matchId);
+  const scoreOnly=isBracketScoreOnlyChange(previousMatch,current);
+  if(!scoreOnly){
+    renderStats();
+    renderPlayerNextMatchCard();
+  }
   if(isTabVisible('standings')){
-    const current=state.matches.find(m=>m.id===matchId);
-    if(!(isElimination(state.tournament.format) &&
-         isBracketScoreOnlyChange(previousMatch,current) &&
+    if(!(isElimination(state.tournament.format) && scoreOnly &&
          patchBracketMatchScore(matchId)))renderStandings();
     standingsDirty=false;
   }
