@@ -4521,31 +4521,28 @@ body:not(.referee-view) .header .logo-img{height:48px;}
   body::before{animation:none;}
 }
 
-/* Mirrored racing lines flow along the edges of the title. */
+/* The right-hand X keeps its native proportions at every header size. */
 body:not(.referee-view) .header .identity-card {
-  --wing-width:clamp(38px,17%,154px);
-  --wing-mask:url("data:image/svg+xml,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%20144%2068'%20fill='none'%3E%3Cg%20stroke='white'%3E%3Cpath%20opacity='.23'%20d='M-6%207h25c44%200%2044%2036%2087%2036h32'/%3E%3Cpath%20opacity='.92'%20stroke-width='3.2'%20d='M-6%2012h23c43%200%2044%2036%2087%2036h19'/%3E%3Cpath%20opacity='.60'%20stroke-width='1.5'%20d='M-6%2017h21c42%200%2044%2036%2087%2036h12'/%3E%3Cpath%20opacity='.31'%20stroke-dasharray='2%205'%20stroke-width='3'%20d='M-6%2023h19c41%200%2044%2036%2087%2036'/%3E%3Cpath%20stroke-width='3'%20d='M37%2015c7%202%2013%206%2018%2010'/%3E%3C/g%3E%3Ccircle%20cx='127'%20cy='48'%20r='1.8'%20fill='white'/%3E%3C/svg%3E");
+  --mark-width:clamp(32px,8vw,58px);
+  --mark-inset:clamp(8px,2vw,24px);
   justify-content:center;
-  padding-inline:calc(var(--wing-width) + 6px);
-  border:1px solid rgba(var(--theme-rgb),.34);
-  border-radius:9px;
+  padding-inline:calc(var(--mark-width) + var(--mark-inset) + 4px);
+  border:1px solid rgba(var(--theme-rgb),.30);
+  border-radius:10px;
   background:
-    linear-gradient(90deg,transparent 8%,#0d0d0ee8 36% 64%,transparent 92%),
-    repeating-linear-gradient(0deg,transparent 0 15px,rgba(var(--theme-rgb),.11) 15px 16px) center,
-    repeating-linear-gradient(90deg,transparent 0 15px,rgba(var(--theme-rgb),.11) 15px 16px) center,
-    linear-gradient(90deg,rgba(var(--theme-rgb),.065),transparent 30% 70%,rgba(var(--theme-rgb),.065)),#100e0c;
+    linear-gradient(0deg,rgba(12,12,13,.8),transparent 85%),
+    linear-gradient(rgba(var(--theme-rgb),.075) 1px,transparent 1px) center / 24px 24px,
+    linear-gradient(90deg,rgba(var(--theme-rgb),.075) 1px,transparent 1px) center / 24px 24px,
+    #100f10;
 }
-body:not(.referee-view) .header .identity-card::before,
+body:not(.referee-view) .header .identity-card::before { content:none; }
 body:not(.referee-view) .header .identity-card::after {
-  content:''; position:absolute; inset:0 auto 0 0;
-  width:var(--wing-width); height:auto; opacity:.88; z-index:0;
-  background:linear-gradient(90deg,rgba(var(--theme-rgb),.5),var(--cyan) 48%,var(--cyan-soft) 77%,var(--cyan));
-  -webkit-mask:var(--wing-mask) left center / contain no-repeat;
-  mask:var(--wing-mask) left center / contain no-repeat;
-  pointer-events:none;
-}
-body:not(.referee-view) .header .identity-card::after {
-  left:auto; right:0; transform:scaleX(-1);
+  content:''; position:absolute; inset:5px var(--mark-inset) 5px auto;
+  width:var(--mark-width); height:auto; transform:none; pointer-events:none;
+  --mark-mask:url("data:image/svg+xml,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%2060%2076'%3E%3Cpath%20d='M8%204h13l11%2024L46%204h11L38%2037l15%2034H40L28%2046%2013%2071H2l20-35z'%20fill='white'%20fill-opacity='.18'%20stroke='white'%20stroke-width='1.5'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask:var(--mark-mask) right center / contain no-repeat;
+  mask:var(--mark-mask) right center / contain no-repeat;
+  background:rgb(var(--theme-rgb)); opacity:.72; z-index:0;
 }
 #tab-standings .welcome-card {
   border-radius: 4px 16px;
