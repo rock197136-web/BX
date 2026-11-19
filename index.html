@@ -934,7 +934,10 @@
           <div class="draw-result" aria-live="polite">
             <div class="draw-result-head">
               <div class="draw-result-title"><span id="drawResultIcon"></span>中籤名單</div>
-              <button type="button" class="draw-copy-btn" id="drawCopyBtn" onclick="copyDrawResults()" disabled><span id="drawCopyIcon"></span>一鍵複製</button>
+              <div class="draw-result-actions">
+                <button type="button" class="draw-copy-btn" id="drawCopyBtn" onclick="copyDrawResults()" disabled><span id="drawCopyIcon"></span>一鍵複製</button>
+                <button type="button" class="draw-copy-btn" id="drawReaderBtn" onclick="openDrawReader()" aria-haspopup="dialog" aria-controls="drawReader" disabled><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9V3h6m6 0h6v6m0 6v6h-6m-6 0H3v-6"/></svg>全螢幕名單</button>
+              </div>
             </div>
             <div class="draw-result-empty" id="drawResultEmpty">抽籤結果會顯示在這裡</div>
             <div class="draw-result-list hidden" id="drawResultList"></div>
@@ -1003,6 +1006,15 @@
 
 <div class="save-flag" id="saveFlag">已儲存</div>
 <div class="action-toast" id="actionToast"><span id="actionToastIcon"></span> <span id="actionToastMsg"></span></div>
+<dialog class="draw-reader" id="drawReader" aria-labelledby="drawReaderTitle" aria-describedby="drawReaderCount">
+  <header class="draw-reader-head">
+    <div><h2 id="drawReaderTitle">中籤名單</h2><p id="drawReaderCount"></p></div>
+    <form method="dialog"><button class="draw-copy-btn" autofocus>關閉</button></form>
+  </header>
+  <div class="draw-reader-scroll" tabindex="0" role="region" aria-label="中籤者">
+    <ol class="draw-reader-list" id="drawReaderList"></ol>
+  </div>
+</dialog>
 <div class="draw-fullscreen" id="drawFullscreen" role="dialog" aria-modal="true" aria-labelledby="drawFullscreenTitle" aria-hidden="true">
   <div class="draw-fullscreen-inner">
     <div class="draw-fullscreen-kicker">RANDOM DRAW SYSTEM</div>

@@ -1177,6 +1177,9 @@ function resetDrawResults(){
   if(list){ list.innerHTML = ''; list.classList.add('hidden'); }
   if(empty){ empty.textContent = '抽籤結果會顯示在這裡'; empty.classList.remove('hidden'); }
   if(copyBtn) copyBtn.disabled = true;
+  document.getElementById('drawReaderBtn').disabled = true;
+  const reader = document.getElementById('drawReader');
+  if(reader.open) reader.close();
 }
 
 function updateDrawToolState(clearResults){
@@ -1355,6 +1358,7 @@ function drawRandomNames(){
   empty.textContent = '抽籤進行中…';
   empty.classList.remove('hidden');
   copyBtn.disabled = true;
+  document.getElementById('drawReaderBtn').disabled = true;
   drawBtn.classList.add('is-drawing');
   drawBtn.disabled = true;
   if(label) label.textContent = '抽取中…';
@@ -1386,6 +1390,33 @@ function renderDrawResults(){
   empty.classList.add('hidden');
   list.classList.remove('hidden');
   copyBtn.disabled = drawToolResults.length === 0;
+  document.getElementById('drawReaderBtn').disabled = copyBtn.disabled;
+}
+
+function openDrawReader(){
+  const dialog = document.getElementById('drawReader');
+  if(dialog.open || !drawToolResults.length || drawAnimationTimer) return;
+  const list = document.getElementById('drawReaderList');
+  document.getElementById('drawReaderCount').textContent = '共 ' + drawToolResults.length + ' 位中籤者';
+  const rows = document.createDocumentFragment();
+  drawToolResults.forEach((name, index) => {
+    const row = document.createElement('li');
+    const number = document.createElement('span');
+    number.className = 'draw-reader-number';
+    number.textContent = String(index + 1).padStart(2, '0');
+    const label = document.createElement('span');
+    label.textContent = name;
+    row.append(number, label);
+    rows.append(row);
+  });
+  list.replaceChildren(rows);
+  const trigger = document.getElementById('drawReaderBtn');
+  dialog.addEventListener('close', () => {
+    list.replaceChildren();
+    if(!trigger.disabled) trigger.focus({preventScroll:true});
+  }, {once:true});
+  dialog.showModal();
+  list.parentElement.scrollTop = 0;
 }
 
 function clearDrawNames(){
@@ -5677,12 +5708,11 @@ function randomizeSchedule(source,count=1){
 const NAME_FLICKER_MS = 80;
 let scheduleSpinLabels = new Map();
 let scheduleSpinObserver = null;
-function startScheduleSpin(duration = 0){
+function startScheduleSpin(){
   stopScheduleSpin();
   const pool = state.players.map(p => p.name).filter(Boolean);
   if(!pool.length) return false;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const started = performance.now();
   const wrap = document.getElementById('bracketTree');
   let treeRoot, cells;
   const visible = new Set();
@@ -5694,7 +5724,7 @@ function startScheduleSpin(duration = 0){
   },{rootMargin:'80px'}) : null;
   scheduleSpinObserver = observer;
   function tick(){
-    if(wrap && !reducedMotion.matches && !document.hidden && wrap.offsetWidth){
+    if(wrap && !reducedMotion.matches && !document.hidden && wrap.getClientRects().length){
       if(treeRoot !== wrap.firstElementChild || !cells){
         treeRoot = wrap.firstElementChild;
         cells = wrap.querySelectorAll('.bslot-name, .champ-name');
@@ -5714,11 +5744,9 @@ function startScheduleSpin(duration = 0){
         el.textContent = pool[i] === el.textContent ? pool[(i + 1) % pool.length] : pool[i];
       }
     }
-    const remaining = duration - (performance.now() - started);
-    const easeOut = duration ? Math.max(0, Math.min(1, 1 - remaining / 850)) : 0;
-    scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS + 140 * easeOut ** 2);
+    scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS);
   }
-  scheduleSpinTimer = setTimeout(tick, NAME_FLICKER_MS);
+  tick();
   return true;
 }
 function stopScheduleSpin(restoreLabels = true){
@@ -5759,7 +5787,7 @@ function receiveRemoteShuffle(data){
     if(remoteShuffle.resultReady && !remoteShuffle.revealed){remoteShuffle.revealed=true;revealShuffleResult();}
     return;
   }
-  if(scheduleSpinTimer===null)startScheduleSpin((5-step)*1000);
+  if(scheduleSpinTimer===null)startScheduleSpin();
   if(changed){
     clearTimeout(remoteShuffle.timer);
     remoteShuffle.timer=setTimeout(()=>{
@@ -5832,7 +5860,7 @@ async function runScheduleShuffleAnimation(count,source,withPlay){
   };
   try{
     lastLocalShuffleAt=run;broadcast(0);
-    startScheduleSpin(count===5 ? 5000 : 480);
+    startScheduleSpin();
     let result;
     for(let i=1;i<=count;i++){
       await new Promise(resolve=>setTimeout(resolve,count===5?1000:480));
@@ -5856,8 +5884,10 @@ let shuffleRevealAnimation=null;
 function revealShuffleResult(){
   const tree=document.getElementById('bracketTree');
   shuffleRevealAnimation?.cancel();
-  if(!tree?.animate || !tree.offsetWidth || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  shuffleRevealAnimation=tree.animate([{opacity:.88},{opacity:1}],{duration:200,easing:'ease-out'});
+  if(!tree?.animate || !tree.getClientRects().length || matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  shuffleRevealAnimation=tree.animate([
+    {opacity:.85,transform:'translateY(2px)'}, {opacity:1,transform:'translateY(0)'}
+  ],{duration:150,easing:'ease-out'});
 }
 function finalizeScheduleShuffle(count,newMatches){
   // Visible brackets are replaced in the same task. Restoring their old names
