@@ -5675,8 +5675,6 @@ function syncDrawActions(){
     target.append(group);
   }
   refMore.classList.add('hidden');
-  const refereeHelp=document.querySelector('.referee-bracket-help');
-  if(refereeHelp) refereeHelp.classList.toggle('hidden',playing);
   group.classList.toggle('hidden',!(ref&&allowed&&!playing));
   group.querySelector('p').textContent=playing?'保留名單，重抽會清除所有比分與對戰紀錄。':'保留名單，重新安排對戰。';
   document.getElementById('setupDrawActions').classList.toggle('hidden',!drawAllowed('setup'));
@@ -6928,14 +6926,14 @@ function syncRefereeViewModeControls(){
   if(bracketCheckbox) bracketCheckbox.setAttribute('aria-label', bracketMode ? '切回計分模式' : '開啟樹狀圖模式');
   const toggleNote = document.getElementById('refereeBracketModeNote');
   if(toggleNote) toggleNote.textContent = supported
-    ? '點場次標題開始；再點一次取消。比賽結束，點勝者姓名確認。即將上場由系統自動安排。'
+    ? '點場次標題即可標記為「進行中」，同時開賽的場數以裁判台數為限。完賽後，點勝者姓名確認晉級。有空台時，系統會自動將可開賽的場次標記為「即將上場」。'
     : '樹狀圖裁判模式適用單淘汰與雙敗淘汰賽';
   document.getElementById('refereeClassicView')?.classList.toggle('hidden', bracketMode);
   document.getElementById('refereeClassicControls')?.classList.toggle('hidden', bracketMode);
   document.getElementById('refereeBracketView')?.classList.toggle('hidden', !bracketMode);
   const subtitle = document.getElementById('refereeCardSub');
   if(subtitle) subtitle.textContent = bracketMode
-    ? '點場次標題開始；再點一次取消。比賽結束，點勝者姓名確認。即將上場由系統自動安排。'
+    ? '點場次標題即可標記為「進行中」，同時開賽的場數以裁判台數為限。完賽後，點勝者姓名確認晉級。有空台時，系統會自動將可開賽的場次標記為「即將上場」。'
     : '多桌並行時可各自新增裁判面板，分頭計分・資料會即時同步。';
   return bracketMode;
 }
@@ -7274,7 +7272,6 @@ function renderReferee(){
     if(bracketHeading) bracketHeading.textContent = hasMatches ? '場次控制' : '建立賽程後即可操作';
     document.getElementById('refereeBracketSummary')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketControls')?.classList.toggle('hidden', !hasMatches);
-    document.querySelector('#refereeBracketView .referee-bracket-help')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketEmpty')?.classList.toggle('hidden', hasMatches);
     document.getElementById('refereeBracketViewport')?.classList.toggle('hidden', !hasMatches);
     renderBracket();

@@ -4112,6 +4112,19 @@ body::before{background:none;}
 .bx-guide-head h2{margin:0;font-size:21px;line-height:1.4;}
 .bx-guide-head p{margin:4px 0 0;color:#b7ada0;font-size:12px;}
 .bx-guide-close{flex-shrink:0;min-width:64px;min-height:44px;border:1px solid rgb(var(--ui-675134));border-radius:8px;background:rgb(var(--ui-201c16));color:#fff6e9;font-size:14px;}
+
+#bxManual .guide-start {margin:0 0 18px;}
+.guide-start h3 {font-size:18px;margin:0 0 10px;}
+.guide-start>div {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.guide-start button {text-align:left;padding:12px 7px;border:1px solid rgba(var(--theme-rgb),.32);border-radius:9px;background:rgba(var(--theme-rgb),.07);color:var(--text);}
+.guide-start button strong,.guide-start button span {display:block;}
+.guide-start button span {margin-top:5px;font-size:12px;color:var(--cyan-soft);}
+.guide-directory {margin:10px 0 16px;}
+.guide-directory summary {padding:12px 0;cursor:pointer;color:var(--cyan-soft);}
+#bxManual .bx-guide-content li {margin-bottom:.7em;line-height:1.65;}
+.guide-screen {margin:16px 0 4px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#0c0d10;}
+.guide-screen img {display:block;margin:auto;width:100%;max-width:390px;height:auto;}
+.guide-screen figcaption {margin-top:10px;color:var(--muted);font-size:13px;line-height:1.55;}
 .bx-guide-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0;padding:18px 20px max(24px,env(safe-area-inset-bottom));}
 .bx-guide-intro{font-size:14px;line-height:1.75;color:#d2c8ba;margin:0 0 16px;}
 .bx-guide-search-label{display:block;font-size:13px;color:rgb(var(--ui-ffda91));margin:0 0 6px;}
@@ -4521,28 +4534,29 @@ body:not(.referee-view) .header .logo-img{height:48px;}
   body::before{animation:none;}
 }
 
-/* The right-hand X keeps its native proportions at every header size. */
+/* The oversized X bleeds past the frame while its crossing remains visible. */
 body:not(.referee-view) .header .identity-card {
-  --mark-width:clamp(32px,8vw,58px);
-  --mark-inset:clamp(8px,2vw,24px);
   justify-content:center;
-  padding-inline:calc(var(--mark-width) + var(--mark-inset) + 4px);
+  padding-inline:clamp(35px,12.8vw,88px);
   border:1px solid rgba(var(--theme-rgb),.30);
   border-radius:10px;
   background:
-    linear-gradient(0deg,rgba(12,12,13,.8),transparent 85%),
+    linear-gradient(90deg,transparent 60%,rgba(var(--theme-rgb),.055)),
+    linear-gradient(0deg,rgba(12,12,13,.65),transparent 85%),
     linear-gradient(rgba(var(--theme-rgb),.075) 1px,transparent 1px) center / 24px 24px,
     linear-gradient(90deg,rgba(var(--theme-rgb),.075) 1px,transparent 1px) center / 24px 24px,
     #100f10;
 }
 body:not(.referee-view) .header .identity-card::before { content:none; }
 body:not(.referee-view) .header .identity-card::after {
-  content:''; position:absolute; inset:5px var(--mark-inset) 5px auto;
-  width:var(--mark-width); height:auto; transform:none; pointer-events:none;
-  --mark-mask:url("data:image/svg+xml,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%2060%2076'%3E%3Cpath%20d='M8%204h13l11%2024L46%204h11L38%2037l15%2034H40L28%2046%2013%2071H2l20-35z'%20fill='white'%20fill-opacity='.18'%20stroke='white'%20stroke-width='1.5'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+  content:''; position:absolute; inset:50% clamp(-34px,-6vw,-18px) auto auto;
+  height:154%; max-height:168px; width:auto; aspect-ratio:160 / 112;
+  transform:translateY(-50%); pointer-events:none;
+  --mark-mask:url("data:image/svg+xml,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%20160%20112'%3E%3Cg%20stroke='white'%20stroke-width='1'%20stroke-linejoin='bevel'%3E%3Cpath%20fill='white'%20fill-opacity='.24'%20d='M21%20-2h32l29%2038-19%2018zM82%2078l19-18%2041%2054h-32z'/%3E%3Cpath%20fill='white'%20fill-opacity='.58'%20d='M123%20-2h35L39%20114H3z'/%3E%3C/g%3E%3Cpath%20fill='none'%20stroke='white'%20stroke-width='2.2'%20d='M17%20109l41-40m41-40%2024-24'/%3E%3Cpath%20fill='none'%20stroke='white'%20stroke-opacity='.46'%20d='m116%2099%209%2012M42%209l13%2017'/%3E%3C/svg%3E");
   -webkit-mask:var(--mark-mask) right center / contain no-repeat;
   mask:var(--mark-mask) right center / contain no-repeat;
-  background:rgb(var(--theme-rgb)); opacity:.72; z-index:0;
+  background:linear-gradient(100deg,rgba(var(--theme-rgb),.16) 8%,rgba(var(--theme-rgb),.47) 43%,rgb(var(--theme-rgb)) 82%);
+  opacity:.67; z-index:-1;
 }
 #tab-standings .welcome-card {
   border-radius: 4px 16px;
@@ -4550,6 +4564,18 @@ body:not(.referee-view) .header .identity-card::after {
   background: radial-gradient(ellipse at 50% 0, rgba(var(--theme-rgb),.09), transparent 65%),var(--panel);
 }
 .setup-card h3::before { width: 4px; border-radius: 1px; transform: skewX(-12deg); }
+#setupRulesTitle::before, #setupRosterTitle::before {
+  align-self:center; flex:0 0 22px; width:22px; height:22px; margin:0;
+  transform:none; border-radius:0; background:var(--cyan-soft);
+  -webkit-mask:var(--section-icon) center / contain no-repeat;
+  mask:var(--section-icon) center / contain no-repeat;
+}
+#setupRosterTitle::before {
+  --section-icon:url("data:image/svg+xml,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='1.8'%20stroke-linecap='round'%3E%3Ccircle%20cx='8'%20cy='8'%20r='2.6'/%3E%3Cpath%20d='M3.5%2018v-1a4.5%204.5%200%200%201%209%200v1M16%207h5m-5%205h5m-5%205h4'/%3E%3C/svg%3E");
+}
+#setupRulesTitle::before {
+  --section-icon:url("data:image/svg+xml,%3Csvg%20xmlns='http%3A//www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='9'%20y='2.5'%20width='6'%20height='4'%20rx='1'/%3E%3Cpath%20d='M12%206.5v3m-7%203V11c0-.8.7-1.5%201.5-1.5h11c.8%200%201.5.7%201.5%201.5v1.5M5%2016v1.5m14-1.5v1.5'/%3E%3Crect%20x='2'%20y='12.5'%20width='6'%20height='4'%20rx='1'/%3E%3Crect%20x='16'%20y='12.5'%20width='6'%20height='4'%20rx='1'/%3E%3Cpath%20d='M5%2017.5v2h14v-2'/%3E%3C/svg%3E");
+}
 #welcomeV38 .btn-primary, #tab-setup #startBtn { border-radius: 4px 11px; }
 @media(max-width:700px) {
   body.setup-view .header .identity-card { justify-content:center; }
