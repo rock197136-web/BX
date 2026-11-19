@@ -2100,6 +2100,8 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   color:#e1b8ff;
   animation: nameFlickerPulse .8s ease-in-out infinite;
 }
+#bracketTree.schedule-shuffling{pointer-events:none;user-select:none}
+#bracketTree.schedule-shuffling .conn-path{stroke:rgb(var(--theme-rgb));opacity:.62;filter:drop-shadow(0 0 3px rgba(var(--theme-rgb),.45))}
 @keyframes nameFlickerPulse{
   0%,100%{ color:#d6a0ff; text-shadow:0 0 5px rgba(190,120,255,.35); }
   50%{ color:#f0d9ff; text-shadow:0 0 8px rgba(210,155,255,.5); }
