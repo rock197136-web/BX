@@ -50,6 +50,7 @@
   #tab-setup #playerInputs input{min-width:0;max-width:100%;box-sizing:border-box}
 }
 </style>
+<style>#tab-setup #setupDrawActions h3::before{display:none} #prestartTheme:not(:empty){margin-bottom:14px}</style>
 </head>
 <body>
 
@@ -582,6 +583,7 @@
 
   <!-- STANDINGS -->
   <section id="tab-standings">
+    <div id="prestartTheme"></div>
     <div id="welcomeV38" class="card welcome-card hidden">
       <div class="card-title">尚未建立賽事</div>
       <ol class="setup-steps referee-only-note" aria-label="建立賽事流程"><li><b>1</b>設定賽制</li><li><b>2</b>加入選手</li><li><b>3</b>產生對戰表</li></ol>
@@ -884,7 +886,7 @@
       <button type="button" class="btn btn-primary" onclick="startTournament()" id="startBtn">開始比賽</button>
     </div>
     <div id="setupDrawActions" class="card setup-card hidden">
-      <h3>賽程管理</h3>
+      <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(var(--theme-rgb))" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-13 5 2 2 5-4"/></svg>賽程管理</h3>
       <p class="setup-hint">保留參賽名單，清除比分與對戰紀錄後重新配對。</p>
       <div class="draw-pair">
         <button type="button" class="btn btn-warning" onclick="randomizeSchedule('setup')">重新抽籤對戰</button>
@@ -1403,7 +1405,7 @@
 </div>
 
 
-<script src="app.js?v=3.45.4"></script>
+<script src="app.js?v=3.45.5"></script>
 
 
 <dialog id="bxManual" aria-labelledby="bxGuideTitle">
