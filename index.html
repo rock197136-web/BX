@@ -38,6 +38,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&family=Space+Grotesk:wght@500&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <link rel="stylesheet" href="base.css?v=3.45.4">
+<style>
+@media(max-width:760px){
+  #tab-setup .setup-roster-entry{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+  #tab-setup .setup-add-player{order:-1;align-self:flex-end;min-height:44px}
+  #tab-setup #playerInputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));align-content:start;gap:6px;padding:6px;max-height:52vh;overflow:auto}
+  #tab-setup #playerInputs .player-chip{display:grid;grid-template-columns:auto minmax(0,1fr) 44px;align-items:center;width:100%;max-width:none;height:auto;min-height:44px;padding:0 0 0 8px;gap:5px;border-radius:8px;box-sizing:border-box}
+  #tab-setup #playerInputs .chip-name{white-space:normal;overflow-wrap:anywhere;overflow:visible;font-size:15px;line-height:1.4;padding-block:5px}
+  #tab-setup #playerInputs .chip-index{font-size:11px;font-variant-numeric:tabular-nums}
+  #tab-setup #playerInputs .chip-remove{width:44px;height:44px}
+  #tab-setup #playerInputs input{min-width:0;max-width:100%;box-sizing:border-box}
+}
+</style>
 </head>
 <body>
 
