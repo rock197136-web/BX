@@ -5996,7 +5996,11 @@ function calculateStandings(){
 function renderStandings(){
   const isKnockout = isElimination(state.tournament.format);
   document.getElementById('bracketSection').classList.toggle('hidden', !isKnockout || state.matches.length === 0);
-  document.getElementById('bracketThemeRow').classList.toggle('hidden', !isKnockout);
+  const themeRow = document.getElementById('bracketThemeRow');
+  const beforeStart = state.matches.length === 0;
+  const themeHost = document.querySelector(beforeStart ? '#prestartTheme' : '#bracketSection .bracket-title-row');
+  if(themeHost && themeRow.parentElement !== themeHost) themeHost.append(themeRow);
+  themeRow.classList.toggle('hidden', !beforeStart && !isKnockout);
   document.getElementById('standingsSection').classList.toggle('hidden', isKnockout || state.matches.length === 0);
 
   if(isKnockout){
