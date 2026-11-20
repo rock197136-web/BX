@@ -6973,6 +6973,17 @@ function syncRefereeViewModeControls(){
     Number(state.tournament.bracketCourtCount) >= 1;
   if((!available || !supported) && refereeViewMode === 'bracket') refereeViewMode = 'classic';
   const bracketMode = available && supported && refereeViewMode === 'bracket';
+  const settings = document.getElementById('refereeBracketSettings');
+  const hasWinner = supported && state.matches.some(m => m.status === 'completed' && m.winner && !m.isBye && !m.inactive && !m.forfeited);
+  if(settings){
+    const phase = hasWinner ? 'played:' + (currentEventCode || 'local') : 'ready';
+    if(settings.dataset.phase !== phase){
+      settings.open = !hasWinner;
+      settings.dataset.phase = phase;
+    }
+    settings.classList.toggle('hidden', !available);
+    settings.querySelector('summary').hidden = !hasWinner;
+  }
   document.getElementById('refereeBracketToggleWrap')?.classList.toggle('hidden', !available);
   const bracketCheckbox = document.getElementById('refereeBracketModeCheckbox');
   if(bracketCheckbox) bracketCheckbox.checked = bracketMode;
@@ -7324,7 +7335,7 @@ function renderReferee(){
     moveBracketTreeToReferee();
     const hasMatches = state.matches.length > 0;
     const bracketHeading = document.querySelector('#refereeBracketView .referee-bracket-head .card-title');
-    if(bracketHeading) bracketHeading.textContent = hasMatches ? '場次控制' : '建立賽程後即可操作';
+    if(bracketHeading) bracketHeading.textContent = hasMatches ? '對戰樹狀圖' : '建立賽程後即可操作';
     document.getElementById('refereeBracketSummary')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketControls')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketEmpty')?.classList.toggle('hidden', hasMatches);
