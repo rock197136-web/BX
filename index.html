@@ -51,6 +51,13 @@
 }
 </style>
 <style>#tab-setup #setupDrawActions h3::before{display:none} #prestartTheme:not(:empty){margin-bottom:14px}</style>
+<style>
+@media (max-width: 760px), (pointer: coarse) {
+  body header.header[aria-label="賽事資訊"] {
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  }
+}
+</style>
 </head>
 <body>
 
