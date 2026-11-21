@@ -4033,22 +4033,12 @@ function createPlayerInputs(n){
   // n 保留參數相容舊呼叫點，但晶片式清單不需要空白佔位列
   const container = document.getElementById('playerInputs');
   container.innerHTML = '';
-  ensureChipInput(container);
+  document.getElementById('playerChipInput').value = '';
   renumberPlayerRows();
 }
 
-function ensureChipInput(container){
-  if(document.getElementById('playerChipInput')) return;
-  const input = document.createElement('input');
-  input.id = 'playerChipInput';
-  input.className = 'chip-text-input';
-  input.placeholder = '輸入選手姓名';
-  input.setAttribute('aria-label','選手姓名');
-  input.addEventListener('keydown', onChipInputKeydown);
-  container.appendChild(input);
-}
-
 function onChipInputKeydown(e){
+  if(e.isComposing || e.keyCode === 229) return;
   const input = e.target;
   if(e.key === 'Enter' || e.key === ','){
     e.preventDefault();
@@ -4069,7 +4059,6 @@ function onChipInputKeydown(e){
 
 function addPlayerChip(name, attendance, batch){
   const container = document.getElementById('playerInputs');
-  ensureChipInput(container);
   const displayName = String(name || '').trim().replace(/\s+/g, ' ');
   if(!displayName) return false;
   const normalized=normalizePlayerName(displayName);
@@ -4087,8 +4076,7 @@ function addPlayerChip(name, attendance, batch){
     <span class="chip-name" ondblclick="editChip(this)" title="雙擊可重新命名">${escapeHtml(displayName)}</span>
     <button type="button" class="chip-remove" onclick="removePlayerChip(this)" title="移除" aria-label="移除">×</button>
   `;
-  const chipInput = document.getElementById('playerChipInput');
-  container.insertBefore(chip, chipInput);
+  container.appendChild(chip);
   if(batch)batch.names.add(normalized);
   else {
     renumberPlayerRows();
@@ -4154,7 +4142,6 @@ function editChip(nameSpan){
 }
 
 function addPlayerRow(){
-  ensureChipInput(document.getElementById('playerInputs'));
   const input=document.getElementById('playerChipInput');
   if(input.value.trim() && addPlayerChip(input.value)){
     input.value='';
@@ -6368,7 +6355,7 @@ function renderBracket(){
   if(state.matches.length === 0){
     wrap.innerHTML = currentRole === 'viewer'
       ? `<div class="bracket-empty referee-bracket-empty"><div class="referee-bracket-empty-title">賽程尚未建立</div><p>等待裁判建立賽事後，對戰樹會顯示在這裡。</p></div>`
-      : `<div class="bracket-empty referee-bracket-empty"><div class="referee-bracket-empty-title">先建立賽程</div><p>到「賽事設定」建立單淘汰或雙敗淘汰賽，完成後就能在這裡開始場次並登錄勝者。</p><button type="button" class="btn btn-primary btn-sm" onclick="switchTab('setup')">前往賽事設定</button></div>`;
+      : `<div class="bracket-empty referee-bracket-empty"><div class="referee-bracket-empty-title">尚未建立賽程</div><button type="button" class="btn btn-primary btn-sm" onclick="switchTab('setup')">前往建立賽程</button></div>`;
     return;
   }
 
@@ -7360,8 +7347,7 @@ function renderReferee(){
   if(syncRefereeViewModeControls()){
     moveBracketTreeToReferee();
     const hasMatches = state.matches.length > 0;
-    const bracketHeading = document.querySelector('#refereeBracketView .referee-bracket-head .card-title');
-    if(bracketHeading) bracketHeading.textContent = hasMatches ? '對戰樹狀圖' : '建立賽程後即可操作';
+    document.querySelector('#refereeBracketView .referee-bracket-head').classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketSummary')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketControls')?.classList.toggle('hidden', !hasMatches);
     document.getElementById('refereeBracketEmpty')?.classList.toggle('hidden', hasMatches);
@@ -7382,7 +7368,7 @@ function renderReferee(){
   if(state.matches.length === 0){
     wrap.innerHTML = currentRole === 'viewer'
       ? `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事</div>正在等待裁判建立賽事中...</div></div>`
-      : `<div class="card"><div class="referee-empty"><div class="big">尚未產生賽事</div>請先前往「賽事設定」建立賽事。</div></div>`;
+      : `<div class="card"><div class="referee-empty"><div class="big">尚未建立賽程</div><button type="button" class="btn btn-primary btn-sm" onclick="switchTab('setup')">前往建立賽程</button></div></div>`;
     return;
   }
   if(refereePanels.length === 0) refereePanels.push({ id: genPanelId(), matchId:null, label:'' });
@@ -8115,8 +8101,6 @@ function loadSetupInputs(){
   } else if(showDetail && state.players.length > 0){
     createPlayerInputs(0);
     addPlayerChips(state.players);
-  } else if(showDetail && document.getElementById('playerInputs').children.length === 0){
-    createPlayerInputs(0);
   }
   if(showDetail && !isRunning && state.players.length === 0 && !rosterDraftPrompted){
     const draft = readRosterDraft();
