@@ -3464,17 +3464,17 @@ function openCloudModal(){
     const codesEl = document.getElementById('cloudCurrentCodes');
     if(currentRole === 'referee'){
       codesEl.innerHTML = `
-        <div class="cloud-code-item">
-          <div class="cloud-code-tag">裁判用（完整功能）</div>
-              <p class="code-purpose">僅供主辦與裁判：計分、判勝、設定。</p>
+        <div class="cloud-code-item" data-share-role="referee">
+          <div class="cloud-code-tag"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg>裁判模式</div>
+              <p class="code-purpose">僅供主辦與裁判，可計分、判勝及設定賽事。</p>
           <div class="cloud-code-display">${escapeHtml(shareRefCode||'已更換')}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${shareRefCode||''}', this)">${icon('link',14)} 複製裁判連結</button>
               <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
         </div>
         ${currentViewerCode ? `
-        <div class="cloud-code-item">
-          <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
-              <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
+        <div class="cloud-code-item" data-share-role="player">
+          <div class="cloud-code-tag"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-2a7 7 0 0 1 14 0v2m0-17a3.5 3.5 0 0 1 0 7m3 3a6 6 0 0 1 3 5v2"/></svg>選手模式</div>
+              <p class="code-purpose">可公開分享給選手與觀眾，僅能查看戰況與紀錄。</p>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode)}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">${icon('link',14)} 複製選手連結</button>
           <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode('${currentViewerCode}')">${icon('qr-code',14)} 顯示 QR 碼</button>
@@ -3482,9 +3482,9 @@ function openCloudModal(){
       `;
     } else {
       codesEl.innerHTML = `
-        <div class="cloud-code-item">
-          <div class="cloud-code-tag">目前身分：選手／觀眾（唯讀）</div>
-              <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
+        <div class="cloud-code-item" data-share-role="player">
+          <div class="cloud-code-tag"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-2a7 7 0 0 1 14 0v2m0-17a3.5 3.5 0 0 1 0 7m3 3a6 6 0 0 1 3 5v2"/></svg>選手模式</div>
+              <p class="code-purpose">可公開分享給選手與觀眾，僅能查看戰況與紀錄。</p>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode || '---')}</div>
           ${currentViewerCode ? `
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">${icon('link',14)} 複製選手連結</button>

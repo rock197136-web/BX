@@ -4409,6 +4409,62 @@ body:not(.referee-view) .header .logo-img{height:48px;}
 #cloudModal .cloud-created-status,#cloudModal .cloud-created-status #cloudCreatedIcon{color:#ffd166!important;}
 #cloudModal .cloud-created-status{display:flex;align-items:center;gap:6px;font-weight:800;margin-bottom:10px;}
 
+
+/* Role identity in the event sharing dialog */
+#cloudModal .cloud-code-row .cloud-code-item[data-share-role] {
+  --role-accent: #fafafa;
+  --role-edge: #545454;
+  --role-fill: #202020;
+  --role-deep: #101010;
+  --role-text: #dedede;
+  border: 1px solid var(--role-edge);
+  border-top: 3px solid var(--role-accent);
+  border-radius: 16px;
+  padding: clamp(14px, 3vw, 18px);
+  background: linear-gradient(115deg, var(--role-fill), var(--role-deep));
+}
+#cloudModal .cloud-code-row .cloud-code-item[data-share-role="player"] {
+  --role-color: rgb(var(--theme-rgb));
+  --role-accent: color-mix(in srgb, var(--role-color) 80%, white);
+  --role-edge: color-mix(in srgb, var(--role-color) 46%, #343434);
+  --role-fill: color-mix(in srgb, var(--role-color) 12%, #141414);
+  --role-deep: color-mix(in srgb, var(--role-color) 5%, #101010);
+  --role-text: color-mix(in srgb, var(--role-color) 18%, #f4f4f4);
+}
+#cloudModal .cloud-code-row [data-share-role] .cloud-code-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--role-accent);
+  font-size: clamp(26px, 6vw, 34px) !important;
+  line-height: 1.2;
+  font-weight: 800;
+}
+#cloudModal .cloud-code-row [data-share-role] .cloud-code-display {
+  color: var(--role-accent);
+  font-size: clamp(38px, 10vw, 52px);
+  letter-spacing: .12em;
+}
+#cloudModal .cloud-code-row [data-share-role] .code-purpose {
+  color: var(--role-text);
+  font-size: 15px;
+}
+#cloudModal .cloud-code-row [data-share-role] button {
+  min-height: 48px;
+  color: var(--role-text);
+  background: transparent;
+  border-color: var(--role-edge);
+}
+#cloudModal .cloud-code-row [data-share-role="player"] .cloud-share-btn:not(.cloud-qr-btn) {
+  color: #101010;
+  background: var(--role-accent);
+  border-color: var(--role-accent);
+}
+#cloudModal .cloud-code-row [data-share-role] button:focus-visible {
+  outline: 2px solid var(--role-accent);
+  outline-offset: 2px;
+}
+
 /* Tournament setup */
 #tab-setup .setup-title{
   margin:0 0 14px;
