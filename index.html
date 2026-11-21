@@ -58,7 +58,12 @@
   }
 }
 </style>
-</head>
+<style>
+#cloudModal .ref-share-private{border:1px solid #69503e;border-radius:10px}
+#cloudModal .ref-share-private summary{color:#ffcc99;padding:14px;font-weight:700;cursor:pointer}
+#cloudModal .ref-share-private .cloud-code-display{color:#ffcc99}
+#cloudModal .cloud-code-row>.cloud-code-item{border-inline-start:4px solid var(--cyan-soft)}
+</style></head>
 <body>
 
 <!-- =========================================================
@@ -1096,19 +1101,19 @@
           <div class="field-label cloud-created-status"><span id="cloudCreatedIcon"></span> 賽事已建立</div>
           <div class="cloud-code-row">
             <div class="cloud-code-item">
-              <div class="cloud-code-tag">裁判用（完整功能）</div>
-              <p class="code-purpose">僅供主辦與裁判：計分、判勝、設定。</p>
-              <div class="cloud-code-display" id="cloudResultRefCode">---</div>
-              <button class="cloud-share-btn" id="cloudResultRefShareBtn" onclick="copyShareLink(document.getElementById('cloudResultRefCode').innerText, this)">複製裁判連結</button>
-              <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
-            </div>
-            <div class="cloud-code-item">
-              <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
+              <div class="cloud-code-tag">選手碼 · 可公開分享</div>
               <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
               <div class="cloud-code-display" id="cloudResultViewerCode">---</div>
               <button class="cloud-share-btn" id="cloudResultViewerShareBtn" onclick="copyShareLink(document.getElementById('cloudResultViewerCode').innerText, this)">複製選手連結</button>
               <button class="cloud-share-btn cloud-qr-btn" id="cloudResultQrBtn" onclick="showQRCode(document.getElementById('cloudResultViewerCode').innerText)">顯示 QR 碼</button>
             </div>
+          <details class="ref-share-private"><summary>裁判交接 · 顯示私人裁判碼</summary><div class="cloud-code-item">
+              <div class="cloud-code-tag">私人裁判碼</div>
+              <p class="code-purpose">持有者可改比分、判勝及管理賽事。請私訊指定裁判。</p>
+              <div class="cloud-code-display" id="cloudResultRefCode">---</div>
+              <button class="cloud-share-btn" id="cloudResultRefShareBtn" onclick="copyShareLink(document.getElementById('cloudResultRefCode').innerText, this)">複製裁判連結</button>
+              <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
+            </div></details>
           </div>
 
         </div>
@@ -1414,7 +1419,7 @@
 </div>
 
 
-<script src="app.js?v=3.45.6"></script>
+<script src="app.js?v=3.45.7"></script>
 
 
 <dialog id="bxManual" aria-labelledby="bxGuideTitle">
