@@ -4887,15 +4887,32 @@ function doubleMatchLabelHtml(m){
   return `<span class="de-side">${side}</span><span class="de-divider">·</span><span class="de-round">第 ${m.bracketRound} 輪</span><span class="de-divider">·</span><span class="de-match">第 ${m.displayMatchNo || 1} 場</span>`;
 }
 
-function layoutDoubleBracketSection(matches, rounds){
-  const STEP = 124;
+function layoutDoubleBracketSection(matches, rounds, interactive){
+  const halfBox = interactive ? 45 : 37;
+  const headerSpace = (interactive ? 44 : 18) + 8;
+  const topSpace = halfBox + headerSpace;
+  const bottomSpace = halfBox + 19; // Status badge below the card
+  const STEP = topSpace + bottomSpace + 10;
   const positions = new Map();
   const visibleAt = r => matches.filter(m => m.bracketRound === r && !m.isBye);
   const counts = rounds.map(r => visibleAt(r).length);
   const anchorIndex = counts.indexOf(Math.max(...counts));
 
+  // A hidden bye or missing feeder can put two preferred centers too close.
+  // Settle each column before the next column reads its connector positions.
+  function separateRound(round){
+    let minY = topSpace;
+    for(const match of visibleAt(round)){
+      const point = positions.get(match.id);
+      point.y = Math.max(point.y, minY);
+      minY = point.y + STEP;
+    }
+  }
+
   // 先排列對戰最多的一輪，作為整個區塊的垂直基準。
   visibleAt(rounds[anchorIndex]).forEach((m, i) => positions.set(m.id, {y:(i+.5)*STEP}));
+
+  separateRound(rounds[anchorIndex]);
 
   // 後續輪次置於其來源場次的中間。
   for(let col=anchorIndex+1; col<rounds.length; col++){
@@ -4906,6 +4923,7 @@ function layoutDoubleBracketSection(matches, rounds){
         : (i+.5)*STEP;
       positions.set(m.id,{y});
     });
+    separateRound(rounds[col]);
   }
 
   // 較早輪次依照「會晉級到哪一場」定位。若另一側是輪空，
@@ -4925,13 +4943,14 @@ function layoutDoubleBracketSection(matches, rounds){
         positions.set(m.id,{y:(target ? target.y : (visible.indexOf(m)+.5)*STEP)+offset});
       });
     });
+    separateRound(rounds[col]);
   }
 
   rounds.forEach((r,col)=>visibleAt(r).forEach(m=>{
     const p=positions.get(m.id); p.x=col*240;
   }));
-  const H = Math.max(STEP, ...Array.from(positions.values(),p=>p.y+STEP/2));
-  return {positions,H};
+  const H = Math.max(STEP, ...Array.from(positions.values(),p=>p.y+bottomSpace));
+  return {positions,H,halfBox};
 }
 
 function renderDoubleBracket(){
@@ -4952,7 +4971,7 @@ function renderDoubleBracket(){
     const ms=state.matches.filter(m=>m.bracket===bracket && !m.inactive);
     if(!ms.length) return;
     const rounds=[...new Set(ms.map(m=>m.bracketRound))];
-    const layout=layoutDoubleBracketSection(ms,rounds);
+    const layout=layoutDoubleBracketSection(ms,rounds,isRefereeBracketInteractive());
     const {positions}=layout;
     let H=layout.H;
     if(bracket==='winners'){
@@ -4985,8 +5004,8 @@ function renderDoubleBracket(){
         const canStart = isRefereeBracketInteractive() && isReadyPendingBracketMatch(m);
         const sourceTag = canStart ? 'button' : 'div';
         const liveStage = m.bracketStage === 'live';
-        html+=`<${sourceTag} class="de-source ${bracket === 'final' ? 'final-match-heading' : ''} ${canStart ? 'bracket-stage-edit de-source-action' : ''} ${liveStage ? 'is-live' : ''}" style="top:${p.y-(canStart?69:63)}px" title="${escapeAttr(matchLabel)}${canStart ? (liveStage ? '・點擊取消進行中' : '・點擊設為進行中') : ''}" ${canStart ? `type="button" data-match-id="${escapeAttr(m.id)}" aria-label="${escapeAttr(matchLabel)}，${liveStage ? '點擊取消進行中' : '點擊設為進行中'}"` : ''}>${sourceLabel}${canStart ? `<span class="de-tap-hint" aria-hidden="true">${liveStage ? '取消' : '▶ 開賽'}</span>` : ''}</${sourceTag}>`;
-        html+=bracketMatchBoxHtml(m,p.y-37,live,nextIds,bracket==='final');
+        html+=`<${sourceTag} class="de-source ${bracket === 'final' ? 'final-match-heading' : ''} ${canStart ? 'bracket-stage-edit de-source-action' : ''} ${liveStage ? 'is-live' : ''}" style="top:${p.y-layout.halfBox-8-(canStart?44:18)}px" title="${escapeAttr(matchLabel)}${canStart ? (liveStage ? '・點擊取消進行中' : '・點擊設為進行中') : ''}" ${canStart ? `type="button" data-match-id="${escapeAttr(m.id)}" aria-label="${escapeAttr(matchLabel)}，${liveStage ? '點擊取消進行中' : '點擊設為進行中'}"` : ''}>${sourceLabel}${canStart ? `<span class="de-tap-hint" aria-hidden="true">${liveStage ? '取消' : '▶ 開賽'}</span>` : ''}</${sourceTag}>`;
+        html+=bracketMatchBoxHtml(m,p.y-layout.halfBox,live,nextIds,bracket==='final');
       });
       html+='</div></div>';
     });
