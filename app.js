@@ -547,6 +547,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initBracketPanZoom();
   initBracketTheme();
   initStaticIcons();
+  initDrawNameSizing();
   initDrawTool();
   initPrizeDraw();
 });
@@ -1237,6 +1238,31 @@ function unlockDrawViewport(){
   window.scrollTo(0,drawLockedScrollY);
 }
 
+function initDrawNameSizing(){
+  for(const row of document.querySelectorAll('#drawFullscreenReel .draw-fullscreen-name')){
+    const label = row.firstElementChild;
+    let frameWidth = 0, frameHeight = 0, textWidth = 0, textHeight = 0;
+    // Content boxes ignore the reel's animation transforms and exclude the frame padding.
+    const observer = new ResizeObserver(entries => {
+      for(const {target, contentRect} of entries){
+        if(target === row){
+          frameWidth = contentRect.width;
+          frameHeight = contentRect.height;
+        }else{
+          textWidth = contentRect.width;
+          textHeight = contentRect.height;
+        }
+      }
+      if(frameWidth && frameHeight && textWidth && textHeight){
+        const scale = Math.min(1, frameWidth / textWidth, frameHeight / textHeight);
+        label.style.setProperty('--draw-text-scale', scale);
+      }
+    });
+    observer.observe(row);
+    observer.observe(label);
+  }
+}
+
 function startDrawReel(candidates, winners, kind, onFinish){
   const overlay = document.getElementById('drawFullscreen');
   const reel = document.getElementById('drawFullscreenReel');
@@ -1272,7 +1298,7 @@ function startDrawReel(candidates, winners, kind, onFinish){
     rows.forEach((row, i) => {
       if(center !== lastCenter){
         const offset = landing - travel + center + i - 1;
-        row.textContent = candidates[((offset % candidates.length) + candidates.length) % candidates.length];
+        row.firstElementChild.textContent = candidates[((offset % candidates.length) + candidates.length) % candidates.length];
       }
       const focus = Math.max(0, 1 - Math.abs(i - 1 - fraction));
       row.style.opacity = String(.47 + .53 * focus);
@@ -1286,7 +1312,7 @@ function startDrawReel(candidates, winners, kind, onFinish){
     if(progress < 1) drawAnimationFrame = requestAnimationFrame(frame);
   }
   if(reduced){
-    prev.textContent=''; current.textContent='抽選中'; next.textContent='';
+    prev.firstElementChild.textContent=''; current.firstElementChild.textContent='抽選中'; next.firstElementChild.textContent='';
     stage.style.setProperty('--dial-angle','0deg');
     bar.style.transform='scaleX(1)';
   }else{
@@ -1304,9 +1330,9 @@ function startDrawReel(candidates, winners, kind, onFinish){
     });
     overlay.classList.add('is-revealed');
     title.textContent = '抽選完成';
-    prev.textContent = '本次結果';
-    current.textContent = winners.length === 1 ? winners[0] : `${winners.length} 位${kind}者`;
-    next.textContent = '完整名單即將顯示';
+    prev.firstElementChild.textContent = '本次結果';
+    current.firstElementChild.textContent = winners.length === 1 ? winners[0] : `${winners.length} 位${kind}者`;
+    next.firstElementChild.textContent = '完整名單即將顯示';
     status.textContent = `已抽出 ${winners.length} 位${kind}者`;
     drawAnimationTimer = window.setTimeout(() => {
       drawAnimationTimer=null;
