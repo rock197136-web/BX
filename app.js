@@ -3136,6 +3136,8 @@ async function downloadAwardImage(){
 async function copyShareLink(code, btnEl){
   code = (code || '').trim().toUpperCase();
   if(!isValidEventCode(code)){showToast('請向刷新代碼的裁判索取新連結');return;}
+  const privateLink = !!btnEl?.closest('.ref-share-private') || (shareRefCode && code === shareRefCode);
+  if(privateLink && !window.confirm('這是裁判管理連結，持有者可修改比分。確定要複製並私訊其他裁判嗎？')) return;
   const link = buildShareLink(code);
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -3150,7 +3152,7 @@ async function copyShareLink(code, btnEl){
       document.execCommand('copy');
       document.body.removeChild(ta);
     }
-    showToast('連結已複製到剪貼簿');
+    showToast(privateLink ? '已複製裁判連結，請私訊裁判' : '已複製選手連結，可公開分享');
     if(btnEl){
       const original = btnEl.innerHTML;
       btnEl.classList.add('copied');
@@ -3315,7 +3317,7 @@ function updateCloudStatusUI(){
     dot.className = 'cloud-dot off';
     text.innerText = '僅本機儲存（未設定雲端）';
   } else if(currentEventCode){
-    const shown = currentRole === 'viewer' ? (currentViewerCode || '---') : (shareRefCode || '…');
+    const shown = currentViewerCode || '…';
     const role = currentRole==='viewer'?'選手模式':'裁判模式';
     const roleIcon = icon(currentRole==='viewer'?'user':'gavel',14);
     const offline=navigator.onLine===false;
@@ -3335,7 +3337,7 @@ function updateCloudStatusUI(){
     else if(stale)label='同步待確認・資料可能過期';
     else if(cloudConnectionState!=='connected')label='同步中…';
     const lastLabel=(lastCloudServerAt || failed || offline || stale) ? `<span class="cloud-last-check">上次確認 ${last}</span>` : '';
-    text.innerHTML=`${label}・<span class="cloud-role">${roleIcon}${role}</span>　代碼 ${escapeHtml(shown)}${lastLabel}`;
+    text.innerHTML=`${label}・<span class="cloud-role">${roleIcon}${role}</span>　選手碼 ${escapeHtml(shown)}${lastLabel}`;
     text.title=`伺服器最後確認：${last}`;
     if(retry && (failed || offline || stale))retry.classList.remove('hidden');
   } else {
@@ -3448,6 +3450,7 @@ async function refreshShareCodes(btn){
   finally{btn.disabled=false;btn.textContent='↻ 刷新代碼';setCloudConnectionBusy(null);}
 }
 function openCloudModal(){
+  document.querySelectorAll('#cloudModal .ref-share-private').forEach(panel => { panel.open = false; });
   document.getElementById('cloudError').innerText = '';
   renderRecentEvents();
   const result = document.getElementById('cloudCreatedResult');
@@ -3464,21 +3467,21 @@ function openCloudModal(){
     const codesEl = document.getElementById('cloudCurrentCodes');
     if(currentRole === 'referee'){
       codesEl.innerHTML = `
-        <div class="cloud-code-item">
-          <div class="cloud-code-tag">裁判用（完整功能）</div>
-              <p class="code-purpose">僅供主辦與裁判：計分、判勝、設定。</p>
-          <div class="cloud-code-display">${escapeHtml(shareRefCode||'已更換')}</div>
-          <button class="cloud-share-btn" onclick="copyShareLink('${shareRefCode||''}', this)">${icon('link',14)} 複製裁判連結</button>
-              <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
-        </div>
         ${currentViewerCode ? `
         <div class="cloud-code-item">
-          <div class="cloud-code-tag">選手／觀眾用（唯讀）</div>
+          <div class="cloud-code-tag">出示選手碼</div>
               <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode)}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">${icon('link',14)} 複製選手連結</button>
           <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode('${currentViewerCode}')">${icon('qr-code',14)} 顯示 QR 碼</button>
         </div>` : ''}
+          <details class="ref-share-private"><summary><span class="to-referee">邀請裁判 →</span><span class="to-players">← 返回選手分享</span></summary><div class="cloud-code-item">
+          <div class="cloud-code-tag">邀請裁判 · 專用碼</div>
+              <p class="code-purpose">持有者可改比分、判勝及管理賽事。請私訊指定裁判。</p>
+          <div class="cloud-code-display">${escapeHtml(shareRefCode||'已更換')}</div>
+          <button class="cloud-share-btn" onclick="copyShareLink('${shareRefCode||''}', this)">${icon('link',14)} 複製裁判連結</button>
+              <button type="button" class="rotate-codes" onclick="refreshShareCodes(this)">↻ 刷新代碼</button>
+        </div></details>
       `;
     } else {
       codesEl.innerHTML = `
