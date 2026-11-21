@@ -8241,7 +8241,9 @@ function renderPlayerNextMatchCard(){
   matches.forEach(match => {
     const matchLabel = formatMatchNumberLabel(realMatchNumber(match));
     const metaText = matchLabel ? `${matchLabel}・即將上場` : '即將上場';
-    const versusText = `${nameOf(match.playerA)} vs ${nameOf(match.playerB)}`;
+    const firstName = nameOf(match.playerA);
+    const secondName = nameOf(match.playerB);
+    const versusText = `${firstName} 對 ${secondName}`;
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'player-next-match-card';
@@ -8253,10 +8255,19 @@ function renderPlayerNextMatchCard(){
     copy.className = 'player-next-match-copy';
     const meta = document.createElement('span');
     meta.className = 'player-next-match-meta';
-    meta.textContent = metaText;
+    if(matchLabel){
+      const number = document.createElement('strong');
+      number.textContent = matchLabel;
+      meta.append(number);
+    }
+    meta.append('即將上場');
     const versus = document.createElement('strong');
     versus.className = 'player-next-match-versus';
-    versus.textContent = versusText;
+    const first = document.createElement('span');
+    first.textContent = firstName;
+    const second = document.createElement('span');
+    second.textContent = secondName;
+    versus.append(first, second);
     copy.append(meta, versus);
 
     const arrow = document.createElement('span');
