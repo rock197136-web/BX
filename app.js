@@ -3469,14 +3469,14 @@ function openCloudModal(){
       codesEl.innerHTML = `
         ${currentViewerCode ? `
         <div class="cloud-code-item">
-          <div class="cloud-code-tag">選手碼 · 可公開分享</div>
+          <div class="cloud-code-tag">出示選手碼</div>
               <p class="code-purpose">可公開分享，僅能查看戰況與紀錄。</p>
           <div class="cloud-code-display">${escapeHtml(currentViewerCode)}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${currentViewerCode}', this)">${icon('link',14)} 複製選手連結</button>
           <button class="cloud-share-btn cloud-qr-btn" onclick="showQRCode('${currentViewerCode}')">${icon('qr-code',14)} 顯示 QR 碼</button>
         </div>` : ''}
-          <details class="ref-share-private"><summary>裁判交接 · 顯示私人裁判碼</summary><div class="cloud-code-item">
-          <div class="cloud-code-tag">私人裁判碼</div>
+          <details class="ref-share-private"><summary><span class="to-referee">邀請裁判 →</span><span class="to-players">← 返回選手分享</span></summary><div class="cloud-code-item">
+          <div class="cloud-code-tag">邀請裁判 · 專用碼</div>
               <p class="code-purpose">持有者可改比分、判勝及管理賽事。請私訊指定裁判。</p>
           <div class="cloud-code-display">${escapeHtml(shareRefCode||'已更換')}</div>
           <button class="cloud-share-btn" onclick="copyShareLink('${shareRefCode||''}', this)">${icon('link',14)} 複製裁判連結</button>
