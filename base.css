@@ -4922,8 +4922,10 @@ html:has(#drawReader[open]), body:has(#drawReader[open]) {overflow:hidden;}
 #refereeBracketEmpty { border:0;background:transparent;box-shadow:none; }
 
 /* Anchor the read-only match number to its own card's top edge. */
+/* Keep viewer bracket stage positions clear. The next-match cards carry stage numbers. */
 .single-match-tag.viewer-match-number,
 .double-tree .de-source.viewer-match-number {
+  display:none;
   left:10px;
   display:inline-grid;
   width:22px;
