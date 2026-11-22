@@ -4920,3 +4920,19 @@ html:has(#drawReader[open]), body:has(#drawReader[open]) {overflow:hidden;}
 #tab-setup #playerInputs { margin-top:8px;max-height:min(52vh,420px);overflow-y:auto;align-content:start; }
 #tab-setup #playerInputs:empty { display:none; }
 #refereeBracketEmpty { border:0;background:transparent;box-shadow:none; }
+
+/* Anchor the read-only match number to its own card's top edge. */
+.single-match-tag.viewer-match-tab {
+  left:12px;
+  box-sizing:border-box;
+  height:18px;
+  padding:0 6px;
+  border:1px solid var(--border);
+  border-bottom:0;
+  border-radius:5px 5px 0 0;
+  background:var(--panel-2);
+  color:var(--text);
+  font-size:12px;
+  line-height:17px;
+  pointer-events:none;
+}

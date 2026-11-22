@@ -6417,12 +6417,13 @@ function renderBracket(){
       if(!m.isBye){
         const matchNumberLabel = formatMatchNumberLabel(singleMatchNumbers.get(m.id));
         const canEditStage = editing && isReadyPendingBracketMatch(m);
-        const matchTagOffset = m.status === 'completed' ? 30 : tagH;
+        const viewerLabel = currentRole === 'viewer' && !editing;
+        const matchTagOffset = viewerLabel ? 18 : (m.status === 'completed' ? 30 : tagH);
         html += isFinalRound
           ? `<div class="bracket-stage-meta final" style="top:${centerY - HALF - (editing ? 42 : 28)}px;">${bracketStageMetaHtml(m, liveIds, nextIds, 'final')}</div>`
           : (matchNumberLabel ? (canEditStage
               ? `<button type="button" class="single-match-tag bracket-stage-edit" data-match-id="${escapeAttr(m.id)}" style="top:${centerY - HALF - tagH}px;" aria-label="點擊標記${matchNumberLabel}為進行中">${matchNumberLabel}</button>`
-              : `<div class="single-match-tag ${m.status === 'completed' ? 'locked' : ''}" style="top:${centerY - HALF - matchTagOffset}px;">${matchNumberLabel}</div>`) : '');
+              : `<div class="single-match-tag ${viewerLabel ? 'viewer-match-tab' : ''} ${m.status === 'completed' ? 'locked' : ''}" style="top:${centerY - HALF - matchTagOffset}px;">${matchNumberLabel}</div>`) : '');
         html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound, isFinalRound);
       }
     });
