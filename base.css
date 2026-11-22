@@ -4921,24 +4921,8 @@ html:has(#drawReader[open]), body:has(#drawReader[open]) {overflow:hidden;}
 #tab-setup #playerInputs:empty { display:none; }
 #refereeBracketEmpty { border:0;background:transparent;box-shadow:none; }
 
-/* Anchor the read-only match number to its own card's top edge. */
-/* Keep viewer bracket stage positions clear. The next-match cards carry stage numbers. */
+/* Hide numeric bracket tags in player mode while preserving next-match status cards. */
 .single-match-tag.viewer-match-number,
 .double-tree .de-source.viewer-match-number {
   display:none;
-  left:10px;
-  display:inline-grid;
-  width:22px;
-  height:22px;
-  place-items:center;
-  padding:0;
-  border:1px solid #526c84;
-  border-radius:50%;
-  background:rgba(20,31,42,.96);
-  color:#a9c3dc;
-  font-size:12px;
-  font-weight:700;
-  line-height:1;
-  font-variant-numeric:tabular-nums;
-  pointer-events:none;
 }
