@@ -4953,6 +4953,11 @@ function layoutDoubleBracketSection(matches, rounds, interactive){
   return {positions,H,halfBox};
 }
 
+function showBracketMatchNumber(match, liveIds, nextIds){
+  if(currentRole !== 'viewer') return true;
+  return match.status !== 'completed' && (liveIds.has(match.id) || nextIds.has(match.id));
+}
+
 function renderDoubleBracket(){
   const wrap=document.getElementById('bracketTree');
   wrap.classList.add('double-tree');
@@ -5004,7 +5009,9 @@ function renderDoubleBracket(){
         const canStart = isRefereeBracketInteractive() && isReadyPendingBracketMatch(m);
         const sourceTag = canStart ? 'button' : 'div';
         const liveStage = m.bracketStage === 'live';
-        html+=`<${sourceTag} class="de-source ${bracket === 'final' ? 'final-match-heading' : ''} ${canStart ? 'bracket-stage-edit de-source-action' : ''} ${liveStage ? 'is-live' : ''}" style="top:${p.y-layout.halfBox-8-(canStart?44:18)}px" title="${escapeAttr(matchLabel)}${canStart ? (liveStage ? '・點擊取消進行中' : '・點擊設為進行中') : ''}" ${canStart ? `type="button" data-match-id="${escapeAttr(m.id)}" aria-label="${escapeAttr(matchLabel)}，${liveStage ? '點擊取消進行中' : '點擊設為進行中'}"` : ''}>${sourceLabel}${canStart ? `<span class="de-tap-hint" aria-hidden="true">${liveStage ? '取消' : '▶ 開賽'}</span>` : ''}</${sourceTag}>`;
+        if(bracket === 'final' || showBracketMatchNumber(m, live, nextIds)){
+          html+=`<${sourceTag} class="de-source ${bracket === 'final' ? 'final-match-heading' : ''} ${canStart ? 'bracket-stage-edit de-source-action' : ''} ${liveStage ? 'is-live' : ''}" style="top:${p.y-layout.halfBox-8-(canStart?44:18)}px" title="${escapeAttr(matchLabel)}${canStart ? (liveStage ? '・點擊取消進行中' : '・點擊設為進行中') : ''}" ${canStart ? `type="button" data-match-id="${escapeAttr(m.id)}" aria-label="${escapeAttr(matchLabel)}，${liveStage ? '點擊取消進行中' : '點擊設為進行中'}"` : ''}>${sourceLabel}${canStart ? `<span class="de-tap-hint" aria-hidden="true">${liveStage ? '取消' : '▶ 開賽'}</span>` : ''}</${sourceTag}>`;
+        }
         html+=bracketMatchBoxHtml(m,p.y-layout.halfBox,live,nextIds,bracket==='final');
       });
       html+='</div></div>';
@@ -6421,7 +6428,7 @@ function renderBracket(){
         const matchTagOffset = viewerLabel ? 18 : (m.status === 'completed' ? 30 : tagH);
         html += isFinalRound
           ? `<div class="bracket-stage-meta final" style="top:${centerY - HALF - (editing ? 42 : 28)}px;">${bracketStageMetaHtml(m, liveIds, nextIds, 'final')}</div>`
-          : (matchNumberLabel ? (canEditStage
+          : (matchNumberLabel && showBracketMatchNumber(m, liveIds, nextIds) ? (canEditStage
               ? `<button type="button" class="single-match-tag bracket-stage-edit" data-match-id="${escapeAttr(m.id)}" style="top:${centerY - HALF - tagH}px;" aria-label="點擊標記${matchNumberLabel}為進行中">${matchNumberLabel}</button>`
               : `<div class="single-match-tag ${viewerLabel ? 'viewer-match-tab' : ''} ${m.status === 'completed' ? 'locked' : ''}" style="top:${centerY - HALF - matchTagOffset}px;">${matchNumberLabel}</div>`) : '');
         html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound, isFinalRound);
