@@ -8009,20 +8009,16 @@ function openUpdateNotes(){
   const message = document.getElementById('customModalMessage');
   message.innerHTML = `
     <div class="update-notes">
-      <div class="update-notes-date">更新日期 2026/11/20</div>
+      <div class="update-notes-date">更新日期 2026/11/22</div>
       <section class="update-notes-section">
-        <h4 class="update-notes-heading">V3.45 更新重點</h4>
+        <h4 class="update-notes-heading">近期改動</h4>
         <ul class="update-notes-list">
-          <li>裁判台減少重複同步，比分更新只處理變動場次。</li>
-          <li>設定頁重新排版，手機可快速找到比賽規則、名單和點名。</li>
-          <li>中籤名單可直接複製，也可全螢幕放大查看。</li>
-          <li>重新抽籤使用高品質亂數；抽選時姓名與樹狀圖對局同步跳動，五次抽籤採用第 5 次結果。</li>
+          <li>選手模式對戰樹移除場次數字，微調對戰卡亮度提升辨識度；上方即將上場提示維持顯示。</li>
         </ul>
       </section>
     </div>`;
   message.scrollTop = 0;
 }
-
 function showAlert(message){
   showModal(message, [{ label:'知道了', className:'btn-primary' }]);
 }
