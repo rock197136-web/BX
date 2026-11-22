@@ -616,7 +616,7 @@ body.draw-overlay-open{
 .player-setup-summary{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   cursor:pointer; user-select:none;
-  background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
+  background:#202225; border:1px solid var(--border); border-radius:10px;
   padding:12px 14px; margin-bottom:18px;
 }
 .player-setup-summary:hover{ border-color:var(--muted); }
@@ -2908,7 +2908,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid rgb(var(--ui-ffdc8d
 .conn-path{stroke:#59616b;stroke-width:2.5;}
 .conn-path.active{stroke:rgb(var(--theme-rgb));stroke-width:3;filter:none;}
 .bracket-match.done:not(.final-match){border-color:rgba(var(--theme-rgb),.62);box-shadow:none;}
-.bracket-slot{content-visibility:auto;position:relative;gap:0;padding:0 0 0 11px;background:#1d1e20;}
+.bracket-slot{content-visibility:auto;position:relative;gap:0;padding:0 0 0 11px;background:#242629;}
 .bracket-slot.winner{
   background:linear-gradient(90deg,rgba(var(--theme-rgb),.19),rgba(var(--theme-rgb),.10));
   box-shadow:none;
