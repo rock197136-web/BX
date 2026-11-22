@@ -5003,14 +5003,15 @@ function renderDoubleBracket(){
         const p=positions.get(m.id);
         // 顯示編號只計算真正需要上場的對戰；隱藏的輪空籤位不占號碼。
         const matchLabel = doubleMatchLabel(m);
-        const sourceLabel = bracket === 'final'
-          ? `${icon('trophy',14)}<span>${escapeHtml(matchLabel)}</span>`
-          : doubleMatchLabelHtml(m);
         const canStart = isRefereeBracketInteractive() && isReadyPendingBracketMatch(m);
         const sourceTag = canStart ? 'button' : 'div';
         const liveStage = m.bracketStage === 'live';
         if(bracket === 'final' || showBracketMatchNumber(m, live, nextIds)){
-          html+=`<${sourceTag} class="de-source ${bracket === 'final' ? 'final-match-heading' : ''} ${canStart ? 'bracket-stage-edit de-source-action' : ''} ${liveStage ? 'is-live' : ''}" style="top:${p.y-layout.halfBox-8-(canStart?44:18)}px" title="${escapeAttr(matchLabel)}${canStart ? (liveStage ? '・點擊取消進行中' : '・點擊設為進行中') : ''}" ${canStart ? `type="button" data-match-id="${escapeAttr(m.id)}" aria-label="${escapeAttr(matchLabel)}，${liveStage ? '點擊取消進行中' : '點擊設為進行中'}"` : ''}>${sourceLabel}${canStart ? `<span class="de-tap-hint" aria-hidden="true">${liveStage ? '取消' : '▶ 開賽'}</span>` : ''}</${sourceTag}>`;
+          const viewerNumber = currentRole === 'viewer' && bracket !== 'final';
+          const sourceLabel = bracket === 'final'
+            ? `${icon('trophy',14)}<span>${escapeHtml(matchLabel)}</span>`
+            : viewerNumber ? realMatchNumber(m) : doubleMatchLabelHtml(m);
+          html+=`<${sourceTag} class="de-source ${viewerNumber ? 'viewer-match-number' : ''} ${bracket === 'final' ? 'final-match-heading' : ''} ${canStart ? 'bracket-stage-edit de-source-action' : ''} ${liveStage ? 'is-live' : ''}" style="top:${p.y-layout.halfBox-8-(canStart?44:18)}px" title="${escapeAttr(matchLabel)}${canStart ? (liveStage ? '・點擊取消進行中' : '・點擊設為進行中') : ''}" ${canStart ? `type="button" data-match-id="${escapeAttr(m.id)}" aria-label="${escapeAttr(matchLabel)}，${liveStage ? '點擊取消進行中' : '點擊設為進行中'}"` : ''}>${sourceLabel}${canStart ? `<span class="de-tap-hint" aria-hidden="true">${liveStage ? '取消' : '▶ 開賽'}</span>` : ''}</${sourceTag}>`;
         }
         html+=bracketMatchBoxHtml(m,p.y-layout.halfBox,live,nextIds,bracket==='final');
       });
@@ -6430,7 +6431,7 @@ function renderBracket(){
           ? `<div class="bracket-stage-meta final" style="top:${centerY - HALF - (editing ? 42 : 28)}px;">${bracketStageMetaHtml(m, liveIds, nextIds, 'final')}</div>`
           : (matchNumberLabel && showBracketMatchNumber(m, liveIds, nextIds) ? (canEditStage
               ? `<button type="button" class="single-match-tag bracket-stage-edit" data-match-id="${escapeAttr(m.id)}" style="top:${centerY - HALF - tagH}px;" aria-label="點擊標記${matchNumberLabel}為進行中">${matchNumberLabel}</button>`
-              : `<div class="single-match-tag ${viewerLabel ? 'viewer-match-tab' : ''} ${m.status === 'completed' ? 'locked' : ''}" style="top:${centerY - HALF - matchTagOffset}px;">${matchNumberLabel}</div>`) : '');
+              : `<div class="single-match-tag ${viewerLabel ? 'viewer-match-number' : ''} ${m.status === 'completed' ? 'locked' : ''}" style="top:${centerY - HALF - matchTagOffset}px;" title="${matchNumberLabel}">${viewerLabel ? singleMatchNumbers.get(m.id) : matchNumberLabel}</div>`) : '');
         html += bracketMatchBoxHtml(m, centerY - HALF, liveIds, nextIds, isFinalRound, isFinalRound);
       }
     });
