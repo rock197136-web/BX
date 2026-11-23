@@ -6061,18 +6061,10 @@ function renderStandings(){
   const isTournamentComplete = state.matches.length > 0 && state.matches.every(m => m.status === 'completed');
 
   if(isTournamentComplete && standings.length > 0){
-    const titles = ['冠軍','亞軍','季軍'];
-    podiumContainer.innerHTML = `
-      <div class="podium">
-        ${standings.slice(0,3).map((p,i) => `
-          <div class="podium-item podium-${i+1}">
-            <div class="podium-medal">${TROPHY_ICONS[i+1]}</div>
-            <div class="podium-title">${titles[i]}</div>
-            <div class="podium-name">${escapeHtml(p.name)}</div>
-            <div class="podium-record">${p.wins}勝${p.losses}負・${p.pointsFor}分</div>
-          </div>
-        `).join('')}
-      </div>`;
+    podiumContainer.innerHTML = resultsPodiumHtml(standings.slice(0, 3).map(p => ({
+      name: p.name,
+      record: `${p.wins}勝${p.losses}負・${p.pointsFor}分`
+    })));
     podiumContainer.classList.remove('hidden');
   } else {
     podiumContainer.innerHTML = '';
@@ -6107,6 +6099,22 @@ function renderStandings(){
    RENDER: KNOCKOUT PODIUM (champion only — runner-up/3rd
    place aren't well defined without a 3rd-place playoff)
 ========================================================= */
+function resultsPodiumHtml(places){
+  const titles = ['冠軍', '亞軍', '季軍'];
+  return `
+    <section class="results-podium" aria-label="賽事名次">
+      <ol class="results-podium-list" data-count="${places.length}" role="list">
+        ${places.map(({name, record}, index) => `
+          <li class="results-podium-place podium-item podium-${index+1}" data-place="${index+1}">
+            <div class="podium-medal" aria-hidden="true">${TROPHY_ICONS[index+1]}</div>
+            <div class="podium-title">${titles[index]}</div>
+            <div class="podium-name">${escapeHtml(name)}</div>
+            ${record ? `<div class="podium-record">${escapeHtml(record)}</div>` : ''}
+          </li>`).join('')}
+      </ol>
+    </section>`;
+}
+
 function renderBracketPodium(){
   const podiumContainer = document.getElementById('podiumContainer');
   if(state.matches.length === 0){
@@ -6125,24 +6133,11 @@ function renderBracketPodium(){
   const runnerUpId = champId === finalMatch.playerA ? finalMatch.playerB : finalMatch.playerA;
   const bronzeMatch = state.matches.find(m=>m.thirdPlace);
   const thirdId = state.tournament.format === 'double_elimination' ? doubleThirdId() : (bronzeMatch && bronzeMatch.status === 'completed') ? bronzeMatch.winner : null;
-  podiumContainer.innerHTML = `
-    <div class="podium">
-      <div class="podium-item podium-2">
-        <div class="podium-medal">${TROPHY_ICONS[2]}</div>
-        <div class="podium-title">亞軍</div>
-        <div class="podium-name">${escapeHtml(nameOf(runnerUpId))}</div>
-      </div>
-      <div class="podium-item podium-1">
-        <div class="podium-medal">${TROPHY_ICONS[1]}</div>
-        <div class="podium-title">冠軍</div>
-        <div class="podium-name">${escapeHtml(nameOf(champId))}</div>
-      </div>
-      <div class="podium-item podium-3">
-        <div class="podium-medal">${TROPHY_ICONS[3]}</div>
-        <div class="podium-title">季軍</div>
-        <div class="podium-name">${thirdId ? escapeHtml(nameOf(thirdId)) : (bronzeMatch ? '對戰中' : '－')}</div>
-      </div>
-    </div>`;
+  podiumContainer.innerHTML = resultsPodiumHtml([
+    {name: nameOf(champId)},
+    {name: nameOf(runnerUpId)},
+    {name: thirdId ? nameOf(thirdId) : (bronzeMatch ? '對戰中' : '－')}
+  ]);
   podiumContainer.classList.remove('hidden');
 }
 

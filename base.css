@@ -4928,3 +4928,78 @@ html:has(#drawReader[open]), body:has(#drawReader[open]) {overflow:hidden;}
 .double-tree .de-source.viewer-match-number {
   display:none;
 }
+
+.results-podium {
+  margin-bottom: 16px;
+}
+.results-podium-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.24fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(5px, 2vw, 14px);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.results-podium-list[data-count="1"] {
+  grid-template-columns: minmax(0, 280px);
+  justify-content: center;
+}
+.results-podium-list[data-count="2"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.24fr);
+}
+.results-podium .results-podium-place {
+  --place-rgb: 201, 208, 220;
+  --place-step: 12px;
+  --place-cup: clamp(32px, 10vw, 50px);
+  grid-row: 1;
+  grid-column: 1;
+  align-items: center;
+  align-self: end;
+  min-width: 0;
+  isolation: isolate;
+  padding: 9px 5px calc(var(--place-step) + 10px);
+  border-radius: 12px 12px 5px 5px;
+}
+.results-podium .results-podium-place[data-place="1"] {
+  --place-rgb: 224, 180, 69;
+  --place-step: 11px;
+  --place-cup: clamp(45px, 14vw, 71px);
+  grid-column: 2;
+  container-type: inline-size;
+  padding-top: 15px;
+}
+.results-podium .results-podium-list[data-count="1"] .results-podium-place { grid-column: 1; }
+.results-podium .results-podium-place[data-place="3"] {
+  --place-rgb: 211, 138, 82;
+  --place-step: 7px;
+  grid-column: 3;
+}
+.results-podium-place::after {
+  content: "";
+  position: absolute;
+  inset: auto 8% 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, rgba(var(--place-rgb), .34), transparent);
+}
+.results-podium .podium-medal { width: var(--place-cup); height: var(--place-cup); }
+.results-podium .podium-name {
+  width: 100%;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.results-podium .podium-1 .podium-title {
+  margin-top: 4px;
+  font-size: 13px;
+  font-size: clamp(13px, 9cqi, 16px);
+  line-height: 1.25;
+}
+.results-podium .podium-1 .podium-name {
+  margin-top: 5px;
+  font-size: 19px;
+  font-size: clamp(17px, 15.2cqi, 26px);
+  line-height: 1.24;
+  text-wrap: balance;
+  text-shadow: 0 1px 6px rgba(224, 180, 69, .24);
+}
