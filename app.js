@@ -4947,7 +4947,7 @@ function layoutDoubleBracketSection(matches, rounds, interactive){
   }
 
   rounds.forEach((r,col)=>visibleAt(r).forEach(m=>{
-    const p=positions.get(m.id); p.x=col*240;
+    const p=positions.get(m.id); p.x=col*(BRACKET_COL_WIDTH+DOUBLE_BRACKET_GAP);
   }));
   const H = Math.max(STEP, ...Array.from(positions.values(),p=>p.y+bottomSpace));
   return {positions,H,halfBox};
@@ -4988,17 +4988,18 @@ function renderDoubleBracket(){
       positions.forEach(p=>{p.y+=shift});
       H+=shift;
     }
+    const sectionWidth = rounds.length * (BRACKET_COL_WIDTH + DOUBLE_BRACKET_GAP) - DOUBLE_BRACKET_GAP;
     let html='';
     let paths='';
     ms.forEach(m=>{
       const p=positions.get(m.id), q=positions.get(m.nextMatchId);
       if(!p||!q) return;
-      paths+=`<path class="conn-path ${m.status==='completed'?'active':''}" data-from-match="${m.id}" d="M${p.x+190},${p.y} H${p.x+215} V${q.y} H${q.x}"/>`;
+      paths+=`<path class="conn-path ${m.status==='completed'?'active':''}" data-from-match="${m.id}" d="M${p.x+BRACKET_COL_WIDTH-2},${p.y} H${p.x+BRACKET_COL_WIDTH+DOUBLE_BRACKET_GAP/2} V${q.y} H${q.x+2}"/>`;
     });
-    html+=`<section style="margin-bottom:30px"><h3 style="font-size:16px;margin:0 0 14px;color:var(--text)">${bracket==='winners'?'勝部':bracket==='losers'?'敗部':'總決賽'}</h3><div style="position:relative;width:${rounds.length*240-50}px"><svg style="position:absolute;top:32px;left:0;pointer-events:none" width="${rounds.length*240-50}" height="${H}">${paths}</svg><div style="display:flex;gap:50px">`;
+    html+=`<section style="margin-bottom:30px"><h3 style="font-size:16px;margin:0 0 14px;color:var(--text)">${bracket==='winners'?'勝部':bracket==='losers'?'敗部':'總決賽'}</h3><div style="position:relative;width:${sectionWidth}px"><svg style="position:absolute;top:32px;left:0;pointer-events:none" width="${sectionWidth}" height="${H}">${paths}</svg><div style="display:flex;gap:${DOUBLE_BRACKET_GAP}px">`;
     rounds.forEach(r=>{
       const group=ms.filter(m=>m.bracketRound===r);
-      html+=`<div class="bracket-col" style="width:190px;flex-shrink:0"><div class="bracket-round-label" style="height:32px;margin:0">${doubleRoundLabel(group[0])}</div><div class="bracket-round-body" style="height:${H}px">`;
+      html+=`<div class="bracket-col" style="width:${BRACKET_COL_WIDTH}px"><div class="bracket-round-label" style="height:32px;margin:0">${doubleRoundLabel(group[0])}</div><div class="bracket-round-body" style="height:${H}px">`;
       group.filter(m=>!m.isBye).forEach(m=>{
         const p=positions.get(m.id);
         // 顯示編號只計算真正需要上場的對戰；隱藏的輪空籤位不占號碼。
@@ -6185,11 +6186,11 @@ function bracketRoundLabel(r, totalRounds){
 }
 
 function bracketNameSizeClass(name){
-  const length = Array.from(String(name ?? '')).length;
-  if(length >= 11) return 'name-extra-long';
-  if(length >= 9) return 'name-long';
-  if(length >= 7) return 'name-medium';
-  if(length >= 6) return 'name-compact';
+  // Latin letters and digits generally take less room than CJK characters.
+  const width = Array.from(name).reduce((sum, char) => sum + (/^[\x20-\x7e]$/.test(char) ? 0.6 : 1), 0);
+  if(width >= 10) return 'name-long';
+  if(width >= 8) return 'name-medium';
+  if(width >= 6) return 'name-compact';
   return '';
 }
 
@@ -6279,6 +6280,8 @@ function bracketMatchBoxHtml(m, top, liveIds, nextIds, isFinal, hideStatusBadge 
 // centerY, and boxHeight maps matchId -> its rendered height in px.
 // (visibleByRound keeps its old name for compatibility with renderBracket;
 // nothing is filtered out — every match gets an entry.)
+const BRACKET_COL_WIDTH = 178;
+const DOUBLE_BRACKET_GAP = 50;
 const BRACKET_BOX_H = 74;   // px height of a normal match card
 const BRACKET_BYE_H = 30;   // invisible layout anchor; intentionally not rendered
 const BRACKET_ROW_GAP = 30; // px gap: reserves room for the small match-number label
@@ -6389,7 +6392,6 @@ function renderBracket(){
   const { rounds, byRound } = bracketMatchesByRound();
   const { visibleByRound, pos, H, boxHeight } = computeBracketLayout(rounds, byRound);
   const GAP = 42;       // px width of connector gap between columns
-  const COLW = 190;     // px width of each round column
   const editing = isRefereeBracketInteractive();
   const HALF = editing ? 45 : 37;
   const tagH = editing ? 44 : BRACKET_TAG_H;
@@ -6417,7 +6419,7 @@ function renderBracket(){
     const matches = visibleByRound[r]; // BYEs keep layout positions but have no visible card
     const isFinalRound = ridx === rounds.length - 1;
 
-    html += `<div class="bracket-col" style="width:${COLW}px;">
+    html += `<div class="bracket-col" style="width:${BRACKET_COL_WIDTH}px;">
       <div class="bracket-round-label">${bracketRoundLabel(r, rounds.length)}</div>
       <div class="bracket-round-body" style="height:${H}px;">`;
     matches.forEach(m => {
@@ -6440,7 +6442,7 @@ function renderBracket(){
     html += `</div>`;
     if(isFinalRound && bronzeMatch){
       const top = pos[matches[0].id] - HALF;
-      html += `<div class="bracket-col" style="width:${COLW}px;margin-inline-start:${GAP}px">
+      html += `<div class="bracket-col" style="width:${BRACKET_COL_WIDTH}px;margin-inline-start:${GAP}px">
         <div class="bracket-round-label" aria-hidden="true" style="visibility:hidden">季軍戰</div>
         <div class="bracket-round-body bracket-bronze-body" style="height:${H}px">
           <div class="bracket-stage-meta bronze" style="top:${top-(editing?42:28)}px">${bracketStageMetaHtml(bronzeMatch,liveIds,nextIds,'bronze')}</div>
@@ -6463,7 +6465,7 @@ function renderBracket(){
           const done = f.status === 'completed';
           // Square elbow connector: flat out of the box, a right-angle bend,
           // then flat into the next one.
-          paths += `<path class="conn-path ${done?'active':''}" data-from-match="${f.id}" data-to-match="${nm.id}" d="M0,${yFrom} H${GAP/2} V${yTo} H${GAP}"></path>`;
+          paths += `<path class="conn-path ${done?'active':''}" data-from-match="${f.id}" data-to-match="${nm.id}" d="M-2,${yFrom} H${GAP/2} V${yTo} H${GAP+2}"></path>`;
         });
       });
       html += `<div class="bracket-conn-col" style="width:${GAP}px;">

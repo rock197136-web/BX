@@ -1814,7 +1814,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   .finish-sub{ display:none; }
   .fin-ticks{ display:none; }
   .finish-pts{ font-size:19px; width:46px; height:36px; }
-  .bracket-col{ width:150px !important; }
+  .bracket-inner .bracket-col{ width:140px !important; }
 }
 
 @media (max-width:400px){
@@ -1977,11 +1977,10 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 .bracket{ display:flex; flex-direction:column; align-items:flex-start; gap:22px; }
 .bracket-inner{ display:flex; align-items:flex-start; position:relative; width:max-content; }
 .bracket-col{ display:flex; flex-direction:column; flex-shrink:0; }
-.double-tree .bracket-col{ width:190px !important; }
 .double-tree .de-championship-row{ display:flex; align-items:flex-start; gap:50px; width:max-content; }
 .double-tree .de-championship-row > section{ flex:none; }
 .double-tree .de-source{
-  position:absolute; left:2px; width:186px; height:16px;
+  position:absolute; left:2px; right:2px; height:16px;
   display:flex; align-items:center; gap:5px;
   color:var(--muted); font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;
   font-size:12px; font-weight:500; line-height:16px; letter-spacing:0;
@@ -2074,7 +2073,11 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
 }
 .bslot-pts{ order:2; margin-left:auto; font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); width:18px; text-align:right; flex-shrink:0; }
 .bracket-slot.winner .bslot-pts{ color:rgb(var(--theme-rgb)); font-weight:800; }
-.bslot-name{ order:1; min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bslot-name{
+  order:1; min-width:0; flex:1;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  overflow:hidden; overflow-wrap:anywhere; white-space:normal; line-height:1.2;
+}
 .bracket-slot.winner .bslot-name{ font-weight:400; color:rgb(var(--theme-rgb)); text-shadow:0 0 10px rgba(var(--theme-rgb),.45); }
 .bracket-slot.loser .bslot-name{ color:var(--muted); font-weight:500; }
 .bracket-slot.loser .bslot-pts{ color:var(--muted); opacity:.65; }
@@ -2113,7 +2116,7 @@ td.name{ text-align:left; font-family:'Inter',sans-serif; font-weight:700; font-
   padding-top:20px; margin-top:32px; border-top:1px dashed var(--border); width:100%;
 }
 .bracket-bronze .bracket-round-label{ color:var(--bronze); font-size:13px; padding-bottom:8px; }
-.bracket-bronze-body{ position:relative; height:74px; width:190px; max-width:100%; }
+.bracket-bronze-body{ position:relative; height:74px; }
 .bracket-bronze-body .bracket-match{
   border-color:rgba(211,138,82,.55);
   box-shadow:0 0 0 1px rgba(211,138,82,.15), 0 0 18px rgba(211,138,82,.2);
@@ -3790,8 +3793,7 @@ body::before{opacity:.42;}
    fixed height so one name cannot push neighboring bracket cards out of line. */
 .bracket-slot .bslot-name.name-compact{font-size:13.5px!important;letter-spacing:-.015em;}
 .bracket-slot .bslot-name.name-medium{font-size:12px!important;letter-spacing:-.02em;}
-.bracket-slot .bslot-name.name-long{font-size:10.8px!important;letter-spacing:-.03em;}
-.bracket-slot .bslot-name.name-extra-long{font-size:9.8px!important;letter-spacing:-.04em;}
+.bracket-slot .bslot-name.name-long{font-size:11px!important;letter-spacing:-.025em;}
 /* 雙敗淘汰賽：狀態提示放到卡片右下側的空隙，避開上方輪次與場次標籤。
    124px 的場次間距提供足夠位置，不改卡片高度或連線座標。 */
 .double-tree .bracket-match .bracket-status-badge,
@@ -3904,8 +3906,8 @@ body::before{opacity:.42;}
   font-weight:800;cursor:pointer;z-index:8;
 }
 .referee-bracket-mode .double-tree .de-source-action{
-  box-sizing:border-box;width:190px;max-width:190px;height:44px;
-  padding:0 6px;display:flex;align-items:center;justify-content:space-between;
+  box-sizing:border-box;height:44px;
+  padding:0 5px;display:flex;align-items:center;justify-content:space-between;gap:3px;
   border:1px solid rgba(255,200,87,.55);border-radius:7px;
   background:#292116;color:#ffe1a3;font:700 11px 'Noto Sans TC',sans-serif;
   cursor:pointer;z-index:8;box-shadow:0 1px 5px rgba(0,0,0,.35);
